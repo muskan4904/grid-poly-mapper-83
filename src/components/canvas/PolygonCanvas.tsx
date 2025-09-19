@@ -1637,7 +1637,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   }, [fabricCanvas, rotationDegree, show16Directions, directionLines]);
 
   const toggle16Directions = () => {
-    if (!fabricCanvas || !currentPolygon) return;
+    if (!fabricCanvas) return;
     
     const newShow16Directions = !show16Directions;
     setShow16Directions(newShow16Directions);
@@ -1800,7 +1800,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   }, [fabricCanvas, rotationDegree, show32Gates, gateLines]);
 
   const toggle32Gates = () => {
-    if (!fabricCanvas || !currentPolygon) return;
+    if (!fabricCanvas) return;
     
     const newShow32Gates = !show32Gates;
     setShow32Gates(newShow32Gates);
@@ -2303,10 +2303,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const newShowDevtas = !showDevtas;
     setShowDevtas(newShowDevtas);
     
+    console.log('Toggle devtas:', newShowDevtas, 'Completed polygon points:', completedPolygonPoints.length);
+    
     if (newShowDevtas) {
       // Recreate all devta features to ensure proper display
       if (completedPolygonPoints.length >= 3) {
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
+        console.log('Drawing devta features with center:', center);
         
         // Recreate small and medium polygons
         drawSmallPolygon(completedPolygonPoints, center);
