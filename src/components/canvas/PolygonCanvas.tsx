@@ -1352,10 +1352,29 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const clearVithiMandalPolygons = () => {
     if (!fabricCanvas) return;
     
+    // More comprehensive clearing - remove all vithi mandal related objects
+    const allObjects = fabricCanvas.getObjects();
+    const vithiObjects = allObjects.filter(obj => {
+      // Remove any text objects that might be vithi mandal labels
+      return (obj instanceof Text && (
+        obj.text?.includes('shetra') || 
+        obj.text?.includes('क्षेत्र') ||
+        obj.text?.includes('Brahma') ||
+        obj.text?.includes('Manushya') ||
+        obj.text?.includes('Dev')
+      )) || vithiMandalPolygons.includes(obj);
+    });
+    
+    vithiObjects.forEach(obj => {
+      fabricCanvas.remove(obj);
+    });
+    
     vithiMandalPolygons.forEach(poly => {
       fabricCanvas.remove(poly);
     });
     setVithiMandalPolygons([]);
+    
+    fabricCanvas.renderAll();
   };
 
   const drawCentral12Devtas = (polygonPoints: Point[], totalArea: number, center: Point) => {
