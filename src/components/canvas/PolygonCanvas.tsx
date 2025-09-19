@@ -587,16 +587,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const sliceCenterX = (innerHits[i].x + innerHits[j].x + outerHits[i].x + outerHits[j].x) / 4;
       const sliceCenterY = (innerHits[i].y + innerHits[j].y + outerHits[i].y + outerHits[j].y) / 4;
 
-      // Create mapping for 45 devta numbering as per user requirements
-      const getDevtaNumber = (index: number) => {
-        const numberMapping: { [key: number]: number } = {
-          1: 38, 2: 43, 3: 44, 4: 45, 5: 14, 6: 15, 7: 16, 8: 17, 9: 18, 10: 19,
-          11: 20, 12: 21, 13: 22, 14: 23, 15: 24, 16: 26, 17: 16, 18: 27, 19: 28, 20: 29,
-          21: 30, 22: 31, 23: 32, 24: 33, 25: 34, 26: 35, 27: 36, 28: 38, 29: 1, 30: 39,
-          31: 40, 32: 41, 33: 6, 34: 7, 35: 2, 36: 8, 37: 9, 38: 3, 39: 10, 40: 11,
-          41: 4, 42: 12, 43: 13, 44: 5
+      // Create mapping for 32 Gates 8 1 Pad numbering as per user requirements
+      const getGateLabel = (index: number) => {
+        const labelMapping: { [key: number]: string } = {
+          1: 'W8', 2: 'N1', 3: 'N2', 4: 'N3', 5: 'N4', 6: 'N5', 7: 'N6', 8: 'N7',
+          9: 'N8', 10: 'E1', 11: 'E2', 12: 'E3', 13: 'E4', 14: 'E5', 15: 'E6', 16: 'E7',
+          17: 'E8', 18: 'S1', 19: 'S2', 20: 'S3', 21: 'S4', 22: 'S5', 23: 'S6', 24: 'S7',
+          25: 'S8', 26: 'W1', 27: 'W2', 28: 'W3', 29: 'W4', 30: 'W5', 31: 'W6', 32: 'W7'
         };
-        return numberMapping[index] || index;
+        return labelMapping[index] || `${index}`;
       };
 
       if (hasExisting) {
@@ -620,7 +619,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           (gates8_1PadSlices[labelIndex] as Text).set({
             left: sliceCenterX - 8,
             top: sliceCenterY - 8,
-            text: String(getDevtaNumber(i + 1))
+            text: getGateLabel(i + 1)
           });
         }
       } else {
@@ -649,7 +648,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         fabricCanvas.add(sep);
         newObjects.push(sep);
 
-        const numberLabel = new Text(String(getDevtaNumber(i + 1)), {
+        const numberLabel = new Text(getGateLabel(i + 1), {
           left: sliceCenterX - 8,
           top: sliceCenterY - 8,
           fontSize: 16,
