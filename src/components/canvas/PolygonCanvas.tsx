@@ -525,8 +525,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
     const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 45 devtas
-    const GATES_8_1_PAD_INTERNAL_OFFSET = 0; // Changed from 45 to 0, then apply -45 degrees, plus additional -3 and -4 degrees
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT + GATES_8_1_PAD_INTERNAL_OFFSET - 52) * Math.PI) / 180;
+    const GATES_8_1_PAD_INTERNAL_OFFSET = 0; // Changed from 45 to 0, then apply -45 degrees, plus additional -3, -4, and -3 degrees
+    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT + GATES_8_1_PAD_INTERNAL_OFFSET - 55) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
     
     const outerHits: Point[] = [];
