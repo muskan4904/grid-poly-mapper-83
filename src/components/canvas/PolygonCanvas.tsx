@@ -2717,8 +2717,129 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Add new page for content
       pdf.addPage();
 
-      // Page 2: 45 Devta (only this feature enabled)
-      console.log('Capturing Page 2: 45 Devta');
+      // Page 1: 16 Directions (reset first, then enable only this)
+      console.log('Capturing Page 1: 16 Directions');
+      setShow16Directions(true);
+      if (completedPolygonPoints.length >= 3) {
+        const center = calculatePolygonCenterLocal(completedPolygonPoints);
+        draw16Directions(completedPolygonPoints, center);
+      }
+      ensureImageAtBack();
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const dirAvailableWidth = pageWidth - pdfMargin * 2;
+      const dirAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
+      const dirTargetAspect = dirAvailableWidth / dirAvailableHeight;
+      const directionImage = await captureCanvasState("16 Directions", dirTargetAspect);
+      
+      pdf.setFontSize(16);
+      pdf.text("Page 1: 16 Direction Analysis", pageWidth / 2, 20, { align: 'center' });
+      // Use captured image dimensions for better height utilization
+      let dirFinalWidth = dirAvailableWidth;
+      let dirFinalHeight = dirAvailableHeight * 0.9;
+      
+      const tempDirImg = new Image();
+      tempDirImg.src = directionImage;
+      await new Promise(resolve => tempDirImg.onload = resolve);
+      
+      const dirCapturedAspect = tempDirImg.width / tempDirImg.height;
+      
+      if (dirFinalWidth / dirFinalHeight > dirCapturedAspect) {
+        dirFinalWidth = dirFinalHeight * dirCapturedAspect;
+      } else {
+        dirFinalHeight = dirFinalWidth / dirCapturedAspect;
+      }
+      const dirX = (pageWidth - dirFinalWidth) / 2;
+      const dirY = pdfTopOffset + 6;
+      pdf.addImage(directionImage, 'PNG', dirX, dirY, dirFinalWidth, dirFinalHeight);
+      
+      // Add user details to page
+      addUserDetailsToPage(pdf, userDetails);
+
+      // Page 2: 32 Gates (reset first, then enable only this)
+      pdf.addPage();
+      console.log('Capturing Page 2: 32 Gates');
+      await resetAllFeatures();
+      setShow32Gates(true);
+      if (completedPolygonPoints.length >= 3) {
+        const center = calculatePolygonCenterLocal(completedPolygonPoints);
+        draw32Gates(completedPolygonPoints, center);
+      }
+      ensureImageAtBack();
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const gatesAvailableWidth = pageWidth - pdfMargin * 2;
+      const gatesAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
+      const gatesTargetAspect = gatesAvailableWidth / gatesAvailableHeight;
+      const gatesImage = await captureCanvasState("32 Gates", gatesTargetAspect);
+      
+      pdf.setFontSize(16);
+      pdf.text("Page 2: 32 Gates Layout", pageWidth / 2, 20, { align: 'center' });
+      // Use captured image dimensions for better height utilization  
+      let gatesFinalWidth = gatesAvailableWidth;
+      let gatesFinalHeight = gatesAvailableHeight * 0.9;
+      
+      const tempGatesImg = new Image();
+      tempGatesImg.src = gatesImage;
+      await new Promise(resolve => tempGatesImg.onload = resolve);
+      
+      const gatesCapturedAspect = tempGatesImg.width / tempGatesImg.height;
+      
+      if (gatesFinalWidth / gatesFinalHeight > gatesCapturedAspect) {
+        gatesFinalWidth = gatesFinalHeight * gatesCapturedAspect;
+      } else {
+        gatesFinalHeight = gatesFinalWidth / gatesCapturedAspect;
+      }
+      const gatesX = (pageWidth - gatesFinalWidth) / 2;
+      const gatesY = pdfTopOffset + 6;
+      pdf.addImage(gatesImage, 'PNG', gatesX, gatesY, gatesFinalWidth, gatesFinalHeight);
+      
+      // Add user details to page
+      addUserDetailsToPage(pdf, userDetails);
+
+      // Page 3: 32 Gates 8 1 Pad (reset first, then enable only this)
+      pdf.addPage();
+      console.log('Capturing Page 3: 32 Gates 8 1 Pad');
+      await resetAllFeatures();
+      setShow32Gates8_1Pad(true);
+      if (completedPolygonPoints.length >= 3) {
+        const center = calculatePolygonCenterLocal(completedPolygonPoints);
+        draw32Gates8_1PadSlices(completedPolygonPoints, center);
+      }
+      ensureImageAtBack();
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const gates8PadAvailableWidth = pageWidth - pdfMargin * 2;
+      const gates8PadAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
+      const gates8PadTargetAspect = gates8PadAvailableWidth / gates8PadAvailableHeight;
+      const gates8PadImage = await captureCanvasState("32 Gates 8 1 Pad", gates8PadTargetAspect);
+      
+      pdf.setFontSize(16);
+      pdf.text("Page 3: 32 Gates 8 1 Pad Layout", pageWidth / 2, 20, { align: 'center' });
+      // Use captured image dimensions for better height utilization  
+      let gates8PadFinalWidth = gates8PadAvailableWidth;
+      let gates8PadFinalHeight = gates8PadAvailableHeight * 0.9;
+      
+      const tempGates8PadImg = new Image();
+      tempGates8PadImg.src = gates8PadImage;
+      await new Promise(resolve => tempGates8PadImg.onload = resolve);
+      
+      const gates8PadCapturedAspect = tempGates8PadImg.width / tempGates8PadImg.height;
+      
+      if (gates8PadFinalWidth / gates8PadFinalHeight > gates8PadCapturedAspect) {
+        gates8PadFinalWidth = gates8PadFinalHeight * gates8PadCapturedAspect;
+      } else {
+        gates8PadFinalHeight = gates8PadFinalWidth / gates8PadCapturedAspect;
+      }
+      const gates8PadX = (pageWidth - gates8PadFinalWidth) / 2;
+      const gates8PadY = pdfTopOffset + 6;
+      pdf.addImage(gates8PadImage, 'PNG', gates8PadX, gates8PadY, gates8PadFinalWidth, gates8PadFinalHeight);
+      
+      // Add user details to page
+      addUserDetailsToPage(pdf, userDetails);
+
+      // Page 4: 45 Devtas (reset first, then enable only this) 
+      pdf.addPage();
+      console.log('Capturing Page 4: 45 Devtas');
+      await resetAllFeatures();
       setShowDevtas(true);
       if (completedPolygonPoints.length >= 3) {
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
@@ -2734,10 +2855,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const availableHeight = pageHeight - pdfTopOffset - pdfMargin;
       const targetAspect = availableWidth / availableHeight;
 
-      const devtaImage = await captureCanvasState("45 Devta", targetAspect);
+      const devtaImage = await captureCanvasState("45 Devtas", targetAspect);
       
       pdf.setFontSize(16);
-      pdf.text("Page 1: 45 Devta Distribution", pageWidth / 2, 20, { align: 'center' });
+      pdf.text("Page 4: 45 Devtas Layout", pageWidth / 2, 20, { align: 'center' });
       
       // Use captured image dimensions for better height utilization
       let finalWidth = availableWidth;
@@ -2765,136 +2886,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Add user details to page
       addUserDetailsToPage(pdf, userDetails);
 
-      // Page 2: 16 Directions (reset first, then enable only this)
+      // Page 5: 45 Devtas Names Dialog
       pdf.addPage();
-      console.log('Capturing Page 2: 16 Directions');
-      await resetAllFeatures();
-      setShow16Directions(true);
-      if (completedPolygonPoints.length >= 3) {
-        const center = calculatePolygonCenterLocal(completedPolygonPoints);
-        draw16Directions(completedPolygonPoints, center);
-      }
-      ensureImageAtBack();
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const dirAvailableWidth = pageWidth - pdfMargin * 2;
-      const dirAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
-      const dirTargetAspect = dirAvailableWidth / dirAvailableHeight;
-      const directionImage = await captureCanvasState("16 Directions", dirTargetAspect);
-      
-      pdf.setFontSize(16);
-      pdf.text("Page 2: 16 Direction Analysis", pageWidth / 2, 20, { align: 'center' });
-      // Use captured image dimensions for better height utilization
-      let dirFinalWidth = dirAvailableWidth;
-      let dirFinalHeight = dirAvailableHeight * 0.9;
-      
-      const tempDirImg = new Image();
-      tempDirImg.src = directionImage;
-      await new Promise(resolve => tempDirImg.onload = resolve);
-      
-      const dirCapturedAspect = tempDirImg.width / tempDirImg.height;
-      
-      if (dirFinalWidth / dirFinalHeight > dirCapturedAspect) {
-        dirFinalWidth = dirFinalHeight * dirCapturedAspect;
-      } else {
-        dirFinalHeight = dirFinalWidth / dirCapturedAspect;
-      }
-      const dirX = (pageWidth - dirFinalWidth) / 2;
-      const dirY = pdfTopOffset + 6;
-      pdf.addImage(directionImage, 'PNG', dirX, dirY, dirFinalWidth, dirFinalHeight);
-      
-      // Add user details to page
-      addUserDetailsToPage(pdf, userDetails);
-
-      // Page 3: 32 Gates (reset first, then enable only this)
-      pdf.addPage();
-      console.log('Capturing Page 3: 32 Gates');
-      await resetAllFeatures();
-      setShow32Gates(true);
-      if (completedPolygonPoints.length >= 3) {
-        const center = calculatePolygonCenterLocal(completedPolygonPoints);
-        draw32Gates(completedPolygonPoints, center);
-      }
-      ensureImageAtBack();
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const gatesAvailableWidth = pageWidth - pdfMargin * 2;
-      const gatesAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
-      const gatesTargetAspect = gatesAvailableWidth / gatesAvailableHeight;
-      const gatesImage = await captureCanvasState("32 Gates", gatesTargetAspect);
-      
-      pdf.setFontSize(16);
-      pdf.text("Page 3: 32 Gates Layout", pageWidth / 2, 20, { align: 'center' });
-      // Use captured image dimensions for better height utilization  
-      let gatesFinalWidth = gatesAvailableWidth;
-      let gatesFinalHeight = gatesAvailableHeight * 0.9;
-      
-      const tempGatesImg = new Image();
-      tempGatesImg.src = gatesImage;
-      await new Promise(resolve => tempGatesImg.onload = resolve);
-      
-      const gatesCapturedAspect = tempGatesImg.width / tempGatesImg.height;
-      
-      if (gatesFinalWidth / gatesFinalHeight > gatesCapturedAspect) {
-        gatesFinalWidth = gatesFinalHeight * gatesCapturedAspect;
-      } else {
-        gatesFinalHeight = gatesFinalWidth / gatesCapturedAspect;
-      }
-      const gatesX = (pageWidth - gatesFinalWidth) / 2;
-      const gatesY = pdfTopOffset + 6;
-      pdf.addImage(gatesImage, 'PNG', gatesX, gatesY, gatesFinalWidth, gatesFinalHeight);
-      
-      // Add user details to page
-      addUserDetailsToPage(pdf, userDetails);
-
-      // Page 4: Bar Graph (reset first, then show dialog)
-      pdf.addPage();
-      console.log('Capturing Page 4: Bar Graph');
-      await resetAllFeatures();
-      setShow16BarChart(true);
-      await new Promise(resolve => setTimeout(resolve, 600));
-      let barChartDataUrl: string | null = null;
-      let chartCanvasEl: HTMLCanvasElement | null = null;
-      const chartEl = document.getElementById('direction-chart-capture');
-      if (chartEl) {
-        const c = await html2canvas(chartEl as HTMLElement, {
-          backgroundColor: '#ffffff',
-          scale: 2,
-          logging: false,
-          useCORS: true,
-        });
-        chartCanvasEl = c;
-        barChartDataUrl = c.toDataURL('image/png');
-      } else {
-        console.warn('Direction chart element not found for PDF capture');
-      }
-      setShow16BarChart(false);
-      await new Promise(resolve => setTimeout(resolve, 200));
-      pdf.setFontSize(16);
-      pdf.text("Page 5: Direction Area Analysis", pageWidth / 2, 20, { align: 'center' });
-      if (barChartDataUrl && chartCanvasEl) {
-        // Maximize chart area within margins
-        const chartRatio = chartCanvasEl.height / chartCanvasEl.width;
-        const chartAvailableWidth = pageWidth - pdfMargin * 2;
-        const chartAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
-        let chartW = chartAvailableWidth;
-        let chartH = chartW * chartRatio;
-        if (chartH > chartAvailableHeight) {
-          chartH = chartAvailableHeight;
-          chartW = chartH / chartRatio;
-        }
-        const chartX = (pageWidth - chartW) / 2;
-        const chartY = pdfTopOffset + 6;
-        pdf.addImage(barChartDataUrl, 'PNG', chartX, chartY, chartW, chartH);
-      } else {
-        pdf.text("(Chart unavailable)", pageWidth / 2, 35, { align: 'center' });
-      }
-      
-      // Add user details to page
-      addUserDetailsToPage(pdf, userDetails);
-
-      // Page 6: Devta Names Dialog
-      pdf.addPage();
-      console.log('Capturing Page 6: Devta Names');
+      console.log('Capturing Page 5: 45 Devtas Names');
       await resetAllFeatures();
       setShowDevtaNamesDialog(true);
       await new Promise(resolve => setTimeout(resolve, 600));
@@ -2916,7 +2910,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       setShowDevtaNamesDialog(false);
       await new Promise(resolve => setTimeout(resolve, 200));
       pdf.setFontSize(16);
-      pdf.text("Page 6: 45 Devtas Names", pageWidth / 2, 20, { align: 'center' });
+      pdf.text("Page 5: 45 Devtas Names", pageWidth / 2, 20, { align: 'center' });
       if (devtaNamesDataUrl && devtaNamesCanvasEl) {
         // Maximize dialog area within margins
         const dialogRatio = devtaNamesCanvasEl.height / devtaNamesCanvasEl.width;
@@ -2938,44 +2932,48 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Add user details to page
       addUserDetailsToPage(pdf, userDetails);
 
-      // Page 7: Vithi Mandal (reset first, then enable only this)
+      // Page 6: 16 Direction Bar Graph (reset first, then show dialog)
       pdf.addPage();
-      console.log('Capturing Page 7: Vithi Mandal');
+      console.log('Capturing Page 6: 16 Direction Bar Graph');
       await resetAllFeatures();
-      setShowVithiMandal(true);
-      if (completedPolygonPoints.length >= 3) {
-        const center = calculatePolygonCenterLocal(completedPolygonPoints);
-        drawVithiMandalPolygons(completedPolygonPoints, center);
-      }
-      ensureImageAtBack();
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const vW = pageWidth - pdfMargin * 2;
-      const vH = pageHeight - pdfTopOffset - pdfMargin;
-      const vTargetAspect = vW / vH;
-      const vithiImage = await captureCanvasState("Vithi Mandal", vTargetAspect);
-      
-      pdf.setFontSize(16);
-      pdf.text("Page 7: Vithi Mandal Zones", pageWidth / 2, 20, { align: 'center' });
-      const vithiAvailableWidth = pageWidth - pdfMargin * 2;
-      const vithiAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
-      // Use captured image dimensions for better height utilization
-      let vithiFinalWidth = vithiAvailableWidth;
-      let vithiFinalHeight = vithiAvailableHeight * 0.9;
-      
-      const tempVithiImg = new Image();
-      tempVithiImg.src = vithiImage;
-      await new Promise(resolve => tempVithiImg.onload = resolve);
-      
-      const vithiCapturedAspect = tempVithiImg.width / tempVithiImg.height;
-      
-      if (vithiFinalWidth / vithiFinalHeight > vithiCapturedAspect) {
-        vithiFinalWidth = vithiFinalHeight * vithiCapturedAspect;
+      setShow16BarChart(true);
+      await new Promise(resolve => setTimeout(resolve, 600));
+      let barChartDataUrl: string | null = null;
+      let chartCanvasEl: HTMLCanvasElement | null = null;
+      const chartEl = document.getElementById('direction-chart-capture');
+      if (chartEl) {
+        const c = await html2canvas(chartEl as HTMLElement, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          logging: false,
+          useCORS: true,
+        });
+        chartCanvasEl = c;
+        barChartDataUrl = c.toDataURL('image/png');
       } else {
-        vithiFinalHeight = vithiFinalWidth / vithiCapturedAspect;
+        console.warn('Direction chart element not found for PDF capture');
       }
-      const vithiX = (pageWidth - vithiFinalWidth) / 2;
-      const vithiY = pdfTopOffset + 6;
-      pdf.addImage(vithiImage, 'PNG', vithiX, vithiY, vithiFinalWidth, vithiFinalHeight);
+      setShow16BarChart(false);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      pdf.setFontSize(16);
+      pdf.text("Page 6: 16 Direction Bar Graph Analysis", pageWidth / 2, 20, { align: 'center' });
+      if (barChartDataUrl && chartCanvasEl) {
+        // Maximize chart area within margins
+        const chartRatio = chartCanvasEl.height / chartCanvasEl.width;
+        const chartAvailableWidth = pageWidth - pdfMargin * 2;
+        const chartAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
+        let chartW = chartAvailableWidth;
+        let chartH = chartW * chartRatio;
+        if (chartH > chartAvailableHeight) {
+          chartH = chartAvailableHeight;
+          chartW = chartH / chartRatio;
+        }
+        const chartX = (pageWidth - chartW) / 2;
+        const chartY = pdfTopOffset + 6;
+        pdf.addImage(barChartDataUrl, 'PNG', chartX, chartY, chartW, chartH);
+      } else {
+        pdf.text("(Chart unavailable)", pageWidth / 2, 35, { align: 'center' });
+      }
       
       // Add user details to page
       addUserDetailsToPage(pdf, userDetails);
@@ -3018,6 +3016,48 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const marmaX = (pageWidth - marmaFinalWidth) / 2;
       const marmaY = pdfTopOffset + 6;
       pdf.addImage(marmaSthanImage, 'PNG', marmaX, marmaY, marmaFinalWidth, marmaFinalHeight);
+      
+      // Add user details to page
+      addUserDetailsToPage(pdf, userDetails);
+
+      // Page 8: Vithi Mandal (reset first, then enable only this)
+      pdf.addPage();
+      console.log('Capturing Page 8: Vithi Mandal');
+      await resetAllFeatures();
+      setShowVithiMandal(true);
+      if (completedPolygonPoints.length >= 3) {
+        const center = calculatePolygonCenterLocal(completedPolygonPoints);
+        drawVithiMandalPolygons(completedPolygonPoints, center);
+      }
+      ensureImageAtBack();
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const vW = pageWidth - pdfMargin * 2;
+      const vH = pageHeight - pdfTopOffset - pdfMargin;
+      const vTargetAspect = vW / vH;
+      const vithiImage = await captureCanvasState("Vithi Mandal", vTargetAspect);
+      
+      pdf.setFontSize(16);
+      pdf.text("Page 8: Vithi Mandal Zones", pageWidth / 2, 20, { align: 'center' });
+      const vithiAvailableWidth = pageWidth - pdfMargin * 2;
+      const vithiAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
+      // Use captured image dimensions for better height utilization
+      let vithiFinalWidth = vithiAvailableWidth;
+      let vithiFinalHeight = vithiAvailableHeight * 0.9;
+      
+      const tempVithiImg = new Image();
+      tempVithiImg.src = vithiImage;
+      await new Promise(resolve => tempVithiImg.onload = resolve);
+      
+      const vithiCapturedAspect = tempVithiImg.width / tempVithiImg.height;
+      
+      if (vithiFinalWidth / vithiFinalHeight > vithiCapturedAspect) {
+        vithiFinalWidth = vithiFinalHeight * vithiCapturedAspect;
+      } else {
+        vithiFinalHeight = vithiFinalWidth / vithiCapturedAspect;
+      }
+      const vithiX = (pageWidth - vithiFinalWidth) / 2;
+      const vithiY = pdfTopOffset + 6;
+      pdf.addImage(vithiImage, 'PNG', vithiX, vithiY, vithiFinalWidth, vithiFinalHeight);
       
       // Add user details to page
       addUserDetailsToPage(pdf, userDetails);
@@ -3199,31 +3239,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                     </div>
                   )}
 
-                  {/* Feature Toggles */}
+                      {/* Feature Toggles */}
                   {completedPolygonPoints.length >= 3 && (
                     <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
                       {/* Compact toggle layout */}
                       <div className="space-y-2">
-                        {/* 45 Devtas Toggle */}
-                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">45 Devtas</span>
-                          <Switch
-                            checked={showDevtas}
-                            onCheckedChange={toggleDevtasVisibility}
-                            className="data-[state=checked]:bg-blue-600 touch-manipulation scale-90 xl:scale-100"
-                          />
-                        </div>
-                        
-                        {/* 45 Devtas Names Toggle */}
-                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">45 Devtas Names</span>
-                          <Switch
-                            checked={showDevtaNamesDialog}
-                            onCheckedChange={toggleDevtaNamesDialog}
-                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
-                          />
-                        </div>
-                        
                         {/* 16 Directions Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                           <span className="text-xs xl:text-sm font-medium">16 Directions</span>
@@ -3254,6 +3274,25 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                           />
                         </div>
                         
+                        {/* 45 Devtas Toggle */}
+                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                          <span className="text-xs xl:text-sm font-medium">45 Devtas</span>
+                          <Switch
+                            checked={showDevtas}
+                            onCheckedChange={toggleDevtasVisibility}
+                            className="data-[state=checked]:bg-blue-600 touch-manipulation scale-90 xl:scale-100"
+                          />
+                        </div>
+                        
+                        {/* 45 Devtas Names Toggle */}
+                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                          <span className="text-xs xl:text-sm font-medium">45 Devtas Names</span>
+                          <Switch
+                            checked={showDevtaNamesDialog}
+                            onCheckedChange={toggleDevtaNamesDialog}
+                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
+                          />
+                        </div>
                         
                          {/* 16 Bar Chart Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
@@ -3265,16 +3304,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                           />
                         </div>
                         
-                        {/* Vithi Mandal Toggle */}
-                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">Vithi Mandal</span>
-                          <Switch
-                            checked={showVithiMandal}
-                            onCheckedChange={toggleVithiMandal}
-                            className="data-[state=checked]:bg-cyan-600 touch-manipulation scale-90 xl:scale-100"
-                          />
-                        </div>
-                        
                         {/* Marma Sthan Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                           <span className="text-xs xl:text-sm font-medium">Marma Sthan</span>
@@ -3282,6 +3311,16 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                             checked={showMarmaSthan}
                             onCheckedChange={toggleMarmaSthan}
                             className="data-[state=checked]:bg-red-600 touch-manipulation scale-90 xl:scale-100"
+                          />
+                        </div>
+                        
+                        {/* Vithi Mandal Toggle */}
+                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                          <span className="text-xs xl:text-sm font-medium">Vithi Mandal</span>
+                          <Switch
+                            checked={showVithiMandal}
+                            onCheckedChange={toggleVithiMandal}
+                            className="data-[state=checked]:bg-cyan-600 touch-manipulation scale-90 xl:scale-100"
                           />
                         </div>
                       </div>
