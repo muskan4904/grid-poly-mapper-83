@@ -3253,12 +3253,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
               <span>Area Analysis</span>
             </div>
             
-            {currentPolygon && (
+            {completedPolygonPoints.length >= 3 && (
               <div className="space-y-2 xl:space-y-3">
                 {/* Statistics removed per user request - keeping only feature controls below */}
                 
                 {/* Shared Rotation Controls */}
-                    {currentPolygon && (show16Directions || show32Gates || showDevtas || showMarmaSthan || show32Gates8_1Pad) && (
+                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || showMarmaSthan || show32Gates8_1Pad) && (
                     <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
@@ -3311,7 +3311,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                   )}
 
                   {/* Feature Toggles */}
-                  {currentPolygon && (
+                  {completedPolygonPoints.length >= 3 && (
                     <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
                       {/* Compact toggle layout */}
                       <div className="space-y-2">
@@ -3401,7 +3401,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
               </div>
             )}
             
-            {!currentPolygon && (
+            {completedPolygonPoints.length < 3 && (
               <div className="text-xs xl:text-sm text-muted-foreground text-center py-4 xl:py-6">
                 Draw a polygon to see analysis
               </div>
