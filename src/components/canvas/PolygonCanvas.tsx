@@ -525,7 +525,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
     const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 45 devtas
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
+    const GATES_8_1_PAD_OFFSET = -45; // Additional -45 degree offset for 32 Gates 8 1 Pad feature
+    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT + GATES_8_1_PAD_OFFSET) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
     
     const outerHits: Point[] = [];
@@ -3262,16 +3263,17 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                       <div className="flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
                         <div className="px-2 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800">
-                          {rotationDegree}°
+                          {show32Gates8_1Pad ? (rotationDegree + 45) % 360 : rotationDegree}°
                         </div>
                       </div>
                       
                       <div className="space-y-2">
                         <Slider
-                          value={[rotationDegree]}
+                          value={[show32Gates8_1Pad ? (rotationDegree + 45) % 360 : rotationDegree]}
                           onValueChange={(value) => {
-                            const newValue = Math.max(0, Math.min(360, Number(value[0])));
-                            setRotationDegree(newValue);
+                            const displayValue = Math.max(0, Math.min(360, Number(value[0])));
+                            const adjustedValue = show32Gates8_1Pad ? (displayValue - 45 + 360) % 360 : displayValue;
+                            setRotationDegree(adjustedValue);
                           }}
                           max={360}
                           min={0}
@@ -3282,15 +3284,16 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                         <div className="flex gap-2">
                           <Input
                             type="number"
-                            value={rotationDegree}
+                            value={show32Gates8_1Pad ? (rotationDegree + 45) % 360 : rotationDegree}
                             onChange={(e) => {
                               const value = e.target.value;
                               if (value === '') {
-                                setRotationDegree(0);
+                                setRotationDegree(show32Gates8_1Pad ? -45 : 0);
                                 return;
                               }
                               const numValue = parseInt(value) || 0;
-                              setRotationDegree(Math.max(0, Math.min(360, numValue)));
+                              const adjustedValue = show32Gates8_1Pad ? (numValue - 45 + 360) % 360 : numValue;
+                              setRotationDegree(Math.max(0, Math.min(360, adjustedValue)));
                             }}
                             min={0}
                             max={360}
