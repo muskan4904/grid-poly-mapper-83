@@ -558,31 +558,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         { x: outerHits[i].x, y: outerHits[i].y },
       ];
 
-      // Separator line coordinates
+      // Separator line coordinates - all lines should stay within the black polygon area (inner to black boundary)
       let lineStartX = innerHits[i].x;
       let lineStartY = innerHits[i].y;
       let lineEndX = outerHits[i].x;
       let lineEndY = outerHits[i].y;
-      
-      // For specific lines (4, 7, 12, 15, 20, 23, 28, 31), extend them from red polygon boundary to outer boundary
-      const specialLines = [3, 6, 11, 14, 19, 22, 27, 30]; // indices for lines 4, 7, 12, 15, 20, 23, 28, 31
-      if (specialLines.includes(i)) {
-        // Calculate the direction from center with rotation
-        const angle = i * angleStep + rotationRad + northOffset;
-        
-        // Find intersection with RED polygon boundary (start point)
-        const redBoundaryPoint = getRayIntersectionWithPolygon(center, angle, redPolygonPoints);
-        // Find intersection with main outer polygon boundary (end point)
-        const outerBoundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
-        
-        if (redBoundaryPoint && outerBoundaryPoint) {
-          // Start from red polygon boundary, end at outer boundary
-          lineStartX = redBoundaryPoint.x;
-          lineStartY = redBoundaryPoint.y;
-          lineEndX = outerBoundaryPoint.x;
-          lineEndY = outerBoundaryPoint.y;
-        }
-      }
 
       // Label coordinates
       const sliceCenterX = (innerHits[i].x + innerHits[j].x + outerHits[i].x + outerHits[j].x) / 4;
