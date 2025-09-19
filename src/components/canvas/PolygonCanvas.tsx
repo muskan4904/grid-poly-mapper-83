@@ -3158,11 +3158,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                       
                       <div className="space-y-2">
                         <Slider
-                          value={[show32Gates8_1Pad ? (rotationDegree + 45) % 360 : rotationDegree]}
+                          value={[rotationDegree]}
                           onValueChange={(value) => {
                             const displayValue = Math.max(0, Math.min(360, Number(value[0])));
-                            const adjustedValue = show32Gates8_1Pad ? (displayValue - 45 + 360) % 360 : displayValue;
-                            setRotationDegree(adjustedValue);
+                            setRotationDegree(displayValue);
                           }}
                           max={360}
                           min={0}
@@ -3173,16 +3172,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                         <div className="flex gap-2">
                           <Input
                             type="number"
-                            value={show32Gates8_1Pad ? (rotationDegree + 45) % 360 : rotationDegree}
+                            value={rotationDegree}
                             onChange={(e) => {
                               const value = e.target.value;
                               if (value === '') {
-                                setRotationDegree(show32Gates8_1Pad ? -45 : 0);
+                                setRotationDegree(0);
                                 return;
                               }
                               const numValue = parseInt(value) || 0;
-                              const adjustedValue = show32Gates8_1Pad ? (numValue - 45 + 360) % 360 : numValue;
-                              setRotationDegree(Math.max(0, Math.min(360, adjustedValue)));
+                              setRotationDegree(Math.max(0, Math.min(360, numValue)));
                             }}
                             min={0}
                             max={360}
