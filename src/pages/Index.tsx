@@ -47,7 +47,7 @@ const Index = () => {
               <img src={astroshaLogo} alt="Astroshala Logo" className="h-4 w-4 sm:h-5 sm:w-5 object-contain" />
             </div>
             <div>
-              <h1 className="text-base sm:text-xl font-bold text-foreground">Astroshala Vastu Software</h1>
+              <h1 className="text-base sm:text-xl font-bold text-foreground">VastuGrid</h1>
               <p className="text-xs text-muted-foreground">BY Somnath Banga</p>
             </div>
           </div>
