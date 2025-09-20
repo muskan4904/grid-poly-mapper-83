@@ -53,6 +53,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [showDevtaNamesDialog, setShowDevtaNamesDialog] = useState(false);
   const [showVithiMandal, setShowVithiMandal] = useState(false);
   const [rotationDegree, setRotationDegree] = useState(0);
+  const [debouncedRotationDegree, setDebouncedRotationDegree] = useState(0);
   const [directionLines, setDirectionLines] = useState<any[]>([]);
   const [gateLines, setGateLines] = useState<any[]>([]);
   const [completedPolygonPoints, setCompletedPolygonPoints] = useState<Point[]>([]);
@@ -70,6 +71,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     phone: '',
     address: ''
   });
+
+  // Debouncing effect for rotation to improve mobile performance
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedRotationDegree(rotationDegree);
+    }, 100); // 100ms debounce for mobile performance
+
+    return () => clearTimeout(timeoutId);
+  }, [rotationDegree]);
   
 
   // Initialize canvas with responsive dimensions
@@ -526,7 +536,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const ROTATION_OFFSET = -10; // System offset for directional alignment
     const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 45 devtas
     const GATES_8_1_PAD_BASE_OFFSET = -58; // Current position becomes 0 degrees baseline
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT + GATES_8_1_PAD_BASE_OFFSET) * Math.PI) / 180;
+    const rotationRad = ((debouncedRotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT + GATES_8_1_PAD_BASE_OFFSET) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
     
     const outerHits: Point[] = [];
@@ -658,7 +668,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     } else {
       fabricCanvas.renderAll();
     }
-  }, [fabricCanvas, rotationDegree, show32Gates8_1Pad, gates8_1PadSlices]);
+  }, [fabricCanvas, debouncedRotationDegree, show32Gates8_1Pad, gates8_1PadSlices]);
 
   const clear32Gates8_1PadSlices = useCallback(() => {
     if (!fabricCanvas) return;
@@ -696,7 +706,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
     const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 45 devtas
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
+    const rotationRad = ((debouncedRotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
     
     const outerHits: Point[] = [];
@@ -1167,7 +1177,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     } else {
       fabricCanvas.renderAll();
     }
-  }, [fabricCanvas, rotationDegree, gridLines]);
+  }, [fabricCanvas, debouncedRotationDegree, gridLines]);
 
   const clearGrid = () => {
     if (!fabricCanvas) return;
@@ -1448,7 +1458,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     const angleStep = (Math.PI * 2) / 16; // 22.5° each
     const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
+    const rotationRad = ((debouncedRotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
 
     const hasExisting = directionLines.length >= 32; // 16 lines + 16 labels
@@ -1523,7 +1533,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     } else {
       fabricCanvas.renderAll();
     }
-  }, [fabricCanvas, rotationDegree, show16Directions, directionLines]);
+  }, [fabricCanvas, debouncedRotationDegree, show16Directions, directionLines]);
 
   const toggle16Directions = () => {
     if (!fabricCanvas) return;
@@ -1549,7 +1559,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       draw16Directions(completedPolygonPoints, center);
     }
-  }, [rotationDegree, show16Directions, currentPolygon, completedPolygonPoints, fabricCanvas, draw16Directions]);
+  }, [debouncedRotationDegree, show16Directions, currentPolygon, completedPolygonPoints, fabricCanvas, draw16Directions]);
 
   // Clear all 32 gates lines and labels
   const clearGateLines = useCallback(() => {
@@ -1603,7 +1613,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const N = 32;
     const angleStep = (Math.PI * 2) / N; // 11.25° each
     const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
+    const rotationRad = ((debouncedRotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
 
     // Custom gate labels mapping
@@ -1686,7 +1696,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     } else {
       fabricCanvas.renderAll();
     }
-  }, [fabricCanvas, rotationDegree, show32Gates, gateLines]);
+  }, [fabricCanvas, debouncedRotationDegree, show32Gates, gateLines]);
 
   const toggle32Gates = () => {
     if (!fabricCanvas) return;
@@ -1720,7 +1730,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const N = 32;
     const angleStep = (Math.PI * 2) / N; // 11.25° each
     const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
+    const rotationRad = ((debouncedRotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
 
     // Calculate area for each of the 32 sectors
@@ -1823,7 +1833,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       draw32Gates(completedPolygonPoints, center);
     }
-  }, [rotationDegree, show32Gates, currentPolygon, completedPolygonPoints, fabricCanvas, draw32Gates]);
+  }, [debouncedRotationDegree, show32Gates, currentPolygon, completedPolygonPoints, fabricCanvas, draw32Gates]);
 
 
   // Clear Marma Sthan lines
@@ -1874,7 +1884,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
     const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 45 devtas
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
+    const rotationRad = ((debouncedRotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
 
     // Define the block pairs to connect
@@ -2017,7 +2027,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     setMarmaSthanLines(newLines);
     fabricCanvas.renderAll();
     console.log(`Marma Sthan: Red lines with ${intersectionPoints.length} intersection dots drawn`);
-  }, [fabricCanvas, showMarmaSthan, marmaSthanLines, rotationDegree]);
+  }, [fabricCanvas, showMarmaSthan, marmaSthanLines, debouncedRotationDegree]);
 
   // Helper function to find intersection point of a ray with polygon boundary
   const findPolygonBoundaryIntersection = (center: Point, direction: Point, polygon: Point[]): Point => {
@@ -2094,7 +2104,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       drawMarmaSthan(completedPolygonPoints, center);
     }
-  }, [rotationDegree, showMarmaSthan, currentPolygon, completedPolygonPoints, fabricCanvas, drawMarmaSthan]);
+  }, [debouncedRotationDegree, showMarmaSthan, currentPolygon, completedPolygonPoints, fabricCanvas, drawMarmaSthan]);
 
   // Smooth updates for 45 devtas rotation
   useEffect(() => {
@@ -2102,7 +2112,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       drawRingSlices(completedPolygonPoints, center);
     }
-  }, [rotationDegree, showDevtas, currentPolygon, completedPolygonPoints, fabricCanvas]);
+  }, [debouncedRotationDegree, showDevtas, currentPolygon, completedPolygonPoints, fabricCanvas]);
 
   // Smooth updates for 32 gates 8 1 pad rotation  
   useEffect(() => {
@@ -2110,7 +2120,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       draw32Gates8_1PadSlices(completedPolygonPoints, center);
     }
-  }, [rotationDegree, show32Gates8_1Pad, completedPolygonPoints, fabricCanvas]);
+  }, [debouncedRotationDegree, show32Gates8_1Pad, completedPolygonPoints, fabricCanvas]);
 
   // Smooth updates for vithi mandal rotation
   useEffect(() => {
@@ -2118,7 +2128,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       drawVithiMandalPolygons(completedPolygonPoints, center);
     }
-  }, [rotationDegree, showVithiMandal, currentPolygon, completedPolygonPoints, fabricCanvas]);
+  }, [debouncedRotationDegree, showVithiMandal, currentPolygon, completedPolygonPoints, fabricCanvas]);
 
   const clearDevtaZones = () => {
     if (!fabricCanvas) return;
@@ -3269,7 +3279,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                           value={[rotationDegree]}
                           onValueChange={(value) => {
                             const displayValue = Math.max(0, Math.min(360, Number(value[0])));
+                            setIsRotating(true);
                             setRotationDegree(displayValue);
+                            // Clear rotating state after user stops interacting
+                            setTimeout(() => setIsRotating(false), 200);
                           }}
                           max={360}
                           min={0}
