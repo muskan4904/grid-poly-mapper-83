@@ -2897,15 +2897,36 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const devtaNamesEl = document.querySelector('[data-dialog-content]');
       if (devtaNamesEl) {
         console.log('Found devta names dialog element for PDF capture');
+        
+        // Temporarily remove scroll constraints to capture full content
+        const scrollContainer = devtaNamesEl.querySelector('.overflow-y-auto') as HTMLElement;
+        const originalMaxHeight = scrollContainer?.style.maxHeight;
+        const originalOverflow = scrollContainer?.style.overflow;
+        
+        if (scrollContainer) {
+          (scrollContainer as HTMLElement).style.maxHeight = 'none';
+          (scrollContainer as HTMLElement).style.overflow = 'visible';
+        }
+        
+        // Wait for layout adjustment
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         const c = await html2canvas(devtaNamesEl as HTMLElement, {
           backgroundColor: '#ffffff',
           scale: 2,
           logging: false,
           useCORS: true,
+          height: undefined, // Let it capture full height
         });
         devtaNamesCanvasEl = c;
         devtaNamesDataUrl = c.toDataURL('image/png');
         console.log('Successfully captured devta names dialog');
+        
+        // Restore original scroll constraints
+        if (scrollContainer) {
+          (scrollContainer as HTMLElement).style.maxHeight = originalMaxHeight || '';
+          (scrollContainer as HTMLElement).style.overflow = originalOverflow || '';
+        }
       } else {
         console.warn('Devta names dialog element not found for PDF capture');
       }
