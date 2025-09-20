@@ -105,8 +105,8 @@ export const DevtaNamesDialog: React.FC<DevtaNamesDialogProps> = ({ isOpen, onCl
           </div>
         </DialogHeader>
         
-        <div className="overflow-y-auto max-h-[calc(80vh-120px)]">
-          <div ref={chartRef} className="bg-background p-6">
+        <div className="overflow-y-auto max-h-[calc(80vh-120px)]" data-scroll-container>
+          <div ref={chartRef} className="bg-background p-6" data-devta-names-content>
             <h2 className="text-xl font-semibold text-center mb-6 text-foreground">45 Devtas Names</h2>
             
             <div className="grid grid-cols-3 gap-x-8 gap-y-2">

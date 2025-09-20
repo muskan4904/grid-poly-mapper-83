@@ -2894,39 +2894,84 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       await new Promise(resolve => setTimeout(resolve, 1000));
       let devtaNamesDataUrl: string | null = null;
       let devtaNamesCanvasEl: HTMLCanvasElement | null = null;
-      const devtaNamesEl = document.querySelector('[data-dialog-content]');
+      const devtaNamesEl = document.querySelector('[data-dialog-content]') as HTMLElement | null;
       if (devtaNamesEl) {
         console.log('Found devta names dialog element for PDF capture');
         
-        // Temporarily remove scroll constraints to capture full content
-        const scrollContainer = devtaNamesEl.querySelector('.overflow-y-auto') as HTMLElement;
+        // Temporarily remove scroll/height constraints on the dialog itself
+        const originalDialogMaxHeight = devtaNamesEl.style.maxHeight;
+        const originalDialogOverflow = devtaNamesEl.style.overflow;
+        const originalDialogHeight = devtaNamesEl.style.height;
+        devtaNamesEl.style.maxHeight = 'none';
+        devtaNamesEl.style.overflow = 'visible';
+        devtaNamesEl.style.height = 'auto';
+        
+        // Temporarily remove scroll constraints on the inner scroll container
+        const scrollContainer = devtaNamesEl.querySelector('[data-scroll-container]') as HTMLElement | null;
         const originalMaxHeight = scrollContainer?.style.maxHeight;
         const originalOverflow = scrollContainer?.style.overflow;
-        
+        const originalHeight = scrollContainer?.style.height;
         if (scrollContainer) {
-          (scrollContainer as HTMLElement).style.maxHeight = 'none';
-          (scrollContainer as HTMLElement).style.overflow = 'visible';
+          scrollContainer.style.maxHeight = 'none';
+          scrollContainer.style.overflow = 'visible';
+          scrollContainer.style.height = 'auto';
         }
+        
+        // Choose the capture target (inner content if available)
+        const captureEl = (devtaNamesEl.querySelector('[data-devta-names-content]') as HTMLElement) || devtaNamesEl;
         
         // Wait for layout adjustment
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        const c = await html2canvas(devtaNamesEl as HTMLElement, {
+        const fullWidth = captureEl.scrollWidth;
+        const fullHeight = captureEl.scrollHeight;
+        
+        // Clone content into an offscreen container to avoid clipping from ancestors
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'fixed';
+        tempContainer.style.left = '-10000px';
+        tempContainer.style.top = '0';
+        tempContainer.style.background = '#ffffff';
+        tempContainer.style.padding = '24px';
+        tempContainer.style.width = fullWidth + 'px';
+        tempContainer.style.height = 'auto';
+        const cloned = captureEl.cloneNode(true) as HTMLElement;
+        cloned.style.width = '100%';
+        tempContainer.appendChild(cloned);
+        document.body.appendChild(tempContainer);
+        
+        // Wait for layout paint
+        await new Promise(r => setTimeout(r, 100));
+        
+        const c = await html2canvas(tempContainer as HTMLElement, {
           backgroundColor: '#ffffff',
           scale: 2,
           logging: false,
           useCORS: true,
-          height: undefined, // Let it capture full height
+          width: tempContainer.scrollWidth,
+          height: tempContainer.scrollHeight,
+          windowWidth: Math.max(document.documentElement.clientWidth, tempContainer.scrollWidth),
+          windowHeight: Math.max(document.documentElement.clientHeight, tempContainer.scrollHeight),
+          scrollX: 0,
+          scrollY: -window.scrollY,
         });
+        
+        // Cleanup temp container
+        document.body.removeChild(tempContainer);
+        
         devtaNamesCanvasEl = c;
         devtaNamesDataUrl = c.toDataURL('image/png');
-        console.log('Successfully captured devta names dialog');
+        console.log('Successfully captured devta names dialog', { fullWidth, fullHeight });
         
         // Restore original scroll constraints
         if (scrollContainer) {
-          (scrollContainer as HTMLElement).style.maxHeight = originalMaxHeight || '';
-          (scrollContainer as HTMLElement).style.overflow = originalOverflow || '';
+          scrollContainer.style.maxHeight = originalMaxHeight || '';
+          scrollContainer.style.overflow = originalOverflow || '';
+          scrollContainer.style.height = originalHeight || '';
         }
+        devtaNamesEl.style.maxHeight = originalDialogMaxHeight || '';
+        devtaNamesEl.style.overflow = originalDialogOverflow || '';
+        devtaNamesEl.style.height = originalDialogHeight || '';
       } else {
         console.warn('Devta names dialog element not found for PDF capture');
       }
