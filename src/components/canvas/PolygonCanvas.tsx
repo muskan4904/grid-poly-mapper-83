@@ -2891,11 +2891,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       console.log('Capturing Page 5: 45 Devtas Names');
       await resetAllFeatures();
       setShowDevtaNamesDialog(true);
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       let devtaNamesDataUrl: string | null = null;
       let devtaNamesCanvasEl: HTMLCanvasElement | null = null;
       const devtaNamesEl = document.querySelector('[data-dialog-content]');
-      if (devtaNamesEl && showDevtaNamesDialog) {
+      if (devtaNamesEl) {
+        console.log('Found devta names dialog element for PDF capture');
         const c = await html2canvas(devtaNamesEl as HTMLElement, {
           backgroundColor: '#ffffff',
           scale: 2,
@@ -2904,6 +2905,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         });
         devtaNamesCanvasEl = c;
         devtaNamesDataUrl = c.toDataURL('image/png');
+        console.log('Successfully captured devta names dialog');
       } else {
         console.warn('Devta names dialog element not found for PDF capture');
       }
