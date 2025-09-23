@@ -2107,10 +2107,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   // Smooth updates for 32 gates 8 1 pad rotation  
   useEffect(() => {
     if (show32Gates8_1Pad && completedPolygonPoints.length >= 3 && fabricCanvas) {
+      // Clear existing objects first to ensure clean update
+      clear32Gates8_1PadSlices();
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       draw32Gates8_1PadSlices(completedPolygonPoints, center);
     }
-  }, [rotationDegree, show32Gates8_1Pad, completedPolygonPoints, fabricCanvas]);
+  }, [rotationDegree, show32Gates8_1Pad, completedPolygonPoints, fabricCanvas, draw32Gates8_1PadSlices, clear32Gates8_1PadSlices]);
 
   // Smooth updates for vithi mandal rotation
   useEffect(() => {
