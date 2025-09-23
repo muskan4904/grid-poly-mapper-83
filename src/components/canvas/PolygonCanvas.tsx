@@ -613,6 +613,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           evented: false,
           objectCaching: false
         });
+        (slice as any).isGates8_1Pad = true;
         fabricCanvas.add(slice);
         newObjects.push(slice);
 
@@ -626,6 +627,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             objectCaching: false
           }
         );
+        (sep as any).isGates8_1Pad = true;
         fabricCanvas.add(sep);
         newObjects.push(sep);
 
@@ -641,6 +643,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           textAlign: 'center',
           objectCaching: false
         });
+        (numberLabel as any).isGates8_1Pad = true;
         fabricCanvas.add(numberLabel);
         newObjects.push(numberLabel);
       }
@@ -663,15 +666,20 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const clear32Gates8_1PadSlices = useCallback(() => {
     if (!fabricCanvas) return;
     
+    // Remove tracked objects first
     gates8_1PadSlices.forEach(obj => {
       fabricCanvas.remove(obj);
     });
     setGates8_1PadSlices([]);
     
+    // Additionally, remove any lingering objects tagged as part of this feature (survive HMR/state resets)
+    const toRemove = (fabricCanvas.getObjects() as any[]).filter((obj: any) => (obj as any).isGates8_1Pad);
+    toRemove.forEach((obj: any) => fabricCanvas.remove(obj));
+    
     // Force render
     fabricCanvas.renderAll();
     
-    console.log('32 gates 8 1 pad slices cleared, remaining objects:', fabricCanvas.getObjects().length);
+    console.log('32 gates 8 1 pad slices cleared (including tagged), remaining objects:', fabricCanvas.getObjects().length);
   }, [fabricCanvas, gates8_1PadSlices]);
 
   // Create 32 ring slices between main (outer) polygon and the medium (inner) polygon  
