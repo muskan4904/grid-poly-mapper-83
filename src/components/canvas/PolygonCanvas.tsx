@@ -1884,6 +1884,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
   // Draw 32 entrances 81 pad - radial lines + labels (copied from 45 Devtas line logic, without red polygon)
   const draw32Entrances = useCallback((polygonPoints: Point[], center: Point) => {
+    console.log('[32 Entrances] draw called. pts=', polygonPoints.length, 'center=', center);
     if (!fabricCanvas) return;
 
     // Clear existing entrance visuals
@@ -1946,7 +1947,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     setEntranceLines(newObjs);
-    // Keep all new lines/labels above the map image
+    // Ensure background image stays behind
+    const bg = fabricCanvas.getObjects().find(o => o instanceof FabricImage) as FabricImage | undefined;
+    if (bg) fabricCanvas.sendObjectToBack(bg);
+    // Ensure the new lines/labels are above
     newObjs.forEach(obj => fabricCanvas.bringObjectToFront(obj));
     fabricCanvas.renderAll();
   }, [fabricCanvas, entranceLines, rotationDegree]);
@@ -1991,12 +1995,17 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
   // Toggle 32 entrances visibility
   const toggle32Entrances = (newShow32Entrances: boolean) => {
+    console.log('[32 Entrances] toggle ->', newShow32Entrances, {
+      hasCanvas: !!fabricCanvas,
+      completedPts: completedPolygonPoints.length,
+    });
     setShow32Entrances(newShow32Entrances);
     
     if (!newShow32Entrances) {
       clear32EntranceLines();
     } else if (completedPolygonPoints.length >= 3) {
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
+      console.log('[32 Entrances] drawing after toggle. center=', center);
       draw32Entrances(completedPolygonPoints, center);
     }
 
