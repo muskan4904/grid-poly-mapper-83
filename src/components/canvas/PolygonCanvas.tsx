@@ -1882,18 +1882,17 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     return closestPoint;
   };
 
-  // Draw 32 entrances 81 pad - radial lines + labels (copied from 45 Devtas line logic, without red polygon)
+  // Draw 32 entrances 81 pad - copy 45 Devtas ring-slice mechanic (no red polygon shown)
   const draw32Entrances = useCallback((polygonPoints: Point[], center: Point) => {
     console.log('[32 Entrances] draw called. pts=', polygonPoints.length, 'center=', center);
     if (!fabricCanvas) return;
 
-    // Clear existing entrance visuals
+    // Remove previously tracked entrance objects
     if (entranceLines.length > 0) {
       entranceLines.forEach(obj => fabricCanvas.contains(obj) && fabricCanvas.remove(obj));
-      setEntranceLines([]);
     }
 
-    // Medium inner polygon (same scale as 45 Devtas inner ring), used only to position labels if needed
+    // Inner ring uses same scale as 45 Devtas medium polygon (62% area)
     const innerScale = Math.sqrt(0.62);
     const innerPolygonPoints = polygonPoints.map(p => ({
       x: center.x + (p.x - center.x) * innerScale,
@@ -1902,37 +1901,68 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     const N = 32;
     const angleStep = (Math.PI * 2) / N;
-    const ROTATION_OFFSET = -10; // same base offset as system
-    const DEVTA_ADJUSTMENT = 4;  // keep in sync with 45 Devtas
+    const ROTATION_OFFSET = -10; // keep system baseline
+    const DEVTA_ADJUSTMENT = 4;  // align with 45 Devtas baseline
     const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
-    const northOffset = -Math.PI / 2; // 0° = North (up)
+    const northOffset = -Math.PI / 2;
+
+    const outerHits: Point[] = [];
+    const innerHits: Point[] = [];
+
+    for (let i = 0; i < N; i++) {
+      const a = i * angleStep + rotationRad + northOffset;
+      const ho = getRayIntersectionWithPolygon(center, a, polygonPoints);
+      const hi = getRayIntersectionWithPolygon(center, a, innerPolygonPoints);
+      if (!ho || !hi) continue;
+      outerHits.push(ho);
+      innerHits.push(hi);
+    }
 
     const newObjs: any[] = [];
 
-    for (let i = 0; i < N; i++) {
-      const angle = i * angleStep + rotationRad + northOffset;
+    // Build slices + separator lines + labels (exact structure used by 45 Devtas)
+    for (let i = 0; i < outerHits.length; i++) {
+      const j = (i + 1) % outerHits.length;
+      const verts = [
+        { x: innerHits[i].x, y: innerHits[i].y },
+        { x: innerHits[j].x, y: innerHits[j].y },
+        { x: outerHits[j].x, y: outerHits[j].y },
+        { x: outerHits[i].x, y: outerHits[i].y },
+      ];
 
-      // Boundary hit on outer polygon
-      const outerHit = getRayIntersectionWithPolygon(center, angle, polygonPoints);
-      if (!outerHit) continue;
-
-      // 1) Draw radial line from center to outer boundary
-      const line = new Line([center.x, center.y, outerHit.x, outerHit.y], {
+      // Slice polygon (transparent fill, black edge)
+      const slice = new Polygon(verts, {
+        fill: 'transparent',
         stroke: '#000000',
         strokeWidth: 2,
         selectable: false,
         evented: false,
         objectCaching: false,
       });
-      fabricCanvas.add(line);
-      newObjs.push(line);
+      fabricCanvas.add(slice);
+      newObjs.push(slice);
 
-      // 2) Place label around 60% from center to boundary
-      const labelX = center.x + (outerHit.x - center.x) * 0.6;
-      const labelY = center.y + (outerHit.y - center.y) * 0.6;
+      // Separator radial line (from inner ring to outer boundary)
+      const sep = new Line([
+        innerHits[i].x, innerHits[i].y,
+        outerHits[i].x, outerHits[i].y,
+      ], {
+        stroke: '#000000',
+        strokeWidth: 2,
+        selectable: false,
+        evented: false,
+        objectCaching: false,
+      });
+      fabricCanvas.add(sep);
+      newObjs.push(sep);
+
+      // Center of slice for label
+      const cx = (innerHits[i].x + innerHits[j].x + outerHits[i].x + outerHits[j].x) / 4;
+      const cy = (innerHits[i].y + innerHits[j].y + outerHits[i].y + outerHits[j].y) / 4;
+
       const label = new Text(String(i + 1), {
-        left: labelX - 8,
-        top: labelY - 8,
+        left: cx - 8,
+        top: cy - 8,
         fontSize: 16,
         fill: '#000000',
         fontFamily: 'Arial',
@@ -1947,11 +1977,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     setEntranceLines(newObjs);
-    // Ensure background image stays behind
+
+    // Keep background image at back and bring our objects to front
     const bg = fabricCanvas.getObjects().find(o => o instanceof FabricImage) as FabricImage | undefined;
     if (bg) fabricCanvas.sendObjectToBack(bg);
-    // Ensure the new lines/labels are above
     newObjs.forEach(obj => fabricCanvas.bringObjectToFront(obj));
+
     fabricCanvas.renderAll();
   }, [fabricCanvas, entranceLines, rotationDegree]);
 
