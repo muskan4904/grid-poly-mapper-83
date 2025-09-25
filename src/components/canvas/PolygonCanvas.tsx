@@ -2054,7 +2054,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
       // Test square labels mapping
       const testSquareLabels: { [key: number]: string } = {
-        33: 'N4',
+        1: 'N4',
         2: 'N5',
         3: 'N6',
         4: 'N7',
