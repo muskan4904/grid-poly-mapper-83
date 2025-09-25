@@ -70,6 +70,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     phone: '',
     address: ''
   });
+  const [showTest, setShowTest] = useState(false);
+  const [testPolygon, setTestPolygon] = useState<Polygon | null>(null);
+  const [testMediumPolygon, setTestMediumPolygon] = useState<Polygon | null>(null);
+  const [testGridLines, setTestGridLines] = useState<any[]>([]);
   
 
   // Initialize canvas with responsive dimensions
@@ -396,8 +400,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       drawMarmaSthan(points, center);
     }
 
+    // Draw Test feature if enabled
+    if (showTest) {
+      drawTestSmallPolygon(points, center);
+      drawTestMediumPolygon(points, center);
+      drawTestRingSlices(points, center);
+    }
+
     fabricCanvas.renderAll();
-    console.log("Polygon completed. Canvas objects:", fabricCanvas.getObjects().length, "Show features:", { show45Devtas, show16Directions, show32Gates, showVithiMandal, showMarmaSthan });
+    console.log("Polygon completed. Canvas objects:", fabricCanvas.getObjects().length, "Show features:", { show45Devtas, show16Directions, show32Gates, showVithiMandal, showMarmaSthan, showTest });
     setIsDrawing(false);
     setPolygonPoints([]);
     setCompletedPolygonPoints(points); // Store completed polygon points
@@ -1854,6 +1865,499 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     console.log(`Marma Sthan: Red lines with ${intersectionPoints.length} intersection dots drawn`);
   }, [fabricCanvas, showMarmaSthan, marmaSthanLines, rotationDegree]);
 
+  // Test feature functions - exact duplicate of 45 devtas
+  const drawTestSmallPolygon = (polygonPoints: Point[], center: Point) => {
+    if (!fabricCanvas) return;
+
+    // Remove existing test small polygon
+    if (testPolygon) {
+      fabricCanvas.remove(testPolygon);
+      setTestPolygon(null);
+    }
+
+    // Calculate scale factor for 11% area (√0.11 ≈ 0.331)
+    const areaScaleFactor = 0.11;
+    const linearScaleFactor = Math.sqrt(areaScaleFactor);
+
+    console.log('Creating test small polygon with scale factor:', linearScaleFactor);
+    console.log('Original polygon center:', center);
+    console.log('Original polygon points:', polygonPoints);
+
+    // Scale polygon points around the center
+    const scaledPoints = polygonPoints.map(point => {
+      // Translate to origin (center)
+      const translatedX = point.x - center.x;
+      const translatedY = point.y - center.y;
+      
+      // Scale
+      const scaledX = translatedX * linearScaleFactor;
+      const scaledY = translatedY * linearScaleFactor;
+      
+      // Translate back to center position
+      return {
+        x: scaledX + center.x,
+        y: scaledY + center.y
+      };
+    });
+
+    console.log('Scaled test polygon points:', scaledPoints);
+
+    // Create smaller polygon with transparent fill and red boundary only
+    const fabricPoints = scaledPoints.map(p => ({ x: p.x, y: p.y }));
+    const testSmallPoly = new Polygon(fabricPoints, {
+      fill: 'transparent', // No fill - transparent inside
+      stroke: '#ff0000', // Red border only
+      strokeWidth: 3,
+      selectable: false,
+      evented: false
+    });
+
+    // Add and ensure it's on top
+    fabricCanvas.add(testSmallPoly);
+    
+    // Make sure it's rendered on top of everything except center point
+    fabricCanvas.bringObjectToFront(testSmallPoly);
+    
+    setTestPolygon(testSmallPoly);
+    fabricCanvas.renderAll();
+
+    const smallArea = calculatePolygonArea(scaledPoints);
+    const originalArea = calculatePolygonArea(polygonPoints);
+    const actualPercentage = (smallArea / originalArea) * 100;
+    
+    console.log('Original polygon area:', originalArea);
+    console.log('Test small polygon area:', smallArea);
+    console.log('Actual percentage:', actualPercentage);
+    
+    toast.success(`Test small polygon created with ${actualPercentage.toFixed(1)}% area (${smallArea.toFixed(2)} sq units)`);
+  };
+
+  const drawTestMediumPolygon = (polygonPoints: Point[], center: Point) => {
+    if (!fabricCanvas) return;
+
+    // Remove existing test medium polygon
+    if (testMediumPolygon) {
+      fabricCanvas.remove(testMediumPolygon);
+      setTestMediumPolygon(null);
+    }
+
+    // Calculate scale factor for 62% area (√0.62 ≈ 0.787)
+    const areaScaleFactor = 0.62;
+    const linearScaleFactor = Math.sqrt(areaScaleFactor);
+
+    console.log('Creating test medium polygon with scale factor:', linearScaleFactor);
+
+    // Position medium polygon at the same center as the main polygon and small polygon
+    // This ensures equal spacing from all sides of the main polygon
+    const scaledPoints = polygonPoints.map(point => {
+      // Translate to origin (same center as main polygon)
+      const translatedX = point.x - center.x;
+      const translatedY = point.y - center.y;
+      
+      // Scale
+      const scaledX = translatedX * linearScaleFactor;
+      const scaledY = translatedY * linearScaleFactor;
+      
+      // Translate back to center position (same center as main polygon)
+      return {
+        x: scaledX + center.x,
+        y: scaledY + center.y
+      };
+    });
+
+    console.log('Test medium polygon points:', scaledPoints);
+
+    // Create medium polygon with transparent fill and black boundary
+    const fabricPoints = scaledPoints.map(p => ({ x: p.x, y: p.y }));
+    const testMediumPoly = new Polygon(fabricPoints, {
+      fill: 'transparent', // No fill - transparent inside
+      stroke: '#000000', // Black border
+      strokeWidth: 3,
+      selectable: false,
+      evented: false
+    });
+
+    // Add and ensure proper layering
+    fabricCanvas.add(testMediumPoly);
+    
+    // Make sure it's rendered properly in the layer order
+    fabricCanvas.bringObjectToFront(testMediumPoly);
+    
+    setTestMediumPolygon(testMediumPoly);
+    fabricCanvas.renderAll();
+
+    const mediumArea = calculatePolygonArea(scaledPoints);
+    const originalArea = calculatePolygonArea(polygonPoints);
+    const actualPercentage = (mediumArea / originalArea) * 100;
+    
+    console.log('Test medium polygon area:', mediumArea);
+    console.log('Test medium actual percentage:', actualPercentage);
+    
+    toast.success(`Test medium polygon created with ${actualPercentage.toFixed(1)}% area (${mediumArea.toFixed(2)} sq units)`);
+  };
+
+  // Create 32 ring slices between main (outer) polygon and the medium (inner) polygon - Test version
+  const drawTestRingSlices = useCallback((polygonPoints: Point[], center: Point) => {
+    if (!fabricCanvas) return;
+
+    // Recompute the inner (second layer) polygon using the same scale as drawTestMediumPolygon
+    const innerScale = Math.sqrt(0.62); // ~0.787
+    const innerPolygonPoints = polygonPoints.map((p) => ({
+      x: center.x + (p.x - center.x) * innerScale,
+      y: center.y + (p.y - center.y) * innerScale,
+    }));
+
+    // Also compute the red small polygon points for boundary intersection
+    const redPolygonScale = Math.sqrt(0.11); // ~0.331 (same as drawTestSmallPolygon)
+    const redPolygonPoints = polygonPoints.map((p) => ({
+      x: center.x + (p.x - center.x) * redPolygonScale,
+      y: center.y + (p.y - center.y) * redPolygonScale,
+    }));
+
+    const N = 32;
+    const angleStep = (Math.PI * 2) / N;
+    const ROTATION_OFFSET = -10; // System offset for directional alignment
+    const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for test feature
+    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
+    const northOffset = -Math.PI / 2; // 0° = North (up)
+    
+    const outerHits: Point[] = [];
+    const innerHits: Point[] = [];
+
+    for (let i = 0; i < N; i++) {
+      const a = i * angleStep + rotationRad + northOffset;
+      const ho = getRayIntersectionWithPolygon(center, a, polygonPoints);
+      const hi = getRayIntersectionWithPolygon(center, a, innerPolygonPoints);
+      if (!ho || !hi) continue;
+      outerHits.push(ho);
+      innerHits.push(hi);
+    }
+
+    // Check if existing objects need updating vs creating new ones
+    const expectedObjectCount = outerHits.length * 3; // slices + lines + labels
+    const hasExisting = testGridLines.length >= expectedObjectCount;
+    const newObjects: any[] = [];
+
+    // Disable selection for performance while updating
+    fabricCanvas.selection = false;
+
+    for (let i = 0; i < outerHits.length; i++) {
+      const j = (i + 1) % outerHits.length;
+      const verts = [
+        { x: innerHits[i].x, y: innerHits[i].y },
+        { x: innerHits[j].x, y: innerHits[j].y },
+        { x: outerHits[j].x, y: outerHits[j].y },
+        { x: outerHits[i].x, y: outerHits[i].y },
+      ];
+
+      // Separator line coordinates
+      let lineStartX = innerHits[i].x;
+      let lineStartY = innerHits[i].y;
+      let lineEndX = outerHits[i].x;
+      let lineEndY = outerHits[i].y;
+      
+      // For specific lines (4, 7, 12, 15, 20, 23, 28, 31), extend them from red polygon boundary to outer boundary
+      const specialLines = [3, 6, 11, 14, 19, 22, 27, 30]; // indices for lines 4, 7, 12, 15, 20, 23, 28, 31
+      if (specialLines.includes(i)) {
+        // Calculate the direction from center with rotation
+        const angle = i * angleStep + rotationRad + northOffset;
+        
+        // Find intersection with RED polygon boundary (start point)
+        const redBoundaryPoint = getRayIntersectionWithPolygon(center, angle, redPolygonPoints);
+        // Find intersection with main outer polygon boundary (end point)
+        const outerBoundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
+        
+        if (redBoundaryPoint && outerBoundaryPoint) {
+          // Start from red polygon boundary, end at outer boundary
+          lineStartX = redBoundaryPoint.x;
+          lineStartY = redBoundaryPoint.y;
+          lineEndX = outerBoundaryPoint.x;
+          lineEndY = outerBoundaryPoint.y;
+        }
+      }
+
+      // Label coordinates
+      const sliceCenterX = (innerHits[i].x + innerHits[j].x + outerHits[i].x + outerHits[j].x) / 4;
+      const sliceCenterY = (innerHits[i].y + innerHits[j].y + outerHits[i].y + outerHits[j].y) / 4;
+
+        // Create mapping for 45 devta numbering as per user requirements
+        const getDevtaNumber = (index: number) => {
+          const numberMapping: { [key: number]: number } = {
+            1: 38, 2: 43, 3: 44, 4: 45, 5: 14, 6: 15, 7: 16, 8: 17, 9: 18, 10: 19,
+            11: 20, 12: 21, 13: 22, 14: 23, 15: 24, 16: 25, 17: 26, 18: 27, 19: 28, 20: 29,
+            21: 30, 22: 31, 23: 32, 24: 33, 25: 34, 26: 35, 27: 36, 28: 37, 29: 38, 30: 39,
+            31: 40, 32: 41, 33: 6, 34: 7, 35: 2, 36: 8, 37: 9, 38: 3, 39: 10, 40: 11,
+            41: 4, 42: 12, 43: 13, 44: 5
+          };
+          return numberMapping[index] || index;
+        };
+
+        if (hasExisting) {
+          // Update existing objects
+          const sliceIndex = 3 * i;
+          const lineIndex = 3 * i + 1;  
+          const labelIndex = 3 * i + 2;
+
+          if (testGridLines[sliceIndex]) {
+            (testGridLines[sliceIndex] as Polygon).set({ points: verts });
+          }
+
+          if (testGridLines[lineIndex]) {
+            (testGridLines[lineIndex] as Line).set({
+              x1: lineStartX, y1: lineStartY, 
+              x2: lineEndX, y2: lineEndY
+            });
+          }
+
+          if (testGridLines[labelIndex]) {
+            (testGridLines[labelIndex] as Text).set({
+              left: sliceCenterX - 8,
+              top: sliceCenterY - 8,
+              text: String(getDevtaNumber(i + 1))
+            });
+          }
+        } else {
+        // Create new objects
+        const slice = new Polygon(verts, {
+          fill: 'transparent',
+          stroke: '#000000',
+          strokeWidth: 2,
+          selectable: false,
+          evented: false,
+          objectCaching: false
+        });
+        fabricCanvas.add(slice);
+        newObjects.push(slice);
+
+        const sep = new Line(
+          [lineStartX, lineStartY, lineEndX, lineEndY],
+          {
+            stroke: '#000000',
+            strokeWidth: 2,
+            selectable: false,
+            evented: false,
+            objectCaching: false
+          }
+        );
+        fabricCanvas.add(sep);
+        newObjects.push(sep);
+
+
+        const numberLabel = new Text(String(getDevtaNumber(i + 1)), {
+          left: sliceCenterX - 8,
+          top: sliceCenterY - 8,
+          fontSize: 16,
+          fill: '#000000',
+          fontFamily: 'Arial',
+          fontWeight: 'bold',
+          selectable: false,
+          evented: false,
+          textAlign: 'center',
+          objectCaching: false
+        });
+        fabricCanvas.add(numberLabel);
+        newObjects.push(numberLabel);
+      }
+    }
+
+    // Update existing objects or track new ones for state
+    if (!hasExisting && newObjects.length > 0) {
+      setTestGridLines(newObjects);
+    }
+
+
+    // Add numbers 33-44 between red polygon and black polygon boundaries in fixed radial sectors
+    // Split regions 33, 36, 38, 40 diagonally into two halves, creating 12 regions total (33-44)
+    const specialLines = [3, 6, 11, 14, 19, 22, 27, 30]; // 8 lines creating base sectors
+    let regionNumber = 33;
+    
+    // Create mapping for region numbers as per user requirements
+    const getRegionNumber = (regionNum: number) => {
+      const regionMapping: { [key: number]: number } = {
+        33: 6, 34: 7, 35: 2, 36: 8, 37: 9, 38: 37, 39: 10, 40: 11, 41: 4, 42: 12, 43: 13, 44: 5
+      };
+      return regionMapping[regionNum] || regionNum;
+    };
+    
+    // Process each sector, splitting sectors at k=0, k=2, k=4, k=6 diagonally into two halves
+    for (let k = 0; k < specialLines.length; k++) {
+      const currentLineIndex = specialLines[k];
+      const nextLineIndex = specialLines[(k + 1) % specialLines.length];
+      
+      // Calculate the center angle for this sector (without rotation applied yet)
+      const sectorAngleStart = currentLineIndex * angleStep;
+      const sectorAngleEnd = nextLineIndex * angleStep;
+      let sectorCenterAngle = (sectorAngleStart + sectorAngleEnd) / 2;
+      
+      // Handle wrap-around for the last sector
+      if (k === specialLines.length - 1 && nextLineIndex < currentLineIndex) {
+        const adjustedEnd = nextLineIndex * angleStep + Math.PI * 2;
+        sectorCenterAngle = (sectorAngleStart + adjustedEnd) / 2;
+        if (sectorCenterAngle >= Math.PI * 2) {
+          sectorCenterAngle -= Math.PI * 2;
+        }
+      }
+      
+      // Apply rotation and north offset for rendering
+      const rotatedSectorCenter = sectorCenterAngle + rotationRad + northOffset;
+      
+      // For sectors 33, 36, 38, 40 (k=0, k=2, k=4, k=6), split into two halves
+      if (k === 0 || k === 2 || k === 4 || k === 6) {
+        // Create two halves using radial split from center
+        const splitAngle = rotatedSectorCenter; // The diagonal split line
+        
+        // Calculate perpendicular angle for the split line direction
+        const splitDirection = { x: Math.cos(splitAngle), y: Math.sin(splitAngle) };
+        
+        // First half (left side of split)
+        const firstHalfCenter = {
+          x: (sectorAngleStart + sectorCenterAngle) / 2,
+          y: 0 // Not used for angle calculations
+        };
+        const firstHalfAngle = firstHalfCenter.x + rotationRad + northOffset;
+        const firstRegionPosition = findRegionCenterBetweenPolygons(center, firstHalfAngle, redPolygonPoints, innerPolygonPoints);
+        
+        const firstRegionLabel = new Text(String(getRegionNumber(regionNumber)), {
+          left: firstRegionPosition.x - 8,
+          top: firstRegionPosition.y - 8,
+          fontSize: 14,
+          fill: '#0000ff', // Blue color for inner region numbers
+          fontFamily: 'Arial',
+          fontWeight: 'bold',
+          selectable: false,
+          evented: false,
+          textAlign: 'center',
+          objectCaching: false
+        });
+        fabricCanvas.add(firstRegionLabel);
+        newObjects.push(firstRegionLabel);
+        regionNumber++;
+        
+        // Second half (right side of split)
+        const secondHalfCenter = {
+          x: (sectorCenterAngle + sectorAngleEnd) / 2,
+          y: 0 // Not used for angle calculations
+        };
+        let secondHalfCenterAngle = secondHalfCenter.x;
+        
+        // Handle wrap-around for the last sector
+        if (k === specialLines.length - 1 && nextLineIndex < currentLineIndex) {
+          const adjustedEnd = nextLineIndex * angleStep + Math.PI * 2;
+          secondHalfCenterAngle = (sectorCenterAngle + adjustedEnd) / 2;
+          if (secondHalfCenterAngle >= Math.PI * 2) {
+            secondHalfCenterAngle -= Math.PI * 2;
+          }
+        }
+        
+        const secondHalfAngle = secondHalfCenterAngle + rotationRad + northOffset;
+        const secondRegionPosition = findRegionCenterBetweenPolygons(center, secondHalfAngle, redPolygonPoints, innerPolygonPoints);
+        
+        const secondRegionLabel = new Text(String(getRegionNumber(regionNumber)), {
+          left: secondRegionPosition.x - 8,
+          top: secondRegionPosition.y - 8,
+          fontSize: 14,
+          fill: '#0000ff', // Blue color for inner region numbers
+          fontFamily: 'Arial',
+          fontWeight: 'bold',
+          selectable: false,
+          evented: false,
+          textAlign: 'center',
+          objectCaching: false
+        });
+        fabricCanvas.add(secondRegionLabel);
+        newObjects.push(secondRegionLabel);
+        regionNumber++;
+      } else {
+        // Single region for sectors 34, 35, 37, 39, 41, 42
+        const regionPosition = findRegionCenterBetweenPolygons(center, rotatedSectorCenter, redPolygonPoints, innerPolygonPoints);
+        
+        const regionLabel = new Text(String(getRegionNumber(regionNumber)), {
+          left: regionPosition.x - 8,
+          top: regionPosition.y - 8,
+          fontSize: 14,
+          fill: '#0000ff', // Blue color for inner region numbers
+          fontFamily: 'Arial',
+          fontWeight: 'bold',
+          selectable: false,
+          evented: false,
+          textAlign: 'center',
+          objectCaching: false
+        });
+        fabricCanvas.add(regionLabel);
+        newObjects.push(regionLabel);
+        regionNumber++;
+      }
+    }
+
+    // Re-enable selection after updates
+    fabricCanvas.selection = true;
+
+    // Keep background image at back and bring our objects to front
+    const bg = fabricCanvas.getObjects().find(o => o instanceof FabricImage) as FabricImage | undefined;
+    if (bg) fabricCanvas.sendObjectToBack(bg);
+    newObjects.forEach(obj => fabricCanvas.bringObjectToFront(obj));
+
+    fabricCanvas.renderAll();
+  }, [fabricCanvas, testGridLines, rotationDegree]);
+
+  // Helper function to find the center point of a region between two polygons
+  const findRegionCenterBetweenPolygons = (center: Point, angle: number, innerPoly: Point[], outerPoly: Point[]): Point => {
+    const innerPoint = getRayIntersectionWithPolygon(center, angle, innerPoly);
+    const outerPoint = getRayIntersectionWithPolygon(center, angle, outerPoly);
+    
+    if (!innerPoint || !outerPoint) return center;
+    
+    // Return point at 50% distance between inner and outer boundaries
+    return {
+      x: innerPoint.x + (outerPoint.x - innerPoint.x) * 0.5,
+      y: innerPoint.y + (outerPoint.y - innerPoint.y) * 0.5
+    };
+  };
+
+  const toggleTest = () => {
+    if (!fabricCanvas) return;
+    
+    const newShowTest = !showTest;
+    setShowTest(newShowTest);
+    
+    if (newShowTest) {
+      // Recreate all test features to ensure proper display
+      if (completedPolygonPoints.length >= 3) {
+        const center = calculatePolygonCenterLocal(completedPolygonPoints);
+        console.log('Drawing test features with center:', center);
+        
+        // Recreate small and medium polygons
+        drawTestSmallPolygon(completedPolygonPoints, center);
+        drawTestMediumPolygon(completedPolygonPoints, center);
+        
+        // Recreate ring slices with all special extended lines
+        drawTestRingSlices(completedPolygonPoints, center);
+      }
+    } else {
+      // Properly remove all test objects instead of just hiding them
+      if (testPolygon) {
+        fabricCanvas.remove(testPolygon);
+        setTestPolygon(null);
+      }
+      if (testMediumPolygon) {
+        fabricCanvas.remove(testMediumPolygon);
+        setTestMediumPolygon(null);
+      }
+      
+      // Remove all test grid lines and devta zones
+      testGridLines.forEach(line => {
+        if (fabricCanvas.contains(line)) {
+          fabricCanvas.remove(line);
+        }
+      });
+      setTestGridLines([]);
+    }
+    
+    fabricCanvas.renderAll();
+    console.log("Test feature toggled:", newShowTest, "Canvas objects:", fabricCanvas.getObjects().length);
+    toast.success(`Test feature ${newShowTest ? 'enabled' : 'disabled'}`);
+  };
+
   // Helper function to find intersection point of a ray with polygon boundary
   const findPolygonBoundaryIntersection = (center: Point, direction: Point, polygon: Point[]): Point => {
     let closestDistance = Infinity;
@@ -2080,6 +2584,14 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       drawRingSlices(completedPolygonPoints, center);
     }
   }, [rotationDegree, showDevtas, currentPolygon, completedPolygonPoints, fabricCanvas]);
+
+  // Smooth updates for test feature rotation
+  useEffect(() => {
+    if (showTest && currentPolygon && completedPolygonPoints.length >= 3 && fabricCanvas) {
+      const center = calculatePolygonCenterLocal(completedPolygonPoints);
+      drawTestRingSlices(completedPolygonPoints, center);
+    }
+  }, [rotationDegree, showTest, currentPolygon, completedPolygonPoints, fabricCanvas]);
 
 
   // Smooth updates for vithi mandal rotation
@@ -3300,6 +3812,16 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                             checked={showVithiMandal}
                             onCheckedChange={toggleVithiMandal}
                             className="data-[state=checked]:bg-cyan-600 touch-manipulation scale-90 xl:scale-100"
+                          />
+                        </div>
+
+                         {/* Test Toggle */}
+                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                          <span className="text-xs xl:text-sm font-medium">Test</span>
+                          <Switch
+                            checked={showTest}
+                            onCheckedChange={toggleTest}
+                            className="data-[state=checked]:bg-yellow-600 touch-manipulation scale-90 xl:scale-100"
                           />
                         </div>
                       </div>
