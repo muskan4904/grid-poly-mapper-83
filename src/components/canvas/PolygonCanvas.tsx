@@ -2052,9 +2052,45 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const sliceCenterX = (innerHits[i].x + innerHits[j].x + outerHits[i].x + outerHits[j].x) / 4;
       const sliceCenterY = (innerHits[i].y + innerHits[j].y + outerHits[i].y + outerHits[j].y) / 4;
 
-      // Simple numbering 1-32
-      const getSliceNumber = (index: number) => {
-        return index + 1;
+      // Test square labels mapping
+      const testSquareLabels: { [key: number]: string } = {
+        33: 'N4',
+        2: 'N5',
+        3: 'N6',
+        4: 'N7',
+        5: 'N8',
+        6: 'E1',
+        7: 'E2',
+        8: 'E3',
+        9: 'E4',
+        10: 'E5',
+        11: 'E6',
+        12: 'E7',
+        13: 'E8',
+        14: 'S1',
+        15: 'S2',
+        16: 'S3',
+        17: 'S4',
+        18: 'S5',
+        19: 'S6',
+        20: 'S7',
+        21: 'S8',
+        22: 'W1',
+        23: 'W2',
+        24: 'W3',
+        25: 'W4',
+        26: 'W5',
+        27: 'W6',
+        28: 'W7',
+        29: 'W8',
+        30: 'N1',
+        31: 'N2',
+        32: 'N3',
+      };
+      
+      const getSliceLabel = (index: number) => {
+        const sliceNumber = index + 1;
+        return testSquareLabels[sliceNumber] || sliceNumber.toString();
       };
 
       if (hasExisting) {
@@ -2078,7 +2114,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           (testGridLines[labelIndex] as Text).set({
             left: sliceCenterX - 8,
             top: sliceCenterY - 8,
-            text: String(getSliceNumber(i + 1))
+            text: getSliceLabel(i)
           });
         }
       } else {
@@ -2107,7 +2143,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         fabricCanvas.add(sep);
         newObjects.push(sep);
 
-        const numberLabel = new Text(String(getSliceNumber(i + 1)), {
+        const numberLabel = new Text(getSliceLabel(i), {
           left: sliceCenterX - 8,
           top: sliceCenterY - 8,
           fontSize: 16,
