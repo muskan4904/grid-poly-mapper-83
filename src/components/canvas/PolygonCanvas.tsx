@@ -59,8 +59,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [isRotating, setIsRotating] = useState(false);
   const [show45Devtas, setShow45Devtas] = useState(false);
   const [devtaSlices, setDevtaSlices] = useState<any[]>([]);
-  const [show32Gates8_1Pad, setShow32Gates8_1Pad] = useState(false);
-  const [gates8_1PadSlices, setGates8_1PadSlices] = useState<any[]>([]);
   const [vithiMandalPolygons, setVithiMandalPolygons] = useState<any[]>([]);
   const [showMarmaSthan, setShowMarmaSthan] = useState(false);
   const [marmaSthanLines, setMarmaSthanLines] = useState<Line[]>([]);
@@ -392,7 +390,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     fabricCanvas.renderAll();
-    console.log("Polygon completed. Canvas objects:", fabricCanvas.getObjects().length, "Show features:", { show45Devtas, show16Directions, show32Gates, show32Gates8_1Pad, showVithiMandal, showMarmaSthan });
+    console.log("Polygon completed. Canvas objects:", fabricCanvas.getObjects().length, "Show features:", { show45Devtas, show16Directions, show32Gates, showVithiMandal, showMarmaSthan });
     setIsDrawing(false);
     setPolygonPoints([]);
     setCompletedPolygonPoints(points); // Store completed polygon points
@@ -503,184 +501,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     return bestPoint;
   };
 
-  // Create 32 ring slices between main (outer) polygon and the medium (inner) polygon for 32 gates 8 1 pad feature
-  const draw32Gates8_1PadSlices = useCallback((polygonPoints: Point[], center: Point) => {
-    if (!fabricCanvas) return;
-
-    // Recompute the inner (second layer) polygon using the same scale as drawMediumPolygon
-    const innerScale = Math.sqrt(0.62); // ~0.787
-    const innerPolygonPoints = polygonPoints.map((p) => ({
-      x: center.x + (p.x - center.x) * innerScale,
-      y: center.y + (p.y - center.y) * innerScale,
-    }));
-
-    // Also compute the red small polygon points for boundary intersection
-    const redPolygonScale = Math.sqrt(0.11); // ~0.331 (same as drawSmallPolygon)
-    const redPolygonPoints = polygonPoints.map((p) => ({
-      x: center.x + (p.x - center.x) * redPolygonScale,
-      y: center.y + (p.y - center.y) * redPolygonScale,
-    }));
-
-    const N = 32;
-    const angleStep = (Math.PI * 2) / N;
-    const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 45 devtas
-    const GATES_8_1_PAD_BASE_OFFSET = -31; // +11 degrees clockwise from previous -42 position, new 0 degree baseline
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT + GATES_8_1_PAD_BASE_OFFSET) * Math.PI) / 180;
-    const northOffset = -Math.PI / 2; // 0° = North (up)
-    
-    const outerHits: Point[] = [];
-    const innerHits: Point[] = [];
-
-    for (let i = 0; i < N; i++) {
-      const a = i * angleStep + rotationRad + northOffset;
-      const ho = getRayIntersectionWithPolygon(center, a, polygonPoints);
-      const hi = getRayIntersectionWithPolygon(center, a, innerPolygonPoints);
-      if (!ho || !hi) continue;
-      outerHits.push(ho);
-      innerHits.push(hi);
-    }
-
-    // Check if existing objects need updating vs creating new ones
-    const expectedObjectCount = outerHits.length * 3; // slices + lines + labels
-    const hasExisting = gates8_1PadSlices.length >= expectedObjectCount;
-    const newObjects: any[] = [];
-
-    // Disable selection for performance while updating
-    fabricCanvas.selection = false;
-
-    for (let i = 0; i < outerHits.length; i++) {
-      const j = (i + 1) % outerHits.length;
-      const verts = [
-        { x: innerHits[i].x, y: innerHits[i].y },
-        { x: innerHits[j].x, y: innerHits[j].y },
-        { x: outerHits[j].x, y: outerHits[j].y },
-        { x: outerHits[i].x, y: outerHits[i].y },
-      ];
-
-      // Separator line coordinates - all lines should stay within the black polygon area (inner to black boundary)
-      let lineStartX = innerHits[i].x;
-      let lineStartY = innerHits[i].y;
-      let lineEndX = outerHits[i].x;
-      let lineEndY = outerHits[i].y;
-
-      // Label coordinates
-      const sliceCenterX = (innerHits[i].x + innerHits[j].x + outerHits[i].x + outerHits[j].x) / 4;
-      const sliceCenterY = (innerHits[i].y + innerHits[j].y + outerHits[i].y + outerHits[j].y) / 4;
-
-      // Create mapping for 32 Gates 8 1 Pad numbering as per user requirements
-      const getGateLabel = (index: number) => {
-        const labelMapping: { [key: number]: string } = {
-          1: 'W8', 2: 'N1', 3: 'N2', 4: 'N3', 5: 'N4', 6: 'N5', 7: 'N6', 8: 'N7',
-          9: 'N8', 10: 'E1', 11: 'E2', 12: 'E3', 13: 'E4', 14: 'E5', 15: 'E6', 16: 'E7',
-          17: 'E8', 18: 'S1', 19: 'S2', 20: 'S3', 21: 'S4', 22: 'S5', 23: 'S6', 24: 'S7',
-          25: 'S8', 26: 'W1', 27: 'W2', 28: 'W3', 29: 'W4', 30: 'W5', 31: 'W6', 32: 'W7'
-        };
-        return labelMapping[index] || `${index}`;
-      };
-
-      if (hasExisting) {
-        // Update existing objects
-        const sliceIndex = 3 * i;
-        const lineIndex = 3 * i + 1;  
-        const labelIndex = 3 * i + 2;
-
-        if (gates8_1PadSlices[sliceIndex]) {
-          (gates8_1PadSlices[sliceIndex] as Polygon).set({ points: verts });
-        }
-
-        if (gates8_1PadSlices[lineIndex]) {
-          (gates8_1PadSlices[lineIndex] as Line).set({
-            x1: lineStartX, y1: lineStartY, 
-            x2: lineEndX, y2: lineEndY
-          });
-        }
-
-        if (gates8_1PadSlices[labelIndex]) {
-          (gates8_1PadSlices[labelIndex] as Text).set({
-            left: sliceCenterX - 8,
-            top: sliceCenterY - 8,
-            text: getGateLabel(i + 1)
-          });
-        }
-      } else {
-        // Create new objects
-        const slice = new Polygon(verts, {
-          fill: 'transparent',
-          stroke: '#000000',
-          strokeWidth: 2,
-          selectable: false,
-          evented: false,
-          objectCaching: false
-        });
-        (slice as any).isGates8_1Pad = true;
-        fabricCanvas.add(slice);
-        newObjects.push(slice);
-
-        const sep = new Line(
-          [lineStartX, lineStartY, lineEndX, lineEndY],
-          {
-            stroke: '#000000',
-            strokeWidth: 2,
-            selectable: false,
-            evented: false,
-            objectCaching: false
-          }
-        );
-        (sep as any).isGates8_1Pad = true;
-        fabricCanvas.add(sep);
-        newObjects.push(sep);
-
-        const numberLabel = new Text(getGateLabel(i + 1), {
-          left: sliceCenterX - 8,
-          top: sliceCenterY - 8,
-          fontSize: 16,
-          fill: '#000000',
-          fontFamily: 'Arial',
-          fontWeight: 'bold',
-          selectable: false,
-          evented: false,
-          textAlign: 'center',
-          objectCaching: false
-        });
-        (numberLabel as any).isGates8_1Pad = true;
-        fabricCanvas.add(numberLabel);
-        newObjects.push(numberLabel);
-      }
-    }
-
-    // Update existing objects or track new ones for state
-    if (!hasExisting && newObjects.length > 0) {
-      setGates8_1PadSlices(newObjects);
-    }
-
-    // Re-enable selection and render
-    fabricCanvas.selection = true;
-    if ((fabricCanvas as any).requestRenderAll) {
-      (fabricCanvas as any).requestRenderAll();
-    } else {
-      fabricCanvas.renderAll();
-    }
-  }, [fabricCanvas, rotationDegree, show32Gates8_1Pad, gates8_1PadSlices]);
-
-  const clear32Gates8_1PadSlices = useCallback(() => {
-    if (!fabricCanvas) return;
-    
-    // Remove tracked objects first
-    gates8_1PadSlices.forEach(obj => {
-      fabricCanvas.remove(obj);
-    });
-    setGates8_1PadSlices([]);
-    
-    // Additionally, remove any lingering objects tagged as part of this feature (survive HMR/state resets)
-    const toRemove = (fabricCanvas.getObjects() as any[]).filter((obj: any) => (obj as any).isGates8_1Pad);
-    toRemove.forEach((obj: any) => fabricCanvas.remove(obj));
-    
-    // Force render
-    fabricCanvas.renderAll();
-    
-    console.log('32 gates 8 1 pad slices cleared (including tagged), remaining objects:', fabricCanvas.getObjects().length);
-  }, [fabricCanvas, gates8_1PadSlices]);
 
   // Create 32 ring slices between main (outer) polygon and the medium (inner) polygon  
   const drawRingSlices = useCallback((polygonPoints: Point[], center: Point) => {
@@ -2112,15 +1932,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
   }, [rotationDegree, showDevtas, currentPolygon, completedPolygonPoints, fabricCanvas]);
 
-  // Smooth updates for 32 gates 8 1 pad rotation  
-  useEffect(() => {
-    if (show32Gates8_1Pad && completedPolygonPoints.length >= 3 && fabricCanvas) {
-      // Clear existing objects first to ensure clean update
-      clear32Gates8_1PadSlices();
-      const center = calculatePolygonCenterLocal(completedPolygonPoints);
-      draw32Gates8_1PadSlices(completedPolygonPoints, center);
-    }
-  }, [rotationDegree, show32Gates8_1Pad, completedPolygonPoints, fabricCanvas, draw32Gates8_1PadSlices, clear32Gates8_1PadSlices]);
 
   // Smooth updates for vithi mandal rotation
   useEffect(() => {
@@ -2173,28 +1984,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
   };
 
-  const toggle32Gates8_1Pad = () => {
-    if (!fabricCanvas) return;
-    
-    const newShow32Gates8_1Pad = !show32Gates8_1Pad;
-    setShow32Gates8_1Pad(newShow32Gates8_1Pad);
-    
-    if (newShow32Gates8_1Pad) {
-      // Recreate all 32 gates 8 1 pad features to ensure proper display
-      if (completedPolygonPoints.length >= 3) {
-        const center = calculatePolygonCenterLocal(completedPolygonPoints);
-        draw32Gates8_1PadSlices(completedPolygonPoints, center);
-      }
-    } else {
-      // Clear existing objects
-      clear32Gates8_1PadSlices();
-      setGates8_1PadSlices([]);
-    }
-    
-    fabricCanvas.renderAll();
-    console.log("32 gates 8 1 pad toggled:", newShow32Gates8_1Pad, "Canvas objects:", fabricCanvas.getObjects().length);
-    toast.success(`32 gates 8 1 pad ${newShow32Gates8_1Pad ? 'enabled' : 'disabled'}`);
-  };
 
   const toggleDevtasVisibility = () => {
     if (!fabricCanvas) return;
@@ -2341,7 +2130,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         showDevtas,
         show16Directions,
         show32Gates,
-        show32Gates8_1Pad,
+        
         show16BarChart,
         showVithiMandal,
         show45Devtas,
@@ -2492,7 +2281,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         if (showDevtas) toggleDevtasVisibility();
         if (show16Directions) toggle16Directions();
         if (show32Gates) toggle32Gates();
-        if (show32Gates8_1Pad) toggle32Gates8_1Pad();
+        
         if (showVithiMandal) toggleVithiMandal();
         if (showMarmaSthan) toggleMarmaSthan(false);
         if (show16BarChart) setShow16BarChart(false);
@@ -2517,7 +2306,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         setShow16Directions(false);  
         setShow32Gates(false);
         setShowVithiMandal(false);
-        setShow32Gates8_1Pad(false);
+        
         
         // Clear all tracked object arrays
         setSmallPolygon(null);
@@ -2806,49 +2595,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Add user details to page
       addUserDetailsToPage(pdf, userDetails);
 
-      // Page 3: 32 Gates 8 1 Pad (reset first, then enable only this)
+      // Page 3: 45 Devtas (reset first, then enable only this)
       pdf.addPage();
-      console.log('Capturing Page 3: 32 Gates 8 1 Pad');
-      await resetAllFeatures();
-      setShow32Gates8_1Pad(true);
-      if (completedPolygonPoints.length >= 3) {
-        const center = calculatePolygonCenterLocal(completedPolygonPoints);
-        draw32Gates8_1PadSlices(completedPolygonPoints, center);
-      }
-      ensureImageAtBack();
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const gates8PadAvailableWidth = pageWidth - pdfMargin * 2;
-      const gates8PadAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
-      const gates8PadTargetAspect = gates8PadAvailableWidth / gates8PadAvailableHeight;
-      const gates8PadImage = await captureCanvasState("32 Gates 8 1 Pad", gates8PadTargetAspect);
-      
-      pdf.setFontSize(16);
-      pdf.text("Page 3: 32 Gates 8 1 Pad Layout", pageWidth / 2, 20, { align: 'center' });
-      // Use captured image dimensions for better height utilization  
-      let gates8PadFinalWidth = gates8PadAvailableWidth;
-      let gates8PadFinalHeight = gates8PadAvailableHeight * 0.9;
-      
-      const tempGates8PadImg = new Image();
-      tempGates8PadImg.src = gates8PadImage;
-      await new Promise(resolve => tempGates8PadImg.onload = resolve);
-      
-      const gates8PadCapturedAspect = tempGates8PadImg.width / tempGates8PadImg.height;
-      
-      if (gates8PadFinalWidth / gates8PadFinalHeight > gates8PadCapturedAspect) {
-        gates8PadFinalWidth = gates8PadFinalHeight * gates8PadCapturedAspect;
-      } else {
-        gates8PadFinalHeight = gates8PadFinalWidth / gates8PadCapturedAspect;
-      }
-      const gates8PadX = (pageWidth - gates8PadFinalWidth) / 2;
-      const gates8PadY = pdfTopOffset + 6;
-      pdf.addImage(gates8PadImage, 'PNG', gates8PadX, gates8PadY, gates8PadFinalWidth, gates8PadFinalHeight);
-      
-      // Add user details to page
-      addUserDetailsToPage(pdf, userDetails);
-
-      // Page 4: 45 Devtas (reset first, then enable only this) 
-      pdf.addPage();
-      console.log('Capturing Page 4: 45 Devtas');
+      console.log('Capturing Page 3: 45 Devtas');
       await resetAllFeatures();
       setShowDevtas(true);
       if (completedPolygonPoints.length >= 3) {
@@ -3145,7 +2894,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       if (currentStates.showDevtas && !showDevtas) toggleDevtasVisibility();
       if (currentStates.show16Directions && !show16Directions) toggle16Directions();
       if (currentStates.show32Gates && !show32Gates) toggle32Gates();
-      if (currentStates.show32Gates8_1Pad && !show32Gates8_1Pad) toggle32Gates8_1Pad();
+      
       if (currentStates.showVithiMandal && !showVithiMandal) toggleVithiMandal();
       if (currentStates.showMarmaSthan && !showMarmaSthan) toggleMarmaSthan(true);
       if (currentStates.show16BarChart && !show16BarChart) setShow16BarChart(true);
@@ -3265,7 +3014,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                 {/* Statistics removed per user request - keeping only feature controls below */}
                 
                 {/* Shared Rotation Controls */}
-                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || showMarmaSthan || show32Gates8_1Pad) && (
+                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || showMarmaSthan) && (
                     <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
@@ -3342,15 +3091,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                           />
                         </div>
                         
-                        {/* 32 Gates 8 1 Pad Toggle */}
-                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">32 Gates 8 1 Pad</span>
-                          <Switch
-                            checked={show32Gates8_1Pad}
-                            onCheckedChange={toggle32Gates8_1Pad}
-                            className="data-[state=checked]:bg-teal-600 touch-manipulation scale-90 xl:scale-100"
-                          />
-                        </div>
                         
                         {/* 45 Devtas Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
