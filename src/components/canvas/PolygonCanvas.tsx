@@ -402,7 +402,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     // Draw Test feature if enabled
     if (showTest) {
-      drawTestSmallPolygon(points, center);
       drawTestMediumPolygon(points, center);
       drawTestRingSlices(points, center);
     }
@@ -2007,13 +2006,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       y: center.y + (p.y - center.y) * innerScale,
     }));
 
-    // Also compute the red small polygon points for boundary intersection
-    const redPolygonScale = Math.sqrt(0.11); // ~0.331 (same as drawTestSmallPolygon)
-    const redPolygonPoints = polygonPoints.map((p) => ({
-      x: center.x + (p.x - center.x) * redPolygonScale,
-      y: center.y + (p.y - center.y) * redPolygonScale,
-    }));
-
     const N = 32;
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
@@ -2050,73 +2042,46 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         { x: outerHits[i].x, y: outerHits[i].y },
       ];
 
-      // Separator line coordinates
-      let lineStartX = innerHits[i].x;
-      let lineStartY = innerHits[i].y;
-      let lineEndX = outerHits[i].x;
-      let lineEndY = outerHits[i].y;
-      
-      // For specific lines (4, 7, 12, 15, 20, 23, 28, 31), extend them from red polygon boundary to outer boundary
-      const specialLines = [3, 6, 11, 14, 19, 22, 27, 30]; // indices for lines 4, 7, 12, 15, 20, 23, 28, 31
-      if (specialLines.includes(i)) {
-        // Calculate the direction from center with rotation
-        const angle = i * angleStep + rotationRad + northOffset;
-        
-        // Find intersection with RED polygon boundary (start point)
-        const redBoundaryPoint = getRayIntersectionWithPolygon(center, angle, redPolygonPoints);
-        // Find intersection with main outer polygon boundary (end point)
-        const outerBoundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
-        
-        if (redBoundaryPoint && outerBoundaryPoint) {
-          // Start from red polygon boundary, end at outer boundary
-          lineStartX = redBoundaryPoint.x;
-          lineStartY = redBoundaryPoint.y;
-          lineEndX = outerBoundaryPoint.x;
-          lineEndY = outerBoundaryPoint.y;
-        }
-      }
+      // All separator lines go from inner polygon to outer polygon (same length)
+      const lineStartX = innerHits[i].x;
+      const lineStartY = innerHits[i].y;
+      const lineEndX = outerHits[i].x;
+      const lineEndY = outerHits[i].y;
 
       // Label coordinates
       const sliceCenterX = (innerHits[i].x + innerHits[j].x + outerHits[i].x + outerHits[j].x) / 4;
       const sliceCenterY = (innerHits[i].y + innerHits[j].y + outerHits[i].y + outerHits[j].y) / 4;
 
-        // Create mapping for 45 devta numbering as per user requirements
-        const getDevtaNumber = (index: number) => {
-          const numberMapping: { [key: number]: number } = {
-            1: 38, 2: 43, 3: 44, 4: 45, 5: 14, 6: 15, 7: 16, 8: 17, 9: 18, 10: 19,
-            11: 20, 12: 21, 13: 22, 14: 23, 15: 24, 16: 25, 17: 26, 18: 27, 19: 28, 20: 29,
-            21: 30, 22: 31, 23: 32, 24: 33, 25: 34, 26: 35, 27: 36, 28: 37, 29: 38, 30: 39,
-            31: 40, 32: 41, 33: 6, 34: 7, 35: 2, 36: 8, 37: 9, 38: 3, 39: 10, 40: 11,
-            41: 4, 42: 12, 43: 13, 44: 5
-          };
-          return numberMapping[index] || index;
-        };
+      // Simple numbering 1-32
+      const getSliceNumber = (index: number) => {
+        return index + 1;
+      };
 
-        if (hasExisting) {
-          // Update existing objects
-          const sliceIndex = 3 * i;
-          const lineIndex = 3 * i + 1;  
-          const labelIndex = 3 * i + 2;
+      if (hasExisting) {
+        // Update existing objects
+        const sliceIndex = 3 * i;
+        const lineIndex = 3 * i + 1;  
+        const labelIndex = 3 * i + 2;
 
-          if (testGridLines[sliceIndex]) {
-            (testGridLines[sliceIndex] as Polygon).set({ points: verts });
-          }
+        if (testGridLines[sliceIndex]) {
+          (testGridLines[sliceIndex] as Polygon).set({ points: verts });
+        }
 
-          if (testGridLines[lineIndex]) {
-            (testGridLines[lineIndex] as Line).set({
-              x1: lineStartX, y1: lineStartY, 
-              x2: lineEndX, y2: lineEndY
-            });
-          }
+        if (testGridLines[lineIndex]) {
+          (testGridLines[lineIndex] as Line).set({
+            x1: lineStartX, y1: lineStartY, 
+            x2: lineEndX, y2: lineEndY
+          });
+        }
 
-          if (testGridLines[labelIndex]) {
-            (testGridLines[labelIndex] as Text).set({
-              left: sliceCenterX - 8,
-              top: sliceCenterY - 8,
-              text: String(getDevtaNumber(i + 1))
-            });
-          }
-        } else {
+        if (testGridLines[labelIndex]) {
+          (testGridLines[labelIndex] as Text).set({
+            left: sliceCenterX - 8,
+            top: sliceCenterY - 8,
+            text: String(getSliceNumber(i + 1))
+          });
+        }
+      } else {
         // Create new objects
         const slice = new Polygon(verts, {
           fill: 'transparent',
@@ -2142,8 +2107,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         fabricCanvas.add(sep);
         newObjects.push(sep);
 
-
-        const numberLabel = new Text(String(getDevtaNumber(i + 1)), {
+        const numberLabel = new Text(String(getSliceNumber(i + 1)), {
           left: sliceCenterX - 8,
           top: sliceCenterY - 8,
           fontSize: 16,
@@ -2163,130 +2127,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Update existing objects or track new ones for state
     if (!hasExisting && newObjects.length > 0) {
       setTestGridLines(newObjects);
-    }
-
-
-    // Add numbers 33-44 between red polygon and black polygon boundaries in fixed radial sectors
-    // Split regions 33, 36, 38, 40 diagonally into two halves, creating 12 regions total (33-44)
-    const specialLines = [3, 6, 11, 14, 19, 22, 27, 30]; // 8 lines creating base sectors
-    let regionNumber = 33;
-    
-    // Create mapping for region numbers as per user requirements
-    const getRegionNumber = (regionNum: number) => {
-      const regionMapping: { [key: number]: number } = {
-        33: 6, 34: 7, 35: 2, 36: 8, 37: 9, 38: 37, 39: 10, 40: 11, 41: 4, 42: 12, 43: 13, 44: 5
-      };
-      return regionMapping[regionNum] || regionNum;
-    };
-    
-    // Process each sector, splitting sectors at k=0, k=2, k=4, k=6 diagonally into two halves
-    for (let k = 0; k < specialLines.length; k++) {
-      const currentLineIndex = specialLines[k];
-      const nextLineIndex = specialLines[(k + 1) % specialLines.length];
-      
-      // Calculate the center angle for this sector (without rotation applied yet)
-      const sectorAngleStart = currentLineIndex * angleStep;
-      const sectorAngleEnd = nextLineIndex * angleStep;
-      let sectorCenterAngle = (sectorAngleStart + sectorAngleEnd) / 2;
-      
-      // Handle wrap-around for the last sector
-      if (k === specialLines.length - 1 && nextLineIndex < currentLineIndex) {
-        const adjustedEnd = nextLineIndex * angleStep + Math.PI * 2;
-        sectorCenterAngle = (sectorAngleStart + adjustedEnd) / 2;
-        if (sectorCenterAngle >= Math.PI * 2) {
-          sectorCenterAngle -= Math.PI * 2;
-        }
-      }
-      
-      // Apply rotation and north offset for rendering
-      const rotatedSectorCenter = sectorCenterAngle + rotationRad + northOffset;
-      
-      // For sectors 33, 36, 38, 40 (k=0, k=2, k=4, k=6), split into two halves
-      if (k === 0 || k === 2 || k === 4 || k === 6) {
-        // Create two halves using radial split from center
-        const splitAngle = rotatedSectorCenter; // The diagonal split line
-        
-        // Calculate perpendicular angle for the split line direction
-        const splitDirection = { x: Math.cos(splitAngle), y: Math.sin(splitAngle) };
-        
-        // First half (left side of split)
-        const firstHalfCenter = {
-          x: (sectorAngleStart + sectorCenterAngle) / 2,
-          y: 0 // Not used for angle calculations
-        };
-        const firstHalfAngle = firstHalfCenter.x + rotationRad + northOffset;
-        const firstRegionPosition = findRegionCenterBetweenPolygons(center, firstHalfAngle, redPolygonPoints, innerPolygonPoints);
-        
-        const firstRegionLabel = new Text(String(getRegionNumber(regionNumber)), {
-          left: firstRegionPosition.x - 8,
-          top: firstRegionPosition.y - 8,
-          fontSize: 14,
-          fill: '#0000ff', // Blue color for inner region numbers
-          fontFamily: 'Arial',
-          fontWeight: 'bold',
-          selectable: false,
-          evented: false,
-          textAlign: 'center',
-          objectCaching: false
-        });
-        fabricCanvas.add(firstRegionLabel);
-        newObjects.push(firstRegionLabel);
-        regionNumber++;
-        
-        // Second half (right side of split)
-        const secondHalfCenter = {
-          x: (sectorCenterAngle + sectorAngleEnd) / 2,
-          y: 0 // Not used for angle calculations
-        };
-        let secondHalfCenterAngle = secondHalfCenter.x;
-        
-        // Handle wrap-around for the last sector
-        if (k === specialLines.length - 1 && nextLineIndex < currentLineIndex) {
-          const adjustedEnd = nextLineIndex * angleStep + Math.PI * 2;
-          secondHalfCenterAngle = (sectorCenterAngle + adjustedEnd) / 2;
-          if (secondHalfCenterAngle >= Math.PI * 2) {
-            secondHalfCenterAngle -= Math.PI * 2;
-          }
-        }
-        
-        const secondHalfAngle = secondHalfCenterAngle + rotationRad + northOffset;
-        const secondRegionPosition = findRegionCenterBetweenPolygons(center, secondHalfAngle, redPolygonPoints, innerPolygonPoints);
-        
-        const secondRegionLabel = new Text(String(getRegionNumber(regionNumber)), {
-          left: secondRegionPosition.x - 8,
-          top: secondRegionPosition.y - 8,
-          fontSize: 14,
-          fill: '#0000ff', // Blue color for inner region numbers
-          fontFamily: 'Arial',
-          fontWeight: 'bold',
-          selectable: false,
-          evented: false,
-          textAlign: 'center',
-          objectCaching: false
-        });
-        fabricCanvas.add(secondRegionLabel);
-        newObjects.push(secondRegionLabel);
-        regionNumber++;
-      } else {
-        // Single region for sectors 34, 35, 37, 39, 41, 42
-        const regionPosition = findRegionCenterBetweenPolygons(center, rotatedSectorCenter, redPolygonPoints, innerPolygonPoints);
-        
-        const regionLabel = new Text(String(getRegionNumber(regionNumber)), {
-          left: regionPosition.x - 8,
-          top: regionPosition.y - 8,
-          fontSize: 14,
-          fill: '#0000ff', // Blue color for inner region numbers
-          fontFamily: 'Arial',
-          fontWeight: 'bold',
-          selectable: false,
-          evented: false,
-          textAlign: 'center',
-          objectCaching: false
-        });
-        fabricCanvas.add(regionLabel);
-        newObjects.push(regionLabel);
-        regionNumber++;
-      }
     }
 
     // Re-enable selection after updates
@@ -2326,11 +2166,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
         console.log('Drawing test features with center:', center);
         
-        // Recreate small and medium polygons
-        drawTestSmallPolygon(completedPolygonPoints, center);
+        // Recreate medium polygon and ring slices (no red polygon)
         drawTestMediumPolygon(completedPolygonPoints, center);
-        
-        // Recreate ring slices with all special extended lines
         drawTestRingSlices(completedPolygonPoints, center);
       }
     } else {
