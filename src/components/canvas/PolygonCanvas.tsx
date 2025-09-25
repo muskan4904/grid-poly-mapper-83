@@ -1882,7 +1882,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     return closestPoint;
   };
 
-  // Draw 32 entrances 81 pad - only the 32 radial lines (no red polygon)
+  // Draw 32 entrances 81 pad - copy 45 Devtas functionality but without red polygon
   const draw32Entrances = useCallback((polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas) return;
 
@@ -1895,88 +1895,111 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       });
     }
 
+    // Recompute the inner (medium) polygon using the same scale as drawMediumPolygon (62% area)
+    const innerScale = Math.sqrt(0.62); // ~0.787
+    const innerPolygonPoints = polygonPoints.map((p) => ({
+      x: center.x + (p.x - center.x) * innerScale,
+      y: center.y + (p.y - center.y) * innerScale,
+    }));
+
     const N = 32;
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 32 entrances
+    const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for consistency
     const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
     
+    const outerHits: Point[] = [];
+    const innerHits: Point[] = [];
+
+    for (let i = 0; i < N; i++) {
+      const a = i * angleStep + rotationRad + northOffset;
+      const ho = getRayIntersectionWithPolygon(center, a, polygonPoints);
+      const hi = getRayIntersectionWithPolygon(center, a, innerPolygonPoints);
+      if (!ho || !hi) continue;
+      outerHits.push(ho);
+      innerHits.push(hi);
+    }
+
     const newEntranceLines: any[] = [];
 
-    // Draw 32 radial lines from center to polygon boundary
-    for (let i = 0; i < N; i++) {
-      const angle = i * angleStep + rotationRad + northOffset;
-      const boundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
-      
-      if (boundaryPoint) {
-        // Create radial line from center to boundary
-        const line = new Line([center.x, center.y, boundaryPoint.x, boundaryPoint.y], {
+    // Disable selection for performance while updating
+    fabricCanvas.selection = false;
+
+    for (let i = 0; i < outerHits.length; i++) {
+      const j = (i + 1) % outerHits.length;
+      const verts = [
+        { x: innerHits[i].x, y: innerHits[i].y },
+        { x: innerHits[j].x, y: innerHits[j].y },
+        { x: outerHits[j].x, y: outerHits[j].y },
+        { x: outerHits[i].x, y: outerHits[i].y },
+      ];
+
+      // Separator line coordinates - from inner boundary to outer boundary
+      const lineStartX = innerHits[i].x;
+      const lineStartY = innerHits[i].y;
+      const lineEndX = outerHits[i].x;
+      const lineEndY = outerHits[i].y;
+
+      // Label coordinates
+      const sliceCenterX = (innerHits[i].x + innerHits[j].x + outerHits[i].x + outerHits[j].x) / 4;
+      const sliceCenterY = (innerHits[i].y + innerHits[j].y + outerHits[i].y + outerHits[j].y) / 4;
+
+      // Create mapping for 32 entrance numbering (1-32 sequential)
+      const getEntranceNumber = (index: number) => {
+        return index + 1; // Simple 1-32 numbering
+      };
+
+      // Create slice polygon
+      const slice = new Polygon(verts, {
+        fill: 'transparent',
+        stroke: '#000000',
+        strokeWidth: 2,
+        selectable: false,
+        evented: false,
+        objectCaching: false,
+        is32EntranceSlice: true
+      } as any);
+      fabricCanvas.add(slice);
+      newEntranceLines.push(slice);
+
+      // Create separator line
+      const sep = new Line(
+        [lineStartX, lineStartY, lineEndX, lineEndY],
+        {
           stroke: '#000000',
           strokeWidth: 2,
           selectable: false,
           evented: false,
           objectCaching: false,
-          is32EntranceLine: true // Tag for identification
-        });
-        
-        fabricCanvas.add(line);
-        newEntranceLines.push(line);
+          is32EntranceLine: true
+        } as any
+      );
+      fabricCanvas.add(sep);
+      newEntranceLines.push(sep);
 
-        // Add number label at 70% distance from center to boundary
-        const labelDistance = 0.7;
-        const labelX = center.x + (boundaryPoint.x - center.x) * labelDistance;
-        const labelY = center.y + (boundaryPoint.y - center.y) * labelDistance;
-
-        const numberLabel = new Text(String(i + 1), {
-          left: labelX - 8,
-          top: labelY - 8,
-          fontSize: 14,
-          fill: '#000000',
-          fontFamily: 'Arial',
-          fontWeight: 'bold',
-          selectable: false,
-          evented: false,
-          textAlign: 'center',
-          objectCaching: false,
-          is32EntranceLabel: true // Tag for identification
-        });
-        
-        fabricCanvas.add(numberLabel);
-        newEntranceLines.push(numberLabel);
-      }
+      // Create number label
+      const numberLabel = new Text(String(getEntranceNumber(i)), {
+        left: sliceCenterX - 8,
+        top: sliceCenterY - 8,
+        fontSize: 16,
+        fill: '#000000',
+        fontFamily: 'Arial',
+        fontWeight: 'bold',
+        selectable: false,
+        evented: false,
+        textAlign: 'center',
+        objectCaching: false,
+        is32EntranceLabel: true
+      } as any);
+      fabricCanvas.add(numberLabel);
+      newEntranceLines.push(numberLabel);
     }
 
     setEntranceLines(newEntranceLines);
     fabricCanvas.renderAll();
-    console.log(`32 Entrances: ${newEntranceLines.length} radial lines drawn`);
+    console.log(`32 Entrances: ${newEntranceLines.length} objects drawn (slices, lines, labels)`);
   }, [fabricCanvas, show32Entrances, entranceLines, rotationDegree]);
-
-  // Clear 32 entrances lines
-  const clear32EntranceLines = () => {
-    if (!fabricCanvas) return;
-    
-    entranceLines.forEach(line => {
-      if (fabricCanvas.contains(line)) {
-        fabricCanvas.remove(line);
-      }
-    });
-    setEntranceLines([]);
-  };
-
-  // Toggle 32 entrances visibility
-  const toggle32Entrances = (newShow32Entrances: boolean) => {
-    setShow32Entrances(newShow32Entrances);
-    
-    if (!newShow32Entrances) {
-      clear32EntranceLines();
-    } else if (completedPolygonPoints.length >= 3) {
-      const center = calculatePolygonCenterLocal(completedPolygonPoints);
-      draw32Entrances(completedPolygonPoints, center);
-    }
-
-    toast.success(`32 Entrances ${newShow32Entrances ? 'enabled' : 'disabled'}`);
-  };
 
   // Helper function to calculate intersection of ray with line segment
   const rayLineIntersection = (rayStart: Point, rayDirection: Point, lineStart: Point, lineEnd: Point): Point | null => {
@@ -2003,6 +2026,31 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
     
     return null;
+  };
+  // Clear 32 entrances lines
+  const clear32EntranceLines = () => {
+    if (!fabricCanvas) return;
+    
+    entranceLines.forEach(line => {
+      if (fabricCanvas.contains(line)) {
+        fabricCanvas.remove(line);
+      }
+    });
+    setEntranceLines([]);
+  };
+
+  // Toggle 32 entrances visibility
+  const toggle32Entrances = (newShow32Entrances: boolean) => {
+    setShow32Entrances(newShow32Entrances);
+    
+    if (!newShow32Entrances) {
+      clear32EntranceLines();
+    } else if (completedPolygonPoints.length >= 3) {
+      const center = calculatePolygonCenterLocal(completedPolygonPoints);
+      draw32Entrances(completedPolygonPoints, center);
+    }
+
+    toast.success(`32 Entrances ${newShow32Entrances ? 'enabled' : 'disabled'}`);
   };
 
   // Toggle Marma Sthan visibility
