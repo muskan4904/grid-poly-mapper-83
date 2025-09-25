@@ -1882,7 +1882,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     return closestPoint;
   };
 
-  // Draw 32 entrances 81 pad - copy 45 Devtas functionality but without red polygon
+  // Draw 32 entrances 81 pad - EXACT copy of 45 Devtas drawRingSlices functionality
   const draw32Entrances = useCallback((polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas) return;
 
@@ -1895,17 +1895,24 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       });
     }
 
-    // Recompute the inner (medium) polygon using the same scale as drawMediumPolygon (62% area)
+    // Recompute the inner (second layer) polygon using the same scale as drawMediumPolygon
     const innerScale = Math.sqrt(0.62); // ~0.787
     const innerPolygonPoints = polygonPoints.map((p) => ({
       x: center.x + (p.x - center.x) * innerScale,
       y: center.y + (p.y - center.y) * innerScale,
     }));
 
-    const N = 32;
+    // Also compute the red small polygon points for boundary intersection (same as 45 devtas)
+    const redPolygonScale = Math.sqrt(0.11); // ~0.331 (same as drawSmallPolygon)
+    const redPolygonPoints = polygonPoints.map((p) => ({
+      x: center.x + (p.x - center.x) * redPolygonScale,
+      y: center.y + (p.y - center.y) * redPolygonScale,
+    }));
+
+    const N = 32; // 32 segments instead of 45 devtas
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for consistency
+    const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 32 entrances
     const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
     
@@ -1921,7 +1928,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       innerHits.push(hi);
     }
 
-    const newEntranceLines: any[] = [];
+    // Check if existing objects need updating vs creating new ones
+    const expectedObjectCount = outerHits.length * 3; // slices + lines + labels
+    const hasExisting = entranceLines.length >= expectedObjectCount;
+    const newObjects: any[] = [];
 
     // Disable selection for performance while updating
     fabricCanvas.selection = false;
@@ -1935,70 +1945,116 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         { x: outerHits[i].x, y: outerHits[i].y },
       ];
 
-      // Separator line coordinates - from inner boundary to outer boundary
-      const lineStartX = innerHits[i].x;
-      const lineStartY = innerHits[i].y;
-      const lineEndX = outerHits[i].x;
-      const lineEndY = outerHits[i].y;
+      // Separator line coordinates (same logic as 45 devtas)
+      let lineStartX = innerHits[i].x;
+      let lineStartY = innerHits[i].y;
+      let lineEndX = outerHits[i].x;
+      let lineEndY = outerHits[i].y;
+      
+      // For specific lines, extend them from red polygon boundary to outer boundary (like 45 devtas)
+      // Adapting 45 devtas special lines [3, 6, 11, 14, 19, 22, 27, 30] to 32 segments
+      const specialLines = [3, 7, 11, 15, 19, 23, 27, 31]; // adapted for 32 segments
+      if (specialLines.includes(i)) {
+        // Calculate the direction from center with rotation
+        const angle = i * angleStep + rotationRad + northOffset;
+        
+        // Find intersection with RED polygon boundary (start point) - logic from 45 devtas
+        const redBoundaryPoint = getRayIntersectionWithPolygon(center, angle, redPolygonPoints);
+        // Find intersection with main outer polygon boundary (end point)
+        const outerBoundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
+        
+        if (redBoundaryPoint && outerBoundaryPoint) {
+          // Start from red polygon boundary, end at outer boundary (like 45 devtas)
+          lineStartX = redBoundaryPoint.x;
+          lineStartY = redBoundaryPoint.y;
+          lineEndX = outerBoundaryPoint.x;
+          lineEndY = outerBoundaryPoint.y;
+        }
+      }
 
       // Label coordinates
       const sliceCenterX = (innerHits[i].x + innerHits[j].x + outerHits[i].x + outerHits[j].x) / 4;
       const sliceCenterY = (innerHits[i].y + innerHits[j].y + outerHits[i].y + outerHits[j].y) / 4;
 
-      // Create mapping for 32 entrance numbering (1-32 sequential)
+      // Create mapping for 32 entrance numbering (simplified from 45 devtas complex mapping)
       const getEntranceNumber = (index: number) => {
-        return index + 1; // Simple 1-32 numbering
+        return index + 1; // Simple 1-32 numbering for entrances
       };
 
-      // Create slice polygon
-      const slice = new Polygon(verts, {
-        fill: 'transparent',
-        stroke: '#000000',
-        strokeWidth: 2,
-        selectable: false,
-        evented: false,
-        objectCaching: false,
-        is32EntranceSlice: true
-      } as any);
-      fabricCanvas.add(slice);
-      newEntranceLines.push(slice);
+      if (hasExisting) {
+        // Update existing objects (same logic as 45 devtas)
+        const sliceIndex = 3 * i;
+        const lineIndex = 3 * i + 1;  
+        const labelIndex = 3 * i + 2;
 
-      // Create separator line
-      const sep = new Line(
-        [lineStartX, lineStartY, lineEndX, lineEndY],
-        {
+        if (entranceLines[sliceIndex]) {
+          (entranceLines[sliceIndex] as Polygon).set({ points: verts });
+        }
+
+        if (entranceLines[lineIndex]) {
+          (entranceLines[lineIndex] as Line).set({
+            x1: lineStartX, y1: lineStartY, 
+            x2: lineEndX, y2: lineEndY
+          });
+        }
+
+        if (entranceLines[labelIndex]) {
+          (entranceLines[labelIndex] as Text).set({
+            left: sliceCenterX - 8,
+            top: sliceCenterY - 8,
+            text: String(getEntranceNumber(i))
+          });
+        }
+      } else {
+        // Create new objects (same structure as 45 devtas)
+        const slice = new Polygon(verts, {
+          fill: 'transparent',
           stroke: '#000000',
           strokeWidth: 2,
           selectable: false,
           evented: false,
-          objectCaching: false,
-          is32EntranceLine: true
-        } as any
-      );
-      fabricCanvas.add(sep);
-      newEntranceLines.push(sep);
+          objectCaching: false
+        });
+        fabricCanvas.add(slice);
+        newObjects.push(slice);
 
-      // Create number label
-      const numberLabel = new Text(String(getEntranceNumber(i)), {
-        left: sliceCenterX - 8,
-        top: sliceCenterY - 8,
-        fontSize: 16,
-        fill: '#000000',
-        fontFamily: 'Arial',
-        fontWeight: 'bold',
-        selectable: false,
-        evented: false,
-        textAlign: 'center',
-        objectCaching: false,
-        is32EntranceLabel: true
-      } as any);
-      fabricCanvas.add(numberLabel);
-      newEntranceLines.push(numberLabel);
+        const sep = new Line(
+          [lineStartX, lineStartY, lineEndX, lineEndY],
+          {
+            stroke: '#000000',
+            strokeWidth: 2,
+            selectable: false,
+            evented: false,
+            objectCaching: false
+          }
+        );
+        fabricCanvas.add(sep);
+        newObjects.push(sep);
+
+        const numberLabel = new Text(String(getEntranceNumber(i)), {
+          left: sliceCenterX - 8,
+          top: sliceCenterY - 8,
+          fontSize: 16,
+          fill: '#000000',
+          fontFamily: 'Arial',
+          fontWeight: 'bold',
+          selectable: false,
+          evented: false,
+          textAlign: 'center',
+          objectCaching: false
+        });
+        fabricCanvas.add(numberLabel);
+        newObjects.push(numberLabel);
+      }
     }
 
-    setEntranceLines(newEntranceLines);
+    // Update existing objects or track new ones for state
+    if (!hasExisting && newObjects.length > 0) {
+      setEntranceLines(newObjects);
+    }
+
     fabricCanvas.renderAll();
-    console.log(`32 Entrances: ${newEntranceLines.length} objects drawn (slices, lines, labels)`);
+    console.log(`32 Entrances: ${newObjects.length} objects drawn (exact copy of 45 Devtas structure)`);
   }, [fabricCanvas, show32Entrances, entranceLines, rotationDegree]);
 
   // Helper function to calculate intersection of ray with line segment
