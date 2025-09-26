@@ -2590,41 +2590,35 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     setPolygonHistory([]);
     setHistoryIndex(-1);
     
-    if (currentPolygon) {
-      fabricCanvas.remove(currentPolygon);
-      setCurrentPolygon(null);
-    }
-    if (centerPoint) {
-      fabricCanvas.remove(centerPoint);
-      setCenterPoint(null);
-    }
-    if (smallPolygon && fabricCanvas) {
-      fabricCanvas.remove(smallPolygon);
-      setSmallPolygon(null);
-    }
-    if (mediumPolygon && fabricCanvas) {
-      fabricCanvas.remove(mediumPolygon);
-      setMediumPolygon(null);
-    }
-    
-    // Remove all point markers
+    // Remove all objects except the background image
     const allObjects = fabricCanvas.getObjects();
-    const markersToRemove = allObjects.filter(obj => 
-      (obj instanceof Circle && obj.radius === 10) ||
-      (obj instanceof Text && obj.fontSize === 14)
-    );
+    const objectsToRemove = allObjects.filter(obj => !(obj instanceof FabricImage));
     
-    markersToRemove.forEach(marker => {
-      fabricCanvas.remove(marker);
+    objectsToRemove.forEach(obj => {
+      fabricCanvas.remove(obj);
     });
     
+    // Reset all polygon-related states
+    setCurrentPolygon(null);
+    setCenterPoint(null);
+    setSmallPolygon(null);
+    setMediumPolygon(null);
+    setTestPolygon(null);
+    setTestMediumPolygon(null);
+    
+    // Clear all feature arrays
     clearGrid();
     clearDevtaZones();
     clearDirectionLines();
     clearGateLines();
     clear32EntranceLines();
-    clearVithiMandalPolygons(); // Add vithi mandal cleanup
+    clearVithiMandalPolygons();
+    clearMarmaSthanLine();
     setCompletedPolygonPoints([]);
+    setTestGridLines([]);
+    setDevtaSlices([]);
+    setEntranceLines([]);
+    setMarmaSthanLines([]);
     
     fabricCanvas.renderAll();
     onPolygonChange?.([], 0, { x: 0, y: 0 });
@@ -2632,91 +2626,147 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   };
 
   const undoLastPoint = () => {
-    if (!isDrawing || historyIndex <= 0) return;
+    if (!isDrawing || !fabricCanvas || historyIndex <= 0) return;
     
-    const newIndex = historyIndex - 1;
-    const previousPoints = polygonHistory[newIndex];
-    
-    // Remove all point markers and redraw
-    removeAllPointMarkers();
-    setPolygonPoints(previousPoints);
-    setHistoryIndex(newIndex);
-    
-    // Redraw points and polygon
-    redrawPointsAndPolygon(previousPoints);
-    toast.success("Undid last point");
+    try {
+      const newIndex = historyIndex - 1;
+      const previousPoints = polygonHistory[newIndex] || [];
+      
+      // Remove all point markers and current polygon
+      removeAllPointMarkers();
+      
+      // Update state
+      setPolygonPoints(previousPoints);
+      setHistoryIndex(newIndex);
+      
+      // Redraw points and polygon
+      if (previousPoints.length > 0) {
+        redrawPointsAndPolygon(previousPoints);
+      }
+      
+      toast.success("Undid last point");
+    } catch (error) {
+      console.error("Error in undoLastPoint:", error);
+      toast.error("Failed to undo last point");
+    }
   };
 
   const redoLastPoint = () => {
-    if (!isDrawing || historyIndex >= polygonHistory.length - 1) return;
+    if (!isDrawing || !fabricCanvas || historyIndex >= polygonHistory.length - 1) return;
     
-    const newIndex = historyIndex + 1;
-    const nextPoints = polygonHistory[newIndex];
-    
-    // Remove all point markers and redraw
-    removeAllPointMarkers();
-    setPolygonPoints(nextPoints);
-    setHistoryIndex(newIndex);
-    
-    // Redraw points and polygon
-    redrawPointsAndPolygon(nextPoints);
-    toast.success("Redid last point");
+    try {
+      const newIndex = historyIndex + 1;
+      const nextPoints = polygonHistory[newIndex] || [];
+      
+      // Remove all point markers and current polygon
+      removeAllPointMarkers();
+      
+      // Update state
+      setPolygonPoints(nextPoints);
+      setHistoryIndex(newIndex);
+      
+      // Redraw points and polygon
+      if (nextPoints.length > 0) {
+        redrawPointsAndPolygon(nextPoints);
+      }
+      
+      toast.success("Redid last point");
+    } catch (error) {
+      console.error("Error in redoLastPoint:", error);
+      toast.error("Failed to redo last point");
+    }
   };
 
   const removeAllPointMarkers = () => {
     if (!fabricCanvas) return;
     
-    const allObjects = fabricCanvas.getObjects();
-    const markersToRemove = allObjects.filter(obj => 
-      (obj instanceof Circle && obj.radius === 10) ||
-      (obj instanceof Text && obj.fontSize === 14)
-    );
-    
-    markersToRemove.forEach(marker => {
-      fabricCanvas.remove(marker);
-    });
-    
-    // Remove current polygon/polyline
-    if (currentPolygon) {
-      fabricCanvas.remove(currentPolygon);
-      setCurrentPolygon(null);
+    try {
+      const allObjects = fabricCanvas.getObjects();
+      const markersToRemove = [];
+      
+      // Find point markers and polygons/polylines
+      allObjects.forEach(obj => {
+        // Point markers (circles with radius 10)
+        if (obj instanceof Circle && obj.radius === 10) {
+          markersToRemove.push(obj);
+        }
+        // Point number labels (text with fontSize 14)
+        else if (obj instanceof Text && obj.fontSize === 14) {
+          markersToRemove.push(obj);
+        }
+        // Temporary polygons/polylines (not the final completed ones)
+        else if ((obj instanceof Polyline || obj instanceof Polygon) && 
+                 obj !== smallPolygon && obj !== mediumPolygon && obj !== testPolygon && obj !== testMediumPolygon) {
+          // Only remove if it's a temporary drawing polygon
+          if (obj.stroke === '#2563eb' && !obj.fill) {
+            markersToRemove.push(obj);
+          } else if (obj.stroke === '#2563eb' && obj.fill === '') {
+            markersToRemove.push(obj);
+          }
+        }
+      });
+      
+      // Remove identified markers
+      markersToRemove.forEach(marker => {
+        fabricCanvas.remove(marker);
+      });
+      
+      // Remove current polygon/polyline reference
+      if (currentPolygon) {
+        // Only remove if it's not already removed
+        if (fabricCanvas.getObjects().includes(currentPolygon)) {
+          fabricCanvas.remove(currentPolygon);
+        }
+        setCurrentPolygon(null);
+      }
+    } catch (error) {
+      console.error("Error in removeAllPointMarkers:", error);
     }
   };
 
   const redrawPointsAndPolygon = (points: Point[]) => {
-    if (!fabricCanvas) return;
+    if (!fabricCanvas || !points || points.length === 0) return;
     
-    // Redraw point markers
-    points.forEach((point, index) => {
-      const circle = new Circle({
-        radius: 10,
-        fill: '#2563eb',
-        stroke: '#ffffff',
-        strokeWidth: 2,
-        left: point.x - 10,
-        top: point.y - 10,
-        selectable: false,
-        evented: false,
-      });
+    try {
+      // Redraw point markers
+      points.forEach((point, index) => {
+        if (!point || typeof point.x !== 'number' || typeof point.y !== 'number') {
+          console.warn("Invalid point data:", point);
+          return;
+        }
+        
+        const circle = new Circle({
+          radius: 10,
+          fill: '#2563eb',
+          stroke: '#ffffff',
+          strokeWidth: 2,
+          left: point.x - 10,
+          top: point.y - 10,
+          selectable: false,
+          evented: false,
+        });
 
-      const text = new Text((index + 1).toString(), {
-        left: point.x - 4.5,
-        top: point.y - 7,
-        fontSize: 14,
-        fill: '#ffffff',
-        fontWeight: 'bold',
-        textAlign: 'center',
-        selectable: false,
-        evented: false,
-      });
+        const text = new Text((index + 1).toString(), {
+          left: point.x - 4.5,
+          top: point.y - 7,
+          fontSize: 14,
+          fill: '#ffffff',
+          fontWeight: 'bold',
+          textAlign: 'center',
+          selectable: false,
+          evented: false,
+        });
 
-      fabricCanvas.add(circle);
-      fabricCanvas.add(text);
-    });
-    
-    // Redraw polygon/polyline
-    drawTemporaryPolygon(points);
-    fabricCanvas.renderAll();
+        fabricCanvas.add(circle);
+        fabricCanvas.add(text);
+      });
+      
+      // Redraw polygon/polyline
+      drawTemporaryPolygon(points);
+      fabricCanvas.renderAll();
+    } catch (error) {
+      console.error("Error in redrawPointsAndPolygon:", error);
+    }
   };
 
   const exportCanvas = () => {
