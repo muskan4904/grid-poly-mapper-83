@@ -1453,10 +1453,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     // Custom gate labels mapping
     const gateLabels = [
-      'N4', 'N5', 'N6', 'N8', 'E1', 'E2', 'E3', 'E4',
-      'E5', 'E7', 'E8', 'S1', 'S2', 'S3', 'S4', 'S5',
-      'S6', 'S7', 'S8', 'W1', 'W2', 'W3', 'W4', 'W5',
-      'W6', 'W7', 'W8', 'N7', 'N1', 'N2', 'N3', 'N4'
+      'N4', 'N5', 'N6', 'N7', 'N8', 'E1', 'E2', 'E3',
+      'E4', 'E5', 'E6', 'E7', 'E8', 'S1', 'S2', 'S3',
+      'S4', 'S5', 'S6', 'S7', 'S8', 'W1', 'W2', 'W3',
+      'W4', 'W5', 'W6', 'W7', 'W8', 'N1', 'N2', 'N3'
     ];
 
     const hasExisting = gateLines.length >= 64; // 32 lines + 32 labels
