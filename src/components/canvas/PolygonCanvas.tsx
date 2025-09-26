@@ -1474,10 +1474,65 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Disable selection for performance while updating
     fabricCanvas.selection = false;
 
-    // Create water area polygon first
+    // First, draw ALL 16 direction lines (including water directions)
+    for (let i = 0; i < N; i++) {
+      const angle = i * angleStep + rotationRad + northOffset;
+      const boundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
+
+      const middleAngle = angle + angleStep / 2;
+      let labelX = center.x;
+      let labelY = center.y;
+
+      if (boundaryPoint) {
+        const labelDistance = Math.hypot(boundaryPoint.x - center.x, boundaryPoint.y - center.y) * 0.75;
+        labelX = center.x + Math.cos(middleAngle) * labelDistance;
+        labelY = center.y + Math.sin(middleAngle) * labelDistance;
+      }
+
+      if (hasExisting) {
+        const line = fiveElementsLines[2 * i] as unknown as Line;
+        const label = fiveElementsLines[2 * i + 1] as unknown as Text;
+        if (boundaryPoint) {
+          line.set({ x1: center.x, y1: center.y, x2: boundaryPoint.x, y2: boundaryPoint.y, visible: true });
+          label.set({ left: labelX, top: labelY, text: directionLabels[i], visible: true });
+        } else {
+          line.set({ visible: false });
+          label.set({ visible: false });
+        }
+      } else if (boundaryPoint) {
+        // Draw line for ALL directions
+        const line = new Line([center.x, center.y, boundaryPoint.x, boundaryPoint.y], {
+          stroke: '#8b5cf6', // Purple color for all direction lines
+          strokeWidth: 2,
+          selectable: false,
+          evented: false,
+          objectCaching: false,
+        });
+        newObjects.push(line);
+
+        const label = new Text(directionLabels[i], {
+          left: labelX,
+          top: labelY,
+          fontSize: 12,
+          fill: '#8b5cf6', // Purple color for all direction labels
+          fontFamily: 'Arial Black',
+          fontWeight: 'bold',
+          selectable: false,
+          evented: false,
+          textAlign: 'center',
+          originX: 'center',
+          originY: 'center',
+          objectCaching: false,
+        });
+        newObjects.push(label);
+        console.log('Added Five Elements line and label for direction:', directionLabels[i]);
+      }
+    }
+
+    // Then, add the water area polygon on top of the water directions
     const waterAreaPoints: Point[] = [center]; // Start from center
     
-    // Add boundary points for water directions
+    // Add boundary points for water directions in sequence
     for (let i = 0; i < waterDirections.length; i++) {
       const dirIndex = waterDirections[i];
       const angle = dirIndex * angleStep + rotationRad + northOffset;
@@ -1487,14 +1542,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       }
     }
     
-    // Add the boundary point for the next direction after NE to close the area
-    const nextAngle = (waterDirections[waterDirections.length - 1] + 1) * angleStep + rotationRad + northOffset;
-    const nextBoundaryPoint = getRayIntersectionWithPolygon(center, nextAngle, polygonPoints);
-    if (nextBoundaryPoint) {
-      waterAreaPoints.push(nextBoundaryPoint);
+    // Add the boundary point for direction after NE (ENE) to properly close the water area
+    const closeAngle = 3 * angleStep + rotationRad + northOffset; // ENE direction
+    const closeBoundaryPoint = getRayIntersectionWithPolygon(center, closeAngle, polygonPoints);
+    if (closeBoundaryPoint) {
+      waterAreaPoints.push(closeBoundaryPoint);
     }
 
-    if (waterAreaPoints.length > 2) {
+    // Only create water area if we have enough points and this is a new creation
+    if (!hasExisting && waterAreaPoints.length > 3) {
       // Create water area polygon
       const waterAreaPolygon = new Polygon(waterAreaPoints.map(p => ({ x: p.x, y: p.y })), {
         fill: 'rgba(59, 130, 246, 0.3)', // Blue with transparency
@@ -1526,67 +1582,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         objectCaching: false,
       });
       newObjects.push(waterText);
-    }
-
-    // Draw regular direction lines for all directions
-    for (let i = 0; i < N; i++) {
-      const angle = i * angleStep + rotationRad + northOffset;
-      const boundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
-
-      const middleAngle = angle + angleStep / 2;
-      let labelX = center.x;
-      let labelY = center.y;
-
-      if (boundaryPoint) {
-        const labelDistance = Math.hypot(boundaryPoint.x - center.x, boundaryPoint.y - center.y) * 0.75;
-        labelX = center.x + Math.cos(middleAngle) * labelDistance;
-        labelY = center.y + Math.sin(middleAngle) * labelDistance;
-      }
-
-      if (hasExisting) {
-        // Update existing objects (skip water area objects in existing array)
-        const lineIndex = waterDirections.includes(i) ? -1 : 2 * i + 2; // Offset by 2 for water area objects
-        const labelIndex = waterDirections.includes(i) ? -1 : 2 * i + 3;
-        
-        if (lineIndex >= 0 && lineIndex < fiveElementsLines.length) {
-          const line = fiveElementsLines[lineIndex] as unknown as Line;
-          const label = fiveElementsLines[labelIndex] as unknown as Text;
-          if (boundaryPoint) {
-            line.set({ x1: center.x, y1: center.y, x2: boundaryPoint.x, y2: boundaryPoint.y, visible: true });
-            label.set({ left: labelX, top: labelY, text: directionLabels[i], visible: true });
-          } else {
-            line.set({ visible: false });
-            label.set({ visible: false });
-          }
-        }
-      } else if (boundaryPoint && !waterDirections.includes(i)) {
-        // Only draw lines for non-water directions
-        const line = new Line([center.x, center.y, boundaryPoint.x, boundaryPoint.y], {
-          stroke: '#8b5cf6', // Purple color for distinction
-          strokeWidth: 2,
-          selectable: false,
-          evented: false,
-          objectCaching: false,
-        });
-        newObjects.push(line);
-
-        const label = new Text(directionLabels[i], {
-          left: labelX,
-          top: labelY,
-          fontSize: 12,
-          fill: '#8b5cf6', // Purple color for distinction
-          fontFamily: 'Arial Black',
-          fontWeight: 'bold',
-          selectable: false,
-          evented: false,
-          textAlign: 'center',
-          originX: 'center',
-          originY: 'center',
-          objectCaching: false,
-        });
-        newObjects.push(label);
-        console.log('Added Five Elements line and label for direction:', directionLabels[i]);
-      }
     }
 
     if (!hasExisting && newObjects.length > 0) {
