@@ -375,46 +375,43 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.add(centerCircle);
     setCenterPoint(centerCircle);
 
-    // Draw smaller polygon with much smaller area for more spacing
-    if (showDevtas) {
+    // Set primary default features on polygon completion
+    // Force-enable 16 Directions and disable 45 Devtas as the default primary view
+    setShow16Directions(true);
+    setShowDevtas(false);
+
+    // Compute which features to render for this completion step
+    const devtasEnabled = false; // Always off by default on completion
+    const directionsEnabled = true; // Always on by default on completion
+    const gatesEnabled = show32Gates;
+    const entrancesEnabled = show32Entrances;
+    const marmaEnabled = showMarmaSthan;
+    const testEnabled = showTest;
+
+    // Draw features according to the desired defaults
+    if (devtasEnabled) {
       drawSmallPolygon(points, center);
-    }
-    
-    // Draw medium polygon with 62% area
-    if (showDevtas) {
       drawMediumPolygon(points, center);
-    }
-
-    // Removed radial lines extension
-
-    // Divide ring area into 32 equal-angle slices
-    if (showDevtas) {
       drawRingSlices(points, center);
     }
 
-    // Draw 16 directions if enabled
-    if (show16Directions) {
+    if (directionsEnabled) {
       draw16Directions(points, center);
     }
 
-    // Draw 32 gates if enabled
-    if (show32Gates) {
+    if (gatesEnabled) {
       draw32Gates(points, center);
     }
 
-
-    // Draw 32 entrances if enabled
-    if (show32Entrances) {
+    if (entrancesEnabled) {
       draw32Entrances(points, center);
     }
 
-    // Draw Marma Sthan if enabled
-    if (showMarmaSthan) {
+    if (marmaEnabled) {
       drawMarmaSthan(points, center);
     }
 
-    // Draw Test feature if enabled
-    if (showTest) {
+    if (testEnabled) {
       drawTestMediumPolygon(points, center);
       drawTestRingSlices(points, center);
     }
