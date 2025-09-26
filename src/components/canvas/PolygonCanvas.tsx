@@ -1447,7 +1447,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
   // Draw five elements - exact duplicate of 16 directions
   const drawFiveElements = useCallback((polygonPoints: Point[], center: Point) => {
-    if (!fabricCanvas || !showFiveElements) return;
+    console.log('drawFiveElements called:', { showFiveElements, polygonPoints: polygonPoints.length, center });
+    if (!fabricCanvas || !showFiveElements) {
+      console.log('Exiting drawFiveElements: fabricCanvas:', !!fabricCanvas, 'showFiveElements:', showFiveElements);
+      return;
+    }
 
     const N = 16; // Same as 16 directions
     const angleStep = (Math.PI * 2) / N;
@@ -1518,12 +1522,14 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           isFiveElementsLabel: true,
         });
         newObjects.push(label);
+        console.log('Added Five Elements line and label for direction:', directionLabels[i]);
       }
     }
 
     if (!hasExisting && newObjects.length > 0) {
       fabricCanvas.add(...newObjects);
       setFiveElementsLines(newObjects);
+      console.log('Added', newObjects.length, 'Five Elements objects to canvas');
     }
 
     // Re-enable selection and render
@@ -1540,6 +1546,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     
     const newShowFiveElements = !showFiveElements;
     setShowFiveElements(newShowFiveElements);
+    
+    console.log('Five Elements toggled:', newShowFiveElements, 'Completed polygon points:', completedPolygonPoints.length);
 
     if (!newShowFiveElements) {
       // Disabling: clear existing objects  
@@ -1547,7 +1555,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     } else if (completedPolygonPoints.length >= 3) {
       // Enabling: create (or update) instantly without clearing
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
+      console.log('Drawing Five Elements with center:', center);
       drawFiveElements(completedPolygonPoints, center);
+    } else {
+      console.log('Cannot draw Five Elements: insufficient polygon points');
     }
 
     toast.success(`Five elements ${newShowFiveElements ? 'enabled' : 'disabled'}`);
@@ -1560,6 +1571,14 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       draw16Directions(completedPolygonPoints, center);
     }
   }, [rotationDegree, show16Directions, currentPolygon, completedPolygonPoints, fabricCanvas, draw16Directions]);
+
+  // Smooth updates for five elements rotation
+  useEffect(() => {
+    if (showFiveElements && currentPolygon && completedPolygonPoints.length >= 3 && fabricCanvas) {
+      const center = calculatePolygonCenterLocal(completedPolygonPoints);
+      drawFiveElements(completedPolygonPoints, center);
+    }
+  }, [rotationDegree, showFiveElements, currentPolygon, completedPolygonPoints, fabricCanvas, drawFiveElements]);
 
   // Clear all 32 gates lines and labels
   const clearGateLines = useCallback(() => {
@@ -3918,7 +3937,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                 {/* Statistics removed per user request - keeping only feature controls below */}
                 
                      {/* Shared Rotation Controls */}
-                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || show32Entrances || showMarmaSthan || showTest) && (
+                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || show32Entrances || showMarmaSthan || showFiveElements || showTest) && (
                     <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
