@@ -1162,7 +1162,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       originY: 'center',
       selectable: false,
       evented: false,
-      fontFamily: 'Arial, sans-serif'
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: 'white',
+      padding: 4
     });
     fabricCanvas.add(executiveText);
     newVithiPolygons.push(executiveText);
@@ -1179,6 +1181,26 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.add(blackPoly);
     newVithiPolygons.push(blackPoly);
     
+    // Add "economy class" text inside the black polygon
+    const blackCenter = calculatePolygonCenter(blackPoints);
+    const economyText = new Text("economy class", {
+      left: blackCenter.x,
+      top: blackCenter.y,
+      fontSize: 14,
+      fill: '#000000', // Black text to match the polygon
+      fontWeight: 'bold',
+      textAlign: 'center',
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      evented: false,
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: 'white',
+      padding: 4
+    });
+    fabricCanvas.add(economyText);
+    newVithiPolygons.push(economyText);
+    
     // Create center polygon (blue)
     const centerFabricPoints = centerPoints.map(p => ({ x: p.x, y: p.y }));
     const centerPoly = new Polygon(centerFabricPoints, {
@@ -1190,6 +1212,49 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     });
     fabricCanvas.add(centerPoly);
     newVithiPolygons.push(centerPoly);
+    
+    // Add "business area" text inside the blue polygon
+    const blueCenter = calculatePolygonCenter(centerPoints);
+    const businessText = new Text("business area", {
+      left: blueCenter.x,
+      top: blueCenter.y,
+      fontSize: 16,
+      fill: '#0066cc', // Blue text to match the polygon
+      fontWeight: 'bold',
+      textAlign: 'center',
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      evented: false,
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: 'white',
+      padding: 4
+    });
+    fabricCanvas.add(businessText);
+    newVithiPolygons.push(businessText);
+    
+    // Add "normal class" text in the area between main polygon and black polygon
+    // Calculate center point of the space between main and black polygons
+    const mainCenter = calculatePolygonCenter(polygonPoints);
+    const normalClassX = (mainCenter.x + blackCenter.x) / 2;
+    const normalClassY = blackCenter.y - 40; // Position above the black polygon
+    const normalText = new Text("normal class", {
+      left: normalClassX,
+      top: normalClassY,
+      fontSize: 15,
+      fill: '#666666', // Gray text for the normal area
+      fontWeight: 'bold',
+      textAlign: 'center',
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      evented: false,
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: 'white',
+      padding: 4
+    });
+    fabricCanvas.add(normalText);
+    newVithiPolygons.push(normalText);
     
     // Ensure proper layering
     newVithiPolygons.forEach(poly => fabricCanvas.bringObjectToFront(poly));
