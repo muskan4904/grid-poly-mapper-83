@@ -1329,6 +1329,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const clearFiveElementsLines = useCallback(() => {
     if (!fabricCanvas) return;
     
+    console.log('Clearing five elements lines, current count:', fiveElementsLines.length);
     fiveElementsLines.forEach(obj => {
       if (fabricCanvas.contains(obj)) {
         fabricCanvas.remove(obj);
@@ -1445,12 +1446,23 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     toast.success(`16 directions ${newShow16Directions ? 'enabled' : 'disabled'}`);
   };
 
-  // Draw five elements - modified to show water area
+  // Draw five elements - with rotating water area
   const drawFiveElements = useCallback((polygonPoints: Point[], center: Point) => {
-    console.log('drawFiveElements called:', { showFiveElements, polygonPoints: polygonPoints.length, center });
+    console.log('drawFiveElements called with rotation:', rotationDegree, 'hasExisting:', fiveElementsLines.length > 0);
     if (!fabricCanvas || !showFiveElements) {
       console.log('Exiting drawFiveElements: fabricCanvas:', !!fabricCanvas, 'showFiveElements:', showFiveElements);
       return;
+    }
+
+    // Clear existing objects on every call to recreate them with new rotation
+    if (fiveElementsLines.length > 0) {
+      console.log('Clearing existing five elements objects for rotation update');
+      fiveElementsLines.forEach(obj => {
+        if (fabricCanvas.contains(obj)) {
+          fabricCanvas.remove(obj);
+        }
+      });
+      setFiveElementsLines([]);
     }
 
     const N = 16; // Same as 16 directions
@@ -1465,16 +1477,17 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
     ];
 
-    // Water area directions: NNW(15), N(0), NNE(1), NE(2)
+    // Water area should always be at "North" area (directions 15, 0, 1, 2 in the base rotation)
+    // These represent NNW, N, NNE, NE at 0 degree rotation
     const waterDirections = [15, 0, 1, 2];
-
-    const hasExisting = fiveElementsLines.length > 0;
+    
     const newObjects: any[] = [];
 
     // Disable selection for performance while updating
     fabricCanvas.selection = false;
 
-    // First, draw ALL 16 direction lines (including water directions)
+    console.log('Drawing all 16 direction lines...');
+    // First, draw ALL 16 direction lines 
     for (let i = 0; i < N; i++) {
       const angle = i * angleStep + rotationRad + northOffset;
       const boundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
@@ -1487,19 +1500,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const labelDistance = Math.hypot(boundaryPoint.x - center.x, boundaryPoint.y - center.y) * 0.75;
         labelX = center.x + Math.cos(middleAngle) * labelDistance;
         labelY = center.y + Math.sin(middleAngle) * labelDistance;
-      }
 
-      if (hasExisting) {
-        const line = fiveElementsLines[2 * i] as unknown as Line;
-        const label = fiveElementsLines[2 * i + 1] as unknown as Text;
-        if (boundaryPoint) {
-          line.set({ x1: center.x, y1: center.y, x2: boundaryPoint.x, y2: boundaryPoint.y, visible: true });
-          label.set({ left: labelX, top: labelY, text: directionLabels[i], visible: true });
-        } else {
-          line.set({ visible: false });
-          label.set({ visible: false });
-        }
-      } else if (boundaryPoint) {
         // Draw line for ALL directions
         const line = new Line([center.x, center.y, boundaryPoint.x, boundaryPoint.y], {
           stroke: '#8b5cf6', // Purple color for all direction lines
@@ -1525,32 +1526,32 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           objectCaching: false,
         });
         newObjects.push(label);
-        console.log('Added Five Elements line and label for direction:', directionLabels[i]);
       }
     }
 
-    // Then, add the water area polygon on top of the water directions
+    console.log('Drawing water area polygon...');
+    // Then, add the water area polygon on top
     const waterAreaPoints: Point[] = [center]; // Start from center
     
-    // Add boundary points for water directions in sequence
+    // Add boundary points for water directions in the correct order
+    const waterBoundaryPoints: Point[] = [];
     for (let i = 0; i < waterDirections.length; i++) {
       const dirIndex = waterDirections[i];
       const angle = dirIndex * angleStep + rotationRad + northOffset;
       const boundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
       if (boundaryPoint) {
-        waterAreaPoints.push(boundaryPoint);
+        waterBoundaryPoints.push(boundaryPoint);
       }
     }
-    
-    // Add the boundary point for direction after NE (ENE) to properly close the water area
-    const closeAngle = 3 * angleStep + rotationRad + northOffset; // ENE direction
-    const closeBoundaryPoint = getRayIntersectionWithPolygon(center, closeAngle, polygonPoints);
-    if (closeBoundaryPoint) {
-      waterAreaPoints.push(closeBoundaryPoint);
-    }
 
-    // Only create water area if we have enough points and this is a new creation
-    if (!hasExisting && waterAreaPoints.length > 3) {
+    // Create polygon points in proper order: center -> NNW -> N -> NNE -> NE -> back to center
+    if (waterBoundaryPoints.length === 4) {
+      // Add points in clockwise order for proper polygon
+      waterAreaPoints.push(waterBoundaryPoints[0]); // NNW
+      waterAreaPoints.push(waterBoundaryPoints[1]); // N  
+      waterAreaPoints.push(waterBoundaryPoints[2]); // NNE
+      waterAreaPoints.push(waterBoundaryPoints[3]); // NE
+
       // Create water area polygon
       const waterAreaPolygon = new Polygon(waterAreaPoints.map(p => ({ x: p.x, y: p.y })), {
         fill: 'rgba(59, 130, 246, 0.3)', // Blue with transparency
@@ -1563,8 +1564,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       newObjects.push(waterAreaPolygon);
 
       // Calculate center of water area for text placement
-      const waterCenterX = waterAreaPoints.reduce((sum, p) => sum + p.x, 0) / waterAreaPoints.length;
-      const waterCenterY = waterAreaPoints.reduce((sum, p) => sum + p.y, 0) / waterAreaPoints.length;
+      const waterCenterX = waterBoundaryPoints.reduce((sum, p) => sum + p.x, 0) / waterBoundaryPoints.length;
+      const waterCenterY = waterBoundaryPoints.reduce((sum, p) => sum + p.y, 0) / waterBoundaryPoints.length;
 
       // Add water area text
       const waterText = new Text('Water Area', {
@@ -1582,12 +1583,16 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         objectCaching: false,
       });
       newObjects.push(waterText);
+      
+      console.log('Water area created with', waterBoundaryPoints.length, 'boundary points');
+    } else {
+      console.log('Could not create water area: insufficient boundary points', waterBoundaryPoints.length);
     }
 
-    if (!hasExisting && newObjects.length > 0) {
+    if (newObjects.length > 0) {
       fabricCanvas.add(...newObjects);
       setFiveElementsLines(newObjects);
-      console.log('Added', newObjects.length, 'Five Elements objects to canvas');
+      console.log('Added', newObjects.length, 'Five Elements objects to canvas (', newObjects.length / 2 - 2, 'direction lines + water area)');
     }
 
     // Re-enable selection and render
