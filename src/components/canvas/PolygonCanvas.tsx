@@ -78,6 +78,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   // Undo/Redo functionality for polygon drawing
   const [polygonHistory, setPolygonHistory] = useState<Point[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const historyIndexRef = useRef(-1);
   
 
   // Initialize canvas with responsive dimensions
@@ -267,13 +268,19 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         // Draw temporary polygon with proper point connections
         drawTemporaryPolygon(updatedPoints);
         
-        // Update polygon history for undo/redo
+        // Update polygon history for undo/redo using ref to avoid stale closures
         setPolygonHistory(prevHistory => {
-          const newHistory = prevHistory.slice(0, historyIndex + 1);
+          const newIndex = historyIndexRef.current + 1;
+          const newHistory = prevHistory.slice(0, newIndex);
           newHistory.push(updatedPoints);
+          historyIndexRef.current = newIndex;
           return newHistory;
         });
-        setHistoryIndex(prevIndex => prevIndex + 1);
+        setHistoryIndex(prevIndex => {
+          const next = prevIndex + 1;
+          historyIndexRef.current = next;
+          return next;
+        });
         
         return updatedPoints;
       });
@@ -2498,6 +2505,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const startDrawing = () => {
     setIsDrawing(true);
     setPolygonPoints([]);
+    setPolygonHistory([[]]);
+    setHistoryIndex(0);
+    historyIndexRef.current = 0;
     if (currentPolygon && fabricCanvas) {
       fabricCanvas.remove(currentPolygon);
       setCurrentPolygon(null);
