@@ -1241,8 +1241,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Add "normal class" text in the area between main polygon and black polygon
     // Calculate center point of the space between main and black polygons
     const mainCenter = calculatePolygonCenter(polygonPoints);
-    const normalClassX = (mainCenter.x + blackCenter.x) / 2;
-    const normalClassY = blackCenter.y - 40; // Position above the black polygon
+    const blackCenterForNormal = calculatePolygonCenter(blackPoints);
+    
+    // Position the normal class text in the annular region between black and main polygon
+    // Use a point that's 80% of the way from black center to main edge
+    const normalScale = 0.8; // Between black (62%) and main (100%)
+    const normalClassX = mainCenter.x + (blackCenterForNormal.x - mainCenter.x) * normalScale;
+    const normalClassY = mainCenter.y + (blackCenterForNormal.y - mainCenter.y) * normalScale;
     const normalText = new Text("normal class", {
       left: normalClassX,
       top: normalClassY,
