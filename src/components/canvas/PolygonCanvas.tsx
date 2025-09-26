@@ -1106,7 +1106,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
   // Vithi Mandal Functions - Copy of 45 devtas but without radial lines
   const drawVithiMandalPolygons = (polygonPoints: Point[], center: Point) => {
-    if (!fabricCanvas) return;
+    if (!fabricCanvas) {
+      console.log('No fabricCanvas available for Vithi Mandal');
+      return;
+    }
+    
+    console.log('drawVithiMandalPolygons called with', polygonPoints.length, 'points');
     
     // Clear existing vithi mandal polygons
     clearVithiMandalPolygons();
@@ -1748,9 +1753,19 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     
     if (newShowVithiMandal) {
       // Enable: draw vithi mandal polygons
-      if (completedPolygonPoints.length >= 3) {
-        const center = calculatePolygonCenterLocal(completedPolygonPoints);
-        drawVithiMandalPolygons(completedPolygonPoints, center);
+      // Use polygonPoints if available, fallback to completedPolygonPoints
+      const pointsToUse = polygonPoints.length >= 3 ? polygonPoints : completedPolygonPoints;
+      
+      console.log('Vithi Mandal - polygonPoints:', polygonPoints.length, 'completedPolygonPoints:', completedPolygonPoints.length);
+      
+      if (pointsToUse.length >= 3) {
+        const center = calculatePolygonCenterLocal(pointsToUse);
+        console.log('Drawing Vithi Mandal with', pointsToUse.length, 'points');
+        drawVithiMandalPolygons(pointsToUse, center);
+      } else {
+        toast.error('Please draw a polygon first before enabling Vithi Mandal');
+        setShowVithiMandal(false);
+        return;
       }
     } else {
       // Disable: clear vithi mandal polygons
