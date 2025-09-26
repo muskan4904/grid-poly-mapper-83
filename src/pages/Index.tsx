@@ -103,7 +103,7 @@ const Index = () => {
             {!uploadedImage && (
               <Card className="bg-gradient-secondary border-primary/20 flex-1">
                 <CardContent className="pt-6 sm:pt-8 pb-8 sm:pb-10 px-4 sm:px-6 h-full flex flex-col justify-center">
-                  <div className="grid grid-cols-1 gap-6 sm:gap-8 text-sm max-w-md mx-auto w-full">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-6 text-sm max-w-5xl mx-auto w-full">
                     <div className="flex items-start gap-4">
                       <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-sm sm:text-base font-bold flex-shrink-0">1</div>
                       <div className="flex-1">
