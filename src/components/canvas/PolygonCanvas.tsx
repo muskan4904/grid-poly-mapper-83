@@ -2086,7 +2086,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         29: 'N1',
         30: 'N2',
         31: 'N3',
-        32: 'N3',
+        32: 'N4',
       };
       
       const getSliceLabel = (index: number) => {
