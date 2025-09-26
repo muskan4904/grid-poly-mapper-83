@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Eye, Download, FileText } from 'lucide-react';
+import { Eye, Download, FileText, Undo2, Redo2 } from 'lucide-react';
 import { DirectionChartDialog } from '@/components/ui/direction-chart';
 import { DevtaNamesDialog } from '@/components/ui/devta-names-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -74,6 +74,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [testPolygon, setTestPolygon] = useState<Polygon | null>(null);
   const [testMediumPolygon, setTestMediumPolygon] = useState<Polygon | null>(null);
   const [testGridLines, setTestGridLines] = useState<any[]>([]);
+  
+  // Undo/Redo functionality for polygon drawing
+  const [polygonHistory, setPolygonHistory] = useState<Point[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   
 
   // Initialize canvas with responsive dimensions
@@ -262,6 +266,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         
         // Draw temporary polygon with proper point connections
         drawTemporaryPolygon(updatedPoints);
+        
+        // Update polygon history for undo/redo
+        setPolygonHistory(prevHistory => {
+          const newHistory = prevHistory.slice(0, historyIndex + 1);
+          newHistory.push(updatedPoints);
+          return newHistory;
+        });
+        setHistoryIndex(prevIndex => prevIndex + 1);
+        
         return updatedPoints;
       });
     };
@@ -2574,6 +2587,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     
     setIsDrawing(false);
     setPolygonPoints([]);
+    setPolygonHistory([]);
+    setHistoryIndex(-1);
     
     if (currentPolygon) {
       fabricCanvas.remove(currentPolygon);
@@ -2591,6 +2606,18 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       fabricCanvas.remove(mediumPolygon);
       setMediumPolygon(null);
     }
+    
+    // Remove all point markers
+    const allObjects = fabricCanvas.getObjects();
+    const markersToRemove = allObjects.filter(obj => 
+      (obj instanceof Circle && obj.radius === 10) ||
+      (obj instanceof Text && obj.fontSize === 14)
+    );
+    
+    markersToRemove.forEach(marker => {
+      fabricCanvas.remove(marker);
+    });
+    
     clearGrid();
     clearDevtaZones();
     clearDirectionLines();
@@ -2602,6 +2629,94 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.renderAll();
     onPolygonChange?.([], 0, { x: 0, y: 0 });
     toast.success("Canvas cleared!");
+  };
+
+  const undoLastPoint = () => {
+    if (!isDrawing || historyIndex <= 0) return;
+    
+    const newIndex = historyIndex - 1;
+    const previousPoints = polygonHistory[newIndex];
+    
+    // Remove all point markers and redraw
+    removeAllPointMarkers();
+    setPolygonPoints(previousPoints);
+    setHistoryIndex(newIndex);
+    
+    // Redraw points and polygon
+    redrawPointsAndPolygon(previousPoints);
+    toast.success("Undid last point");
+  };
+
+  const redoLastPoint = () => {
+    if (!isDrawing || historyIndex >= polygonHistory.length - 1) return;
+    
+    const newIndex = historyIndex + 1;
+    const nextPoints = polygonHistory[newIndex];
+    
+    // Remove all point markers and redraw
+    removeAllPointMarkers();
+    setPolygonPoints(nextPoints);
+    setHistoryIndex(newIndex);
+    
+    // Redraw points and polygon
+    redrawPointsAndPolygon(nextPoints);
+    toast.success("Redid last point");
+  };
+
+  const removeAllPointMarkers = () => {
+    if (!fabricCanvas) return;
+    
+    const allObjects = fabricCanvas.getObjects();
+    const markersToRemove = allObjects.filter(obj => 
+      (obj instanceof Circle && obj.radius === 10) ||
+      (obj instanceof Text && obj.fontSize === 14)
+    );
+    
+    markersToRemove.forEach(marker => {
+      fabricCanvas.remove(marker);
+    });
+    
+    // Remove current polygon/polyline
+    if (currentPolygon) {
+      fabricCanvas.remove(currentPolygon);
+      setCurrentPolygon(null);
+    }
+  };
+
+  const redrawPointsAndPolygon = (points: Point[]) => {
+    if (!fabricCanvas) return;
+    
+    // Redraw point markers
+    points.forEach((point, index) => {
+      const circle = new Circle({
+        radius: 10,
+        fill: '#2563eb',
+        stroke: '#ffffff',
+        strokeWidth: 2,
+        left: point.x - 10,
+        top: point.y - 10,
+        selectable: false,
+        evented: false,
+      });
+
+      const text = new Text((index + 1).toString(), {
+        left: point.x - 4.5,
+        top: point.y - 7,
+        fontSize: 14,
+        fill: '#ffffff',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        selectable: false,
+        evented: false,
+      });
+
+      fabricCanvas.add(circle);
+      fabricCanvas.add(text);
+    });
+    
+    // Redraw polygon/polyline
+    drawTemporaryPolygon(points);
+    fabricCanvas.renderAll();
   };
 
   const exportCanvas = () => {
@@ -3477,6 +3592,38 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             >
               Finish ({polygonPoints.length})
             </button>
+          )}
+          
+          {isDrawing && (
+            <>
+              <button
+                onClick={undoLastPoint}
+                disabled={historyIndex <= 0}
+                className={cn(
+                  "px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-base rounded-md sm:rounded-lg font-medium transition-smooth flex-1 sm:flex-none min-w-[50px] sm:min-w-[70px]",
+                  "bg-orange-600 text-white hover:bg-orange-700",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                  "shadow-sm sm:shadow-md hover:shadow-lg touch-manipulation h-8 sm:h-auto flex items-center gap-1 justify-center"
+                )}
+              >
+                <Undo2 size={12} className="sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Undo</span>
+              </button>
+              
+              <button
+                onClick={redoLastPoint}
+                disabled={historyIndex >= polygonHistory.length - 1}
+                className={cn(
+                  "px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-base rounded-md sm:rounded-lg font-medium transition-smooth flex-1 sm:flex-none min-w-[50px] sm:min-w-[70px]",
+                  "bg-orange-600 text-white hover:bg-orange-700",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                  "shadow-sm sm:shadow-md hover:shadow-lg touch-manipulation h-8 sm:h-auto flex items-center gap-1 justify-center"
+                )}
+              >
+                <Redo2 size={12} className="sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Redo</span>
+              </button>
+            </>
           )}
           
           <button
