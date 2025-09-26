@@ -2629,6 +2629,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const newIndex = historyIndex - 1;
       const previousPoints = polygonHistory[newIndex] || [];
       
+      console.log("Undo - Current Index:", historyIndex, "New Index:", newIndex, "Previous Points:", previousPoints);
+      
       // Remove all point markers and current polygon
       removeAllPointMarkers();
       
@@ -2639,9 +2641,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Redraw points and polygon
       if (previousPoints.length > 0) {
         redrawPointsAndPolygon(previousPoints);
+      } else {
+        // If no points, just clear the canvas of markers
+        fabricCanvas.renderAll();
       }
       
-      toast.success("Undid last point");
+      toast.success(`Undid last point - ${previousPoints.length} points remaining`);
     } catch (error) {
       console.error("Error in undoLastPoint:", error);
       toast.error("Failed to undo last point");
@@ -2655,6 +2660,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const newIndex = historyIndex + 1;
       const nextPoints = polygonHistory[newIndex] || [];
       
+      console.log("Redo - Current Index:", historyIndex, "New Index:", newIndex, "Next Points:", nextPoints);
+      
       // Remove all point markers and current polygon
       removeAllPointMarkers();
       
@@ -2665,9 +2672,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Redraw points and polygon
       if (nextPoints.length > 0) {
         redrawPointsAndPolygon(nextPoints);
+      } else {
+        // If no points, just clear the canvas of markers
+        fabricCanvas.renderAll();
       }
       
-      toast.success("Redid last point");
+      toast.success(`Redid last point - ${nextPoints.length} points now`);
     } catch (error) {
       console.error("Error in redoLastPoint:", error);
       toast.error("Failed to redo last point");
@@ -2681,7 +2691,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const allObjects = fabricCanvas.getObjects();
       const markersToRemove = [];
       
-      // Find point markers and polygons/polylines
+      // Find point markers and temporary polygons/polylines
       allObjects.forEach(obj => {
         // Point markers (circles with radius 10)
         if (obj instanceof Circle && obj.radius === 10) {
@@ -2691,27 +2701,28 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         else if (obj instanceof Text && obj.fontSize === 14) {
           markersToRemove.push(obj);
         }
-        // Temporary polygons/polylines (not the final completed ones)
-        else if ((obj instanceof Polyline || obj instanceof Polygon) && 
+        // Temporary polygons/polylines during drawing (blue stroke, no fill or transparent fill)
+        else if ((obj instanceof Polyline || (obj instanceof Polygon && obj.fill === 'rgba(37, 99, 235, 0.2)' === false)) && 
                  obj !== smallPolygon && obj !== mediumPolygon && obj !== testPolygon && obj !== testMediumPolygon) {
-          // Only remove if it's a temporary drawing polygon
-          if (obj.stroke === '#2563eb' && !obj.fill) {
-            markersToRemove.push(obj);
-          } else if (obj.stroke === '#2563eb' && obj.fill === '') {
+          // Only remove temporary drawing elements (blue stroke with no significant fill)
+          if (obj.stroke === '#2563eb' && (obj.fill === '' || obj.fill === 'transparent' || !obj.fill)) {
             markersToRemove.push(obj);
           }
         }
       });
+      
+      console.log("Removing", markersToRemove.length, "point markers and temporary polygons");
       
       // Remove identified markers
       markersToRemove.forEach(marker => {
         fabricCanvas.remove(marker);
       });
       
-      // Remove current polygon/polyline reference
-      if (currentPolygon) {
-        // Only remove if it's not already removed
-        if (fabricCanvas.getObjects().includes(currentPolygon)) {
+      // Remove current polygon/polyline reference if it's temporary
+      if (currentPolygon && fabricCanvas.getObjects().includes(currentPolygon)) {
+        // Only remove if it's a temporary drawing polygon (not the final one)
+        if ((currentPolygon instanceof Polyline) || 
+            (currentPolygon instanceof Polygon && currentPolygon.fill !== 'rgba(37, 99, 235, 0.2)')) {
           fabricCanvas.remove(currentPolygon);
         }
         setCurrentPolygon(null);
