@@ -1186,25 +1186,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.add(blackPoly);
     newVithiPolygons.push(blackPoly);
     
-    // Add "economy class" text inside the black polygon
-    const blackCenter = calculatePolygonCenter(blackPoints);
-    const economyText = new Text("economy class", {
-      left: blackCenter.x,
-      top: blackCenter.y,
-      fontSize: 14,
-      fill: '#000000', // Black text to match the polygon
-      fontWeight: 'bold',
-      textAlign: 'center',
-      originX: 'center',
-      originY: 'center',
-      selectable: false,
-      evented: false,
-      fontFamily: 'Arial, sans-serif',
-      backgroundColor: 'white',
-      padding: 4
-    });
-    fabricCanvas.add(economyText);
-    newVithiPolygons.push(economyText);
     
     // Create center polygon (blue)
     const centerFabricPoints = centerPoints.map(p => ({ x: p.x, y: p.y }));
@@ -1218,13 +1199,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.add(centerPoly);
     newVithiPolygons.push(centerPoly);
     
-    // Add "business area" text inside the blue polygon
-    const blueCenter = calculatePolygonCenter(centerPoints);
+    // Add "business area" text in the area between blue polygon and red polygon
+    const mainCenter = calculatePolygonCenter(polygonPoints);
+    // Position business area text in the annular region between red (11%) and blue (36.5%)
+    const businessScale = Math.sqrt((redAreaFactor + centerAreaFactor) / 2); // Average = 23.75%
     const businessText = new Text("business area", {
-      left: blueCenter.x,
-      top: blueCenter.y,
-      fontSize: 16,
-      fill: '#0066cc', // Blue text to match the polygon
+      left: mainCenter.x,
+      top: mainCenter.y - 30, // Offset slightly for better positioning
+      fontSize: 14,
+      fill: '#0066cc', // Blue text
       fontWeight: 'bold',
       textAlign: 'center',
       originX: 'center',
@@ -1238,20 +1221,38 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.add(businessText);
     newVithiPolygons.push(businessText);
     
-    // Add "normal class" text in the area between main polygon and black polygon
-    // Calculate center point of the space between main and black polygons
-    const mainCenter = calculatePolygonCenter(polygonPoints);
-    const blackCenterForNormal = calculatePolygonCenter(blackPoints);
+    // Add "economy class" text in the area between blue polygon and black polygon
+    // Position economy class text in the annular region between blue (36.5%) and black (62%)
+    const economyScale = Math.sqrt((centerAreaFactor + blackAreaFactor) / 2); // Average = 49.25%
+    const economyX = mainCenter.x + (mainCenter.x * 0.1); // Slight offset
+    const economyY = mainCenter.y + 30; // Position below center
+    const economyTextNew = new Text("economy class", {
+      left: economyX,
+      top: economyY,
+      fontSize: 14,
+      fill: '#8B4513', // Brown text for economy area
+      fontWeight: 'bold',
+      textAlign: 'center',
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      evented: false,
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: 'white',
+      padding: 4
+    });
+    fabricCanvas.add(economyTextNew);
+    newVithiPolygons.push(economyTextNew);
     
-    // Position the normal class text in the annular region between black and main polygon
-    // Use a point that's 80% of the way from black center to main edge
-    const normalScale = 0.8; // Between black (62%) and main (100%)
-    const normalClassX = mainCenter.x + (blackCenterForNormal.x - mainCenter.x) * normalScale;
-    const normalClassY = mainCenter.y + (blackCenterForNormal.y - mainCenter.y) * normalScale;
+    // Add "normal class" text in the area between main polygon and black polygon
+    // Position normal class text in the annular region between black (62%) and main (100%)
+    const normalScale = Math.sqrt((blackAreaFactor + 1.0) / 2); // Average = 81%
+    const normalX = mainCenter.x - 30; // Position to the left
+    const normalY = mainCenter.y;
     const normalText = new Text("normal class", {
-      left: normalClassX,
-      top: normalClassY,
-      fontSize: 15,
+      left: normalX,
+      top: normalY,
+      fontSize: 14,
       fill: '#666666', // Gray text for the normal area
       fontWeight: 'bold',
       textAlign: 'center',
