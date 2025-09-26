@@ -64,6 +64,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [entranceLines, setEntranceLines] = useState<any[]>([]);
   const [showMarmaSthan, setShowMarmaSthan] = useState(false);
   const [marmaSthanLines, setMarmaSthanLines] = useState<Line[]>([]);
+  const [showFiveElements, setShowFiveElements] = useState(false);
+  const [fiveElementsLines, setFiveElementsLines] = useState<any[]>([]);
   const [showPDFDialog, setShowPDFDialog] = useState(false);
   const [pdfUserDetails, setPdfUserDetails] = useState({
     name: '',
@@ -169,6 +171,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     setDevtaZones([]);
     setDirectionLines([]);
     setGateLines([]);
+    setFiveElementsLines([]);
     setCompletedPolygonPoints([]);
 
     // Load and add image as Fabric object
@@ -394,6 +397,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const entrancesEnabled = show32Entrances;
     const marmaEnabled = showMarmaSthan;
     const testEnabled = showTest;
+    const fiveElementsEnabled = showFiveElements;
 
     // Draw features according to the desired defaults
     if (devtasEnabled) {
@@ -418,13 +422,17 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       drawMarmaSthan(points, center);
     }
 
+    if (fiveElementsEnabled) {
+      drawFiveElements(points, center);
+    }
+
     if (testEnabled) {
       drawTestMediumPolygon(points, center);
       drawTestRingSlices(points, center);
     }
 
     fabricCanvas.renderAll();
-    console.log("Polygon completed. Canvas objects:", fabricCanvas.getObjects().length, "Show features:", { show45Devtas, show16Directions, show32Gates, showVithiMandal, showMarmaSthan, showTest });
+    console.log("Polygon completed. Canvas objects:", fabricCanvas.getObjects().length, "Show features:", { show45Devtas, show16Directions, show32Gates, showVithiMandal, showMarmaSthan, showFiveElements, showTest });
     setIsDrawing(false);
     setPolygonPoints([]);
     setCompletedPolygonPoints(points); // Store completed polygon points
@@ -1317,6 +1325,20 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     console.log('Direction lines cleared, remaining objects:', fabricCanvas.getObjects().length);
   }, [fabricCanvas, directionLines]);
 
+  // Clear five elements lines
+  const clearFiveElementsLines = useCallback(() => {
+    if (!fabricCanvas) return;
+    
+    fiveElementsLines.forEach(obj => {
+      if (fabricCanvas.contains(obj)) {
+        fabricCanvas.remove(obj);
+      }
+    });
+    setFiveElementsLines([]);
+    fabricCanvas.renderAll();
+    console.log('Five elements lines cleared');
+  }, [fabricCanvas, fiveElementsLines]);
+
   // Draw or update 16 directions in-place for smooth rotation (no flicker)
   const draw16Directions = useCallback((polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas || !show16Directions) return;
@@ -1412,7 +1434,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     setShow16Directions(newShow16Directions);
 
     if (!newShow16Directions) {
-      // Disabling: clear existing objects
+      // Disabling: clear existing objects  
       clearDirectionLines();
     } else if (completedPolygonPoints.length >= 3) {
       // Enabling: create (or update) instantly without clearing
@@ -1421,6 +1443,114 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     toast.success(`16 directions ${newShow16Directions ? 'enabled' : 'disabled'}`);
+  };
+
+  // Draw five elements - exact duplicate of 16 directions
+  const drawFiveElements = useCallback((polygonPoints: Point[], center: Point) => {
+    if (!fabricCanvas || !showFiveElements) return;
+
+    const N = 16; // Same as 16 directions
+    const angleStep = (Math.PI * 2) / N;
+    const ROTATION_OFFSET = -10; // System offset for directional alignment
+    const rotationRad = ((rotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
+    const northOffset = -Math.PI / 2; // 0° = North (up)
+
+    // Define direction labels - same as 16 directions
+    const directionLabels = [
+      'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+      'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
+    ];
+
+    const hasExisting = fiveElementsLines.length > 0;
+    const newObjects: any[] = [];
+
+    // Disable selection for performance while updating
+    fabricCanvas.selection = false;
+
+    for (let i = 0; i < N; i++) {
+      const angle = i * angleStep + rotationRad + northOffset;
+      const boundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
+
+      const middleAngle = angle + angleStep / 2;
+      let labelX = center.x;
+      let labelY = center.y;
+
+      if (boundaryPoint) {
+        const labelDistance = Math.hypot(boundaryPoint.x - center.x, boundaryPoint.y - center.y) * 0.75;
+        labelX = center.x + Math.cos(middleAngle) * labelDistance;
+        labelY = center.y + Math.sin(middleAngle) * labelDistance;
+      }
+
+      if (hasExisting) {
+        const line = fiveElementsLines[2 * i] as unknown as Line;
+        const label = fiveElementsLines[2 * i + 1] as unknown as Text;
+        if (boundaryPoint) {
+          line.set({ x1: center.x, y1: center.y, x2: boundaryPoint.x, y2: boundaryPoint.y, visible: true });
+          label.set({ left: labelX, top: labelY, text: directionLabels[i], visible: true });
+        } else {
+          line.set({ visible: false });
+          label.set({ visible: false });
+        }
+      } else if (boundaryPoint) {
+        const line = new Line([center.x, center.y, boundaryPoint.x, boundaryPoint.y], {
+          stroke: '#8b5cf6', // Purple color for distinction
+          strokeWidth: 2,
+          selectable: false,
+          evented: false,
+          objectCaching: false,
+          isFiveElementsLine: true,
+        });
+        newObjects.push(line);
+
+        const label = new Text(directionLabels[i], {
+          left: labelX,
+          top: labelY,
+          fontSize: 12,
+          fill: '#8b5cf6', // Purple color for distinction
+          fontFamily: 'Arial Black',
+          fontWeight: 'bold',
+          selectable: false,
+          evented: false,
+          textAlign: 'center',
+          originX: 'center',
+          originY: 'center',
+          objectCaching: false,
+          isFiveElementsLabel: true,
+        });
+        newObjects.push(label);
+      }
+    }
+
+    if (!hasExisting && newObjects.length > 0) {
+      fabricCanvas.add(...newObjects);
+      setFiveElementsLines(newObjects);
+    }
+
+    // Re-enable selection and render
+    fabricCanvas.selection = true;
+    if ((fabricCanvas as any).requestRenderAll) {
+      (fabricCanvas as any).requestRenderAll();
+    } else {
+      fabricCanvas.renderAll();
+    }
+  }, [fabricCanvas, rotationDegree, showFiveElements, fiveElementsLines]);
+
+  const toggleFiveElements = () => {
+    if (!fabricCanvas) return;
+    
+    const newShowFiveElements = !showFiveElements;
+    setShowFiveElements(newShowFiveElements);
+
+    if (!newShowFiveElements) {
+      // Disabling: clear existing objects  
+      clearFiveElementsLines();
+    } else if (completedPolygonPoints.length >= 3) {
+      // Enabling: create (or update) instantly without clearing
+      const center = calculatePolygonCenterLocal(completedPolygonPoints);
+      drawFiveElements(completedPolygonPoints, center);
+    }
+
+    toast.success(`Five elements ${newShowFiveElements ? 'enabled' : 'disabled'}`);
   };
 
   // Smooth, instant in-place updates while sliding (no debounce, no clearing)
@@ -3022,6 +3152,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         
         if (showVithiMandal) toggleVithiMandal();
         if (showMarmaSthan) toggleMarmaSthan(false);
+        if (showFiveElements) toggleFiveElements();
         if (show16BarChart) setShow16BarChart(false);
         
         // Wait for toggle operations to complete
@@ -3044,6 +3175,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         setShow16Directions(false);  
         setShow32Gates(false);
         setShowVithiMandal(false);
+        setShowFiveElements(false);
         
         
         // Clear all tracked object arrays
@@ -3053,11 +3185,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         setDirectionLines([]);
         setGateLines([]);
         setMarmaSthanLines([]);
+        setFiveElementsLines([]);
         
         // Explicit cleanup calls
         clearVithiMandalPolygons();
         clearDevtaZones();
         clearMarmaSthanLine();
+        clearFiveElementsLines();
         
         // Ensure background image stays at the back
         const backgroundImage = fabricCanvas.getObjects().find(obj => obj instanceof FabricImage);
@@ -3922,7 +4056,17 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                           />
                         </div>
 
-                         {/* Test Toggle */}
+                          {/* Five Elements Toggle */}
+                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                          <span className="text-xs xl:text-sm font-medium">Five Elements</span>
+                          <Switch
+                            checked={showFiveElements}
+                            onCheckedChange={toggleFiveElements}
+                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
+                          />
+                        </div>
+
+                          {/* Test Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                           <span className="text-xs xl:text-sm font-medium">Test</span>
                           <Switch
