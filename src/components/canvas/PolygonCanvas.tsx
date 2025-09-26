@@ -1149,6 +1149,24 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.add(redPoly);
     newVithiPolygons.push(redPoly);
     
+    // Add "executive area" text inside the red polygon
+    const redCenter = calculatePolygonCenter(redPoints);
+    const executiveText = new Text("executive area", {
+      left: redCenter.x,
+      top: redCenter.y,
+      fontSize: 16,
+      fill: '#ff0000', // Red text to match the polygon
+      fontWeight: 'bold',
+      textAlign: 'center',
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      evented: false,
+      fontFamily: 'Arial, sans-serif'
+    });
+    fabricCanvas.add(executiveText);
+    newVithiPolygons.push(executiveText);
+    
     // Create black polygon
     const blackFabricPoints = blackPoints.map(p => ({ x: p.x, y: p.y }));
     const blackPoly = new Polygon(blackFabricPoints, {
