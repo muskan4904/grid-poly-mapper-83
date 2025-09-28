@@ -1550,14 +1550,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     for (let i = 0; i < waterDirections.length; i++) {
       const dirIndex = waterDirections[i];
-      const angle = dirIndex * angleStep + rotationRad + northOffset;
+      // Use the CENTER of each 16-direction sector to guarantee inclusion (not the boundary line)
+      const boundaryAngle = dirIndex * angleStep + rotationRad + northOffset + angleStep / 2;
       const directionLabel = directionLabels[dirIndex];
-      console.log(`Processing water direction ${i}: index=${dirIndex}, label=${directionLabel}, angle=${(angle * 180 / Math.PI).toFixed(1)}°`);
+      console.log(`Processing water direction ${i}: index=${dirIndex}, label=${directionLabel}, boundaryAngle=${(boundaryAngle * 180 / Math.PI).toFixed(1)}° (center of sector)`);
       
-      const boundaryPoint = getBoundaryPointWithFallback(angle);
+      const boundaryPoint = getBoundaryPointWithFallback(boundaryAngle);
       if (boundaryPoint) {
         waterBoundaryPoints.push(boundaryPoint);
-        console.log(`✓ Water boundary for ${directionLabel} (index ${dirIndex}) added at`, boundaryPoint);
+        console.log(`✓ Water boundary (center ray) for ${directionLabel} (index ${dirIndex}) added at`, boundaryPoint);
       } else {
         console.log(`✗ No boundary point found for ${directionLabel} (index ${dirIndex}) even after fallbacks`);
       }
