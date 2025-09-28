@@ -1477,8 +1477,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
     ];
 
-    // Water area should always be at "North" area (directions 15, 0, 1, 2 in the base rotation)
-    // These represent NNW, N, NNE, NE at 0 degree rotation
+    // Water area should cover NNW(15), N(0), NNE(1), NE(2) - all 4 directions
+    // These represent the northern water zone at 0 degree rotation
     const waterDirections = [15, 0, 1, 2]; // NNW, N, NNE, NE
     
     const newObjects: any[] = [];
@@ -1550,12 +1550,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     // Create polygon points in proper order: center -> NNW -> N -> NNE -> NE -> back to center
-    if (waterBoundaryPoints.length === 4) {
+    console.log('Water boundary points found:', waterBoundaryPoints.length, 'Expected: 4');
+    if (waterBoundaryPoints.length >= 4) {
       // Add points in clockwise order for proper polygon
-      waterAreaPoints.push(waterBoundaryPoints[0]); // NNW
-      waterAreaPoints.push(waterBoundaryPoints[1]); // N  
-      waterAreaPoints.push(waterBoundaryPoints[2]); // NNE
-      waterAreaPoints.push(waterBoundaryPoints[3]); // NE
+      waterAreaPoints.push(waterBoundaryPoints[0]); // NNW (index 15)
+      waterAreaPoints.push(waterBoundaryPoints[1]); // N (index 0) 
+      waterAreaPoints.push(waterBoundaryPoints[2]); // NNE (index 1)
+      waterAreaPoints.push(waterBoundaryPoints[3]); // NE (index 2)
+      
+      console.log('Water area points:', waterAreaPoints.length, 'First boundary point:', waterBoundaryPoints[0], 'Last boundary point:', waterBoundaryPoints[3]);
 
       // Create water area polygon
       const waterAreaPolygon = new Polygon(waterAreaPoints.map(p => ({ x: p.x, y: p.y })), {
@@ -1568,7 +1571,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       });
       newObjects.push(waterAreaPolygon);
 
-      // Calculate center of water area for text placement
+      // Calculate center of water area for text placement - use all 4 boundary points
       const waterCenterX = waterBoundaryPoints.reduce((sum, p) => sum + p.x, 0) / waterBoundaryPoints.length;
       const waterCenterY = waterBoundaryPoints.reduce((sum, p) => sum + p.y, 0) / waterBoundaryPoints.length;
 
@@ -1589,9 +1592,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       });
       newObjects.push(waterText);
       
-      console.log('Water area created with', waterBoundaryPoints.length, 'boundary points');
+      console.log('Water area created with', waterBoundaryPoints.length, 'boundary points including NE');
     } else {
-      console.log('Could not create water area: insufficient boundary points', waterBoundaryPoints.length);
+      console.log('Could not create water area: insufficient boundary points', waterBoundaryPoints.length, 'Expected 4 for NNW, N, NNE, NE');
     }
 
     if (newObjects.length > 0) {
