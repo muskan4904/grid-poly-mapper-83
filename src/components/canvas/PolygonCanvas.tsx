@@ -1535,17 +1535,28 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     
     // Add boundary points for water directions in the correct order
     const waterBoundaryPoints: Point[] = [];
+
+    // Robust intersection: try small angle fallbacks to handle vertex/parallel cases
+    const getBoundaryPointWithFallback = (baseAngleRad: number): Point | null => {
+      const deg = Math.PI / 180;
+      const candidates = [0, 0.3, -0.3, 0.7, -0.7, 1.2, -1.2].map((d) => baseAngleRad + d * deg);
+      for (const a of candidates) {
+        const p = getRayIntersectionWithPolygon(center, a, polygonPoints);
+        if (p) return p;
+      }
+      return null;
+    };
+
     for (let i = 0; i < waterDirections.length; i++) {
       const dirIndex = waterDirections[i];
       const angle = dirIndex * angleStep + rotationRad + northOffset;
       const directionLabel = directionLabels[dirIndex];
-      console.log(`Water direction ${i}: index=${dirIndex}, label=${directionLabel}, angle=${angle * 180 / Math.PI}°`);
-      const boundaryPoint = getRayIntersectionWithPolygon(center, angle, polygonPoints);
+      const boundaryPoint = getBoundaryPointWithFallback(angle);
       if (boundaryPoint) {
         waterBoundaryPoints.push(boundaryPoint);
-        console.log(`Added boundary point for ${directionLabel}:`, boundaryPoint);
+        console.log(`Water boundary for ${directionLabel} set at`, boundaryPoint);
       } else {
-        console.log(`No boundary point found for ${directionLabel}`);
+        console.log(`No boundary point found for ${directionLabel} even after fallbacks`);
       }
     }
 
