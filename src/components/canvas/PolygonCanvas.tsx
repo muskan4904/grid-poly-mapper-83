@@ -1480,6 +1480,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Water area should cover NNW(15), N(0), NNE(1), NE(2) - all 4 directions
     // These represent the northern water zone at 0 degree rotation
     const waterDirections = [15, 0, 1, 2]; // NNW, N, NNE, NE
+    console.log('Water directions defined:', waterDirections.map(i => `${i}:${directionLabels[i]}`));
     
     const newObjects: any[] = [];
 
@@ -1551,12 +1552,14 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const dirIndex = waterDirections[i];
       const angle = dirIndex * angleStep + rotationRad + northOffset;
       const directionLabel = directionLabels[dirIndex];
+      console.log(`Processing water direction ${i}: index=${dirIndex}, label=${directionLabel}, angle=${(angle * 180 / Math.PI).toFixed(1)}°`);
+      
       const boundaryPoint = getBoundaryPointWithFallback(angle);
       if (boundaryPoint) {
         waterBoundaryPoints.push(boundaryPoint);
-        console.log(`Water boundary for ${directionLabel} set at`, boundaryPoint);
+        console.log(`✓ Water boundary for ${directionLabel} (index ${dirIndex}) added at`, boundaryPoint);
       } else {
-        console.log(`No boundary point found for ${directionLabel} even after fallbacks`);
+        console.log(`✗ No boundary point found for ${directionLabel} (index ${dirIndex}) even after fallbacks`);
       }
     }
 
