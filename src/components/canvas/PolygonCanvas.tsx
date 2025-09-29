@@ -2611,7 +2611,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     // Create medium polygon with transparent fill and black boundary
     const fabricPoints = scaledPoints.map(p => ({ x: p.x, y: p.y }));
-    const testMediumPoly = new Polygon(fabricPoints, {
+    const gates81PadMediumPoly = new Polygon(fabricPoints, {
       fill: 'transparent', // No fill - transparent inside
       stroke: '#000000', // Black border
       strokeWidth: 3,
@@ -2620,12 +2620,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     });
 
     // Add and ensure proper layering
-    fabricCanvas.add(testMediumPoly);
+    fabricCanvas.add(gates81PadMediumPoly);
     
     // Make sure it's rendered properly in the layer order
-    fabricCanvas.bringObjectToFront(testMediumPoly);
+    fabricCanvas.bringObjectToFront(gates81PadMediumPoly);
     
-    setTestMediumPolygon(testMediumPoly);
+    setGates81PadMediumPolygon(gates81PadMediumPoly);
     fabricCanvas.renderAll();
 
     const mediumArea = calculatePolygonArea(scaledPoints);
@@ -2670,7 +2670,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     // Check if existing objects need updating vs creating new ones
     const expectedObjectCount = outerHits.length * 3; // slices + lines + labels
-    const hasExisting = testGridLines.length >= expectedObjectCount;
+    const hasExisting = gates81PadGridLines.length >= expectedObjectCount;
     const newObjects: any[] = [];
 
     // Disable selection for performance while updating
@@ -2743,19 +2743,19 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const lineIndex = 3 * i + 1;  
         const labelIndex = 3 * i + 2;
 
-        if (testGridLines[sliceIndex]) {
-          (testGridLines[sliceIndex] as Polygon).set({ points: verts });
+        if (gates81PadGridLines[sliceIndex]) {
+          (gates81PadGridLines[sliceIndex] as Polygon).set({ points: verts });
         }
 
-        if (testGridLines[lineIndex]) {
-          (testGridLines[lineIndex] as Line).set({
+        if (gates81PadGridLines[lineIndex]) {
+          (gates81PadGridLines[lineIndex] as Line).set({
             x1: lineStartX, y1: lineStartY, 
             x2: lineEndX, y2: lineEndY
           });
         }
 
-        if (testGridLines[labelIndex]) {
-          (testGridLines[labelIndex] as Text).set({
+        if (gates81PadGridLines[labelIndex]) {
+          (gates81PadGridLines[labelIndex] as Text).set({
             left: sliceCenterX - 8,
             top: sliceCenterY - 8,
             text: getSliceLabel(i)
@@ -2806,7 +2806,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     // Update existing objects or track new ones for state
     if (!hasExisting && newObjects.length > 0) {
-      setTestGridLines(newObjects);
+      setGates81PadGridLines(newObjects);
     }
 
     // Re-enable selection after updates
@@ -2818,7 +2818,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     newObjects.forEach(obj => fabricCanvas.bringObjectToFront(obj));
 
     fabricCanvas.renderAll();
-  }, [fabricCanvas, testGridLines, rotationDegree]);
+  }, [fabricCanvas, gates81PadGridLines, rotationDegree]);
 
   // Helper function to find the center point of a region between two polygons
   const findRegionCenterBetweenPolygons = (center: Point, angle: number, innerPoly: Point[], outerPoly: Point[]): Point => {
@@ -2852,27 +2852,27 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       }
     } else {
       // Properly remove all test objects instead of just hiding them
-      if (testPolygon) {
-        fabricCanvas.remove(testPolygon);
-        setTestPolygon(null);
+      if (gates81PadPolygon) {
+        fabricCanvas.remove(gates81PadPolygon);
+        setGates81PadPolygon(null);
       }
-      if (testMediumPolygon) {
-        fabricCanvas.remove(testMediumPolygon);
-        setTestMediumPolygon(null);
+      if (gates81PadMediumPolygon) {
+        fabricCanvas.remove(gates81PadMediumPolygon);
+        setGates81PadMediumPolygon(null);
       }
       
-      // Remove all test grid lines and devta zones
-      testGridLines.forEach(line => {
+      // Remove all gates81Pad grid lines and devta zones
+      gates81PadGridLines.forEach(line => {
         if (fabricCanvas.contains(line)) {
           fabricCanvas.remove(line);
         }
       });
-      setTestGridLines([]);
+      setGates81PadGridLines([]);
     }
     
     fabricCanvas.renderAll();
-    console.log("Test feature toggled:", newShowTest, "Canvas objects:", fabricCanvas.getObjects().length);
-    toast.success(`Test feature ${newShowTest ? 'enabled' : 'disabled'}`);
+    console.log("32 Gates 81 Pad feature toggled:", newShowGates81Pad, "Canvas objects:", fabricCanvas.getObjects().length);
+    toast.success(`32 Gates 81 Pad feature ${newShowGates81Pad ? 'enabled' : 'disabled'}`);
   };
 
   // Helper function to find intersection point of a ray with polygon boundary
@@ -2968,13 +2968,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
   }, [rotationDegree, showDevtas, currentPolygon, completedPolygonPoints, fabricCanvas]);
 
-  // Smooth updates for test feature rotation
+  // Smooth updates for 32 gates 81 pad feature rotation
   useEffect(() => {
-    if (showTest && currentPolygon && completedPolygonPoints.length >= 3 && fabricCanvas) {
+    if (showGates81Pad && currentPolygon && completedPolygonPoints.length >= 3 && fabricCanvas) {
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
-      drawTestRingSlices(completedPolygonPoints, center);
+      drawGates81PadRingSlices(completedPolygonPoints, center);
     }
-  }, [rotationDegree, showTest, currentPolygon, completedPolygonPoints, fabricCanvas]);
+  }, [rotationDegree, showGates81Pad, currentPolygon, completedPolygonPoints, fabricCanvas]);
 
 
   // Smooth updates for vithi mandal rotation
@@ -3101,8 +3101,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     setCenterPoint(null);
     setSmallPolygon(null);
     setMediumPolygon(null);
-    setTestPolygon(null);
-    setTestMediumPolygon(null);
+    setGates81PadPolygon(null);
+    setGates81PadMediumPolygon(null);
     
     // Clear all feature arrays
     clearGrid();
@@ -3112,7 +3112,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     clearVithiMandalPolygons();
     clearMarmaSthanLine();
     setCompletedPolygonPoints([]);
-    setTestGridLines([]);
+    setGates81PadGridLines([]);
     setDevtaSlices([]);
     setMarmaSthanLines([]);
     
@@ -3202,7 +3202,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         }
         // Temporary polygons/polylines during drawing (blue stroke, no fill or transparent fill)
         else if ((obj instanceof Polyline || (obj instanceof Polygon && obj.fill === 'rgba(37, 99, 235, 0.2)' === false)) && 
-                 obj !== smallPolygon && obj !== mediumPolygon && obj !== testPolygon && obj !== testMediumPolygon) {
+                 obj !== smallPolygon && obj !== mediumPolygon && obj !== gates81PadPolygon && obj !== gates81PadMediumPolygon) {
           // Only remove temporary drawing elements (blue stroke with no significant fill)
           if (obj.stroke === '#2563eb' && (obj.fill === '' || obj.fill === 'transparent' || !obj.fill)) {
             markersToRemove.push(obj);
@@ -3808,7 +3808,28 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Add user details to page
       addUserDetailsToPage(pdf, userDetails);
 
-      // Page 3: 45 Devtas (reset first, then enable only this)
+      // Page 3: 32 Gates 81 Pad (reset first, then enable only this)
+      pdf.addPage();
+      console.log('Capturing Page 3: 32 Gates 81 Pad');
+      await resetAllFeatures();
+      setShowGates81Pad(true);
+      if (completedPolygonPoints.length >= 3) {
+        const center = calculatePolygonCenterLocal(completedPolygonPoints);
+        drawGates81PadMediumPolygon(completedPolygonPoints, center);
+        drawGates81PadRingSlices(completedPolygonPoints, center);
+      }
+      ensureImageAtBack();
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const gates81PadImage = await captureCanvasState("32 Gates 81 Pad", gatesTargetAspect);
+      
+      pdf.setFontSize(16);
+      pdf.text("Page 3: 32 Gates 81 Pad Layout", pageWidth / 2, 20, { align: 'center' });
+      pdf.addImage(gates81PadImage, 'PNG', gatesX, gatesY, gatesFinalWidth, gatesFinalHeight);
+      
+      // Add user details to page
+      addUserDetailsToPage(pdf, userDetails);
+
+      // Page 4: 45 Devtas (reset first, then enable only this)
       pdf.addPage();
       console.log('Capturing Page 3: 45 Devtas');
       await resetAllFeatures();
@@ -4259,7 +4280,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                 {/* Statistics removed per user request - keeping only feature controls below */}
                 
                      {/* Shared Rotation Controls */}
-                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || showMarmaSthan || showFiveElements || showTest) && (
+                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || showMarmaSthan || showFiveElements || showGates81Pad) && (
                     <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
@@ -4326,13 +4347,23 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                           />
                         </div>
                         
-                        {/* 32 Gates Toggle */}
+                         {/* 32 Gates Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                           <span className="text-xs xl:text-sm font-medium">32 Gates</span>
                           <Switch
                             checked={show32Gates}
                             onCheckedChange={toggle32Gates}
                             className="data-[state=checked]:bg-green-600 touch-manipulation scale-90 xl:scale-100"
+                          />
+                        </div>
+
+                        {/* 32 gates 81 pad Toggle */}
+                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                          <span className="text-xs xl:text-sm font-medium">32 gates 81 pad</span>
+                          <Switch
+                            checked={showGates81Pad}
+                            onCheckedChange={toggleGates81Pad}
+                            className="data-[state=checked]:bg-yellow-600 touch-manipulation scale-90 xl:scale-100"
                           />
                         </div>
                         
@@ -4397,15 +4428,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                           />
                         </div>
 
-                         {/* 32 gates 81 pad Toggle */}
-                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">32 gates 81 pad</span>
-                          <Switch
-                            checked={showGates81Pad}
-                            onCheckedChange={toggleGates81Pad}
-                            className="data-[state=checked]:bg-yellow-600 touch-manipulation scale-90 xl:scale-100"
-                          />
-                        </div>
                       </div>
                     </div>
                   )}
