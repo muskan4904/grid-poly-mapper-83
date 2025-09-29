@@ -1147,11 +1147,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     
     const newVithiPolygons: any[] = [];
     
-    // Create Strip 4 (outermost - dark blue)
+    // Create Strip 4 (outermost - light green)
     const strip4FabricPoints = strip4Points.map(p => ({ x: p.x, y: p.y }));
     const strip4Poly = new Polygon(strip4FabricPoints, {
-      fill: 'rgba(30, 58, 138, 0.2)', // Dark blue fill
-      stroke: '#1e3a8a', // Dark blue stroke
+      fill: 'rgba(34, 197, 94, 0.3)', // Light green fill (like air area in five elements)
+      stroke: '#22c55e', // Green stroke
       strokeWidth: 3,
       selectable: false,
       evented: false
@@ -1159,11 +1159,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.add(strip4Poly);
     newVithiPolygons.push(strip4Poly);
     
-    // Create Strip 3 (blue)
+    // Create Strip 3 (light yellow)
     const strip3FabricPoints = strip3Points.map(p => ({ x: p.x, y: p.y }));
     const strip3Poly = new Polygon(strip3FabricPoints, {
-      fill: 'rgba(37, 99, 235, 0.25)', // Blue fill
-      stroke: '#2563eb', // Blue stroke
+      fill: 'rgba(234, 179, 8, 0.3)', // Light yellow fill (like earth area in five elements)
+      stroke: '#eab308', // Yellow stroke
       strokeWidth: 3,
       selectable: false,
       evented: false
@@ -1174,8 +1174,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Create Strip 2 (light blue)
     const strip2FabricPoints = strip2Points.map(p => ({ x: p.x, y: p.y }));
     const strip2Poly = new Polygon(strip2FabricPoints, {
-      fill: 'rgba(59, 130, 246, 0.3)', // Light blue fill
-      stroke: '#3b82f6', // Light blue stroke
+      fill: 'rgba(59, 130, 246, 0.3)', // Light blue fill (like water area in five elements)
+      stroke: '#3b82f6', // Blue stroke
       strokeWidth: 3,
       selectable: false,
       evented: false
@@ -1183,10 +1183,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.add(strip2Poly);
     newVithiPolygons.push(strip2Poly);
     
-    // Create Strip 1 (Executive area - red outline, no fill)
+    // Create Strip 1 (Executive area - light red fill)
     const strip1FabricPoints = strip1Points.map(p => ({ x: p.x, y: p.y }));
     const strip1Poly = new Polygon(strip1FabricPoints, {
-      fill: 'transparent',
+      fill: 'rgba(239, 68, 68, 0.3)', // Light red fill
       stroke: '#ef4444', // Red stroke
       strokeWidth: 4,
       selectable: false,
