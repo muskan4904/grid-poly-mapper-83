@@ -1595,7 +1595,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             text.text === 'Fire Area' || 
             text.text === 'Earth Area' ||
             text.text === 'Air Area' ||
-            (text.fill === '#3b82f6' || text.fill === '#dc2626' || text.fill === '#ca8a04' || text.fill === '#8b5cf6' || text.fill === '#15803d')) {
+            text.text === 'Space Area' ||
+            (text.fill === '#3b82f6' || text.fill === '#dc2626' || text.fill === '#ca8a04' || text.fill === '#8b5cf6' || text.fill === '#15803d' || text.fill === '#6b7280')) {
           fiveElementsToRemove.push(obj);
         }
       } else if (obj instanceof Polygon) {
@@ -1605,11 +1606,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             polygon.fill === 'rgba(234, 179, 8, 0.3)' ||   // Earth yellow
             polygon.fill === 'rgba(239, 68, 68, 0.3)' ||   // Fire red (updated color)
             polygon.fill === 'rgba(34, 197, 94, 0.3)' ||   // Air green
+            polygon.fill === 'rgba(107, 114, 128, 0.3)' || // Space grey
             polygon.stroke === '#3b82f6' || 
             polygon.stroke === '#dc2626' || 
             polygon.stroke === '#eab308' ||
             polygon.stroke === '#ef4444' ||               // Fire red stroke
-            polygon.stroke === '#22c55e') {               // Air green stroke
+            polygon.stroke === '#22c55e' ||               // Air green stroke
+            polygon.stroke === '#6b7280') {               // Space grey stroke
           fiveElementsToRemove.push(obj);
         }
       } else if (obj instanceof Line) {
@@ -1985,10 +1988,79 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       console.log('Could not create earth area: insufficient boundary points', earthBoundaryPoints.length, 'Expected 3 for SSW, SW, WSW edges');
     }
 
+    console.log('Drawing space area polygon...');
+    // Add the space area polygon - covering WSW(11), W(12), WNW(13), NW(14)
+    const spaceAreaPoints: Point[] = [center]; // Start from center
+    const spaceBoundaryPoints: Point[] = [];
+
+    // Build the FIVE boundary angles that enclose the space zone exactly (WSW..NW)
+    const spaceBoundaryAngles = [
+      11 * angleStep + rotationRad + northOffset,  // B11: SW|WSW (left edge)
+      12 * angleStep + rotationRad + northOffset,  // B12: WSW|W
+      13 * angleStep + rotationRad + northOffset,  // B13: W|WNW
+      14 * angleStep + rotationRad + northOffset,  // B14: WNW|NW
+      15 * angleStep + rotationRad + northOffset,  // B15: NW|NNW (right edge)
+    ];
+
+    spaceBoundaryAngles.forEach((rayAngle, idx) => {
+      const boundaryPoint = getBoundaryPointWithFallback(rayAngle);
+      if (boundaryPoint) {
+        spaceBoundaryPoints.push(boundaryPoint);
+        console.log(`✓ Space boundary edge ${idx + 1} added at`, boundaryPoint);
+      } else {
+        console.log(`✗ No boundary point found for space edge ${idx + 1}`);
+      }
+    });
+
+    // Create space polygon points in proper order: center -> five boundary edges -> back to center
+    console.log('Space boundary points found:', spaceBoundaryPoints.length, 'Expected: 5');
+    if (spaceBoundaryPoints.length >= 5) {
+      // Add all boundary edge points clockwise for proper sector coverage
+      spaceAreaPoints.push(...spaceBoundaryPoints);
+      
+      console.log('Space area points:', spaceAreaPoints.length, 'First boundary point:', spaceBoundaryPoints[0], 'Last boundary point:', spaceBoundaryPoints[4]);
+
+      // Create space area polygon
+      const spaceAreaPolygon = new Polygon(spaceAreaPoints.map(p => ({ x: p.x, y: p.y })), {
+        fill: 'rgba(107, 114, 128, 0.3)', // Grey with transparency
+        stroke: '#6b7280', // Grey stroke
+        strokeWidth: 2,
+        selectable: false,
+        evented: false,
+        objectCaching: false,
+      });
+      newObjects.push(spaceAreaPolygon);
+
+      // Calculate center of space area for text placement - use all boundary points
+      const spaceCenterX = spaceBoundaryPoints.reduce((sum, p) => sum + p.x, 0) / spaceBoundaryPoints.length;
+      const spaceCenterY = spaceBoundaryPoints.reduce((sum, p) => sum + p.y, 0) / spaceBoundaryPoints.length;
+
+      // Add space area text
+      const spaceText = new Text('Space Area', {
+        left: spaceCenterX,
+        top: spaceCenterY,
+        fontSize: 14,
+        fill: '#6b7280', // Darker grey for text
+        fontFamily: 'Arial Black',
+        fontWeight: 'bold',
+        selectable: false,
+        evented: false,
+        textAlign: 'center',
+        originX: 'center',
+        originY: 'center',
+        objectCaching: false,
+      });
+      newObjects.push(spaceText);
+      
+      console.log('Space area created with', spaceBoundaryPoints.length, 'boundary points covering WSW, W, WNW, NW');
+    } else {
+      console.log('Could not create space area: insufficient boundary points', spaceBoundaryPoints.length, 'Expected 5 for WSW, W, WNW, NW, NNW edges');
+    }
+
     if (newObjects.length > 0) {
       fabricCanvas.add(...newObjects);
       setFiveElementsLines(newObjects);
-      console.log('Added', newObjects.length, 'Five Elements objects to canvas (', newObjects.length / 2 - 2, 'direction lines + water area)');
+      console.log('Added', newObjects.length, 'Five Elements objects to canvas (', newObjects.length / 2 - 2, 'direction lines + elemental areas)');
     }
 
     // Re-enable selection and render
