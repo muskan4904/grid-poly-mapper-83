@@ -1550,15 +1550,26 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     for (let i = 0; i < waterDirections.length; i++) {
       const dirIndex = waterDirections[i];
-      // Use the CENTER of each 16-direction sector to guarantee inclusion (not the boundary line)
-      const boundaryAngle = dirIndex * angleStep + rotationRad + northOffset + angleStep / 2;
+
+      // Decide angle per direction to fully cover the 4 sectors:
+      // - NNW (15): use its START boundary (left edge) => center - half step
+      // - N (0), NNE (1): use CENTER of sector
+      // - NE (2): use its END boundary (right edge) => center + half step
+      const centerAngle = dirIndex * angleStep + rotationRad + northOffset;
+      let rayAngle = centerAngle;
+      if (dirIndex === 15) rayAngle = centerAngle - angleStep / 2; // left boundary of zone
+      else if (dirIndex === 2) rayAngle = centerAngle + angleStep / 2; // right boundary of zone
+
       const directionLabel = directionLabels[dirIndex];
-      console.log(`Processing water direction ${i}: index=${dirIndex}, label=${directionLabel}, boundaryAngle=${(boundaryAngle * 180 / Math.PI).toFixed(1)}° (center of sector)`);
-      
-      const boundaryPoint = getBoundaryPointWithFallback(boundaryAngle);
+      const angleType = dirIndex === 15 ? 'start-boundary' : dirIndex === 2 ? 'end-boundary' : 'center';
+      console.log(
+        `Processing water direction ${i}: index=${dirIndex}, label=${directionLabel}, ${angleType} angle=${(rayAngle * 180 / Math.PI).toFixed(1)}°`
+      );
+
+      const boundaryPoint = getBoundaryPointWithFallback(rayAngle);
       if (boundaryPoint) {
         waterBoundaryPoints.push(boundaryPoint);
-        console.log(`✓ Water boundary (center ray) for ${directionLabel} (index ${dirIndex}) added at`, boundaryPoint);
+        console.log(`✓ Water boundary (${angleType}) for ${directionLabel} (index ${dirIndex}) added at`, boundaryPoint);
       } else {
         console.log(`✗ No boundary point found for ${directionLabel} (index ${dirIndex}) even after fallbacks`);
       }
