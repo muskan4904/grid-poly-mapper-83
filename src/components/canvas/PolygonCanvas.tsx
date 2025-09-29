@@ -2934,38 +2934,42 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const newShowGates81Pad = !showGates81Pad;
     setShowGates81Pad(newShowGates81Pad);
     
-    if (newShowGates81Pad) {
-      // Recreate all gates81Pad features to ensure proper display
-      if (completedPolygonPoints.length >= 3) {
-        const center = calculatePolygonCenterLocal(completedPolygonPoints);
-        console.log('Drawing gates81Pad features with center:', center);
+    // Add small delay to ensure state update is processed
+    setTimeout(() => {
+      if (newShowGates81Pad) {
+        // Recreate all gates81Pad features to ensure proper display
+        if (completedPolygonPoints.length >= 3) {
+          const center = calculatePolygonCenterLocal(completedPolygonPoints);
+          console.log('Drawing gates81Pad features with center:', center);
+          
+          // Recreate medium polygon and ring slices (no red polygon)
+          drawGates81PadMediumPolygon(completedPolygonPoints, center);
+          drawGates81PadRingSlices(completedPolygonPoints, center);
+        }
+      } else {
+        // Properly remove all test objects instead of just hiding them
+        if (gates81PadPolygon) {
+          fabricCanvas.remove(gates81PadPolygon);
+          setGates81PadPolygon(null);
+        }
+        if (gates81PadMediumPolygon) {
+          fabricCanvas.remove(gates81PadMediumPolygon);
+          setGates81PadMediumPolygon(null);
+        }
         
-        // Recreate medium polygon and ring slices (no red polygon)
-        drawGates81PadMediumPolygon(completedPolygonPoints, center);
-        drawGates81PadRingSlices(completedPolygonPoints, center);
-      }
-    } else {
-      // Properly remove all test objects instead of just hiding them
-      if (gates81PadPolygon) {
-        fabricCanvas.remove(gates81PadPolygon);
-        setGates81PadPolygon(null);
-      }
-      if (gates81PadMediumPolygon) {
-        fabricCanvas.remove(gates81PadMediumPolygon);
-        setGates81PadMediumPolygon(null);
+        // Remove all gates81Pad grid lines and devta zones
+        gates81PadGridLines.forEach(line => {
+          if (fabricCanvas.contains(line)) {
+            fabricCanvas.remove(line);
+          }
+        });
+        setGates81PadGridLines([]);
       }
       
-      // Remove all gates81Pad grid lines and devta zones
-      gates81PadGridLines.forEach(line => {
-        if (fabricCanvas.contains(line)) {
-          fabricCanvas.remove(line);
-        }
-      });
-      setGates81PadGridLines([]);
-    }
+      fabricCanvas.renderAll();
+      console.log("32 Gates 81 Pad feature toggled:", newShowGates81Pad, "Canvas objects:", fabricCanvas.getObjects().length);
+    }, 10); // Small delay to ensure state synchronization
     
-    fabricCanvas.renderAll();
-    console.log("32 Gates 81 Pad feature toggled:", newShowGates81Pad, "Canvas objects:", fabricCanvas.getObjects().length);
     toast.success(`32 Gates 81 Pad feature ${newShowGates81Pad ? 'enabled' : 'disabled'}`);
   };
 
@@ -3066,6 +3070,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   useEffect(() => {
     if (showGates81Pad && currentPolygon && completedPolygonPoints.length >= 3 && fabricCanvas) {
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
+      // Draw both the medium polygon and ring slices for complete rendering
+      drawGates81PadMediumPolygon(completedPolygonPoints, center);
       drawGates81PadRingSlices(completedPolygonPoints, center);
     }
   }, [rotationDegree, showGates81Pad, currentPolygon, completedPolygonPoints, fabricCanvas]);
