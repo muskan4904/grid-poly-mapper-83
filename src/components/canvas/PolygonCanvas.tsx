@@ -2947,7 +2947,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           drawGates81PadRingSlices(completedPolygonPoints, center);
         }
       } else {
-        // Properly remove all test objects instead of just hiding them
+        // Comprehensive cleanup for all 32 gates 81 pad objects
         if (gates81PadPolygon) {
           fabricCanvas.remove(gates81PadPolygon);
           setGates81PadPolygon(null);
@@ -2957,13 +2957,54 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           setGates81PadMediumPolygon(null);
         }
         
-        // Remove all gates81Pad grid lines and devta zones
+        // Remove all tracked grid lines
         gates81PadGridLines.forEach(line => {
           if (fabricCanvas.contains(line)) {
             fabricCanvas.remove(line);
           }
         });
         setGates81PadGridLines([]);
+
+        // Comprehensive cleanup - search for ALL 32 gates 81 pad objects
+        const allObjects = fabricCanvas.getObjects();
+        const gates81PadToRemove: any[] = [];
+        
+        allObjects.forEach(obj => {
+          // Remove polygons created by drawGates81PadRingSlices (typically have specific fills)
+          if (obj instanceof Polygon) {
+            const polygon = obj as Polygon;
+            // Check for polygons with transparent fills (likely ring slices)
+            if (polygon.fill && typeof polygon.fill === 'string' && 
+                (polygon.fill.includes('rgba') || polygon.fill.includes('hsla')) &&
+                polygon.fill.includes('0.1')) { // Typical alpha for ring slices
+              gates81PadToRemove.push(obj);
+            }
+          }
+          // Remove lines created by drawGates81PadRingSlices 
+          else if (obj instanceof Line) {
+            const line = obj as Line;
+            // Look for specific stroke colors or patterns used by 32 gates
+            if (line.strokeWidth === 1 && line.stroke && 
+                (line.stroke === '#333' || line.stroke === '#666' || line.stroke === '#999')) {
+              gates81PadToRemove.push(obj);
+            }
+          }
+          // Remove text labels created by drawGates81PadRingSlices
+          else if (obj instanceof Text) {
+            const text = obj as Text;
+            // Look for small font size text (likely slice labels)
+            if (text.fontSize === 10 && text.fontFamily === 'Arial' &&
+                typeof text.text === 'string' && text.text.length <= 3) {
+              gates81PadToRemove.push(obj);
+            }
+          }
+        });
+        
+        // Remove all found 32 gates 81 pad objects
+        if (gates81PadToRemove.length > 0) {
+          console.log('Removing', gates81PadToRemove.length, '32 gates 81 pad objects (slices + lines + labels)');
+          gates81PadToRemove.forEach(obj => fabricCanvas.remove(obj));
+        }
       }
       
       fabricCanvas.renderAll();
