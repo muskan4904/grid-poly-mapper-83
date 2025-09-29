@@ -103,7 +103,7 @@ export const DirectionChartDialog: React.FC<DirectionChartDialogProps> = ({
               <p className="text-sm text-muted-foreground">Percentage of total area in each compass direction</p>
             </div>
             
-            <div className="relative flex items-end justify-between gap-2 h-48 bg-muted/10 rounded-lg p-4">
+            <div className="relative flex items-end gap-1 h-48 bg-muted/10 rounded-lg p-4">
               {/* Statistical Reference Lines */}
               <div 
                 className="absolute left-4 right-4 border-t-2 border-dashed border-yellow-500 z-10 pointer-events-none"
@@ -157,8 +157,8 @@ export const DirectionChartDialog: React.FC<DirectionChartDialogProps> = ({
                 }
 
                 return (
-                  <div key={item.direction} className="flex flex-col items-center flex-1 h-full">
-                    <div className="flex-1 flex items-end w-full">
+                  <div key={item.direction} className="flex flex-col items-center h-full" style={{ width: `${100/data.length}%` }}>
+                    <div className="flex-1 flex items-end w-full px-1">
                       <div 
                         className={`${barColor} rounded-t-md w-full relative group transition-all duration-200 hover:opacity-80`}
                         style={{ 
