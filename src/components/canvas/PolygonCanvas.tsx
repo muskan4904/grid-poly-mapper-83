@@ -70,10 +70,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     phone: '',
     address: ''
   });
-  const [showTest, setShowTest] = useState(false);
-  const [testPolygon, setTestPolygon] = useState<Polygon | null>(null);
-  const [testMediumPolygon, setTestMediumPolygon] = useState<Polygon | null>(null);
-  const [testGridLines, setTestGridLines] = useState<any[]>([]);
+  const [showGates81Pad, setShowGates81Pad] = useState(false);
+  const [gates81PadPolygon, setGates81PadPolygon] = useState<Polygon | null>(null);
+  const [gates81PadMediumPolygon, setGates81PadMediumPolygon] = useState<Polygon | null>(null);
+  const [gates81PadGridLines, setGates81PadGridLines] = useState<any[]>([]);
   
   // Undo/Redo functionality for polygon drawing
   const [polygonHistory, setPolygonHistory] = useState<Point[][]>([]);
@@ -393,7 +393,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const directionsEnabled = true; // Always on by default on completion
     const gatesEnabled = show32Gates;
     const marmaEnabled = showMarmaSthan;
-    const testEnabled = showTest;
+    const gates81PadEnabled = showGates81Pad;
     const fiveElementsEnabled = showFiveElements;
 
     // Draw features according to the desired defaults
@@ -419,13 +419,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       drawFiveElements(points, center);
     }
 
-    if (testEnabled) {
-      drawTestMediumPolygon(points, center);
-      drawTestRingSlices(points, center);
+    if (gates81PadEnabled) {
+      drawGates81PadMediumPolygon(points, center);
+      drawGates81PadRingSlices(points, center);
     }
 
     fabricCanvas.renderAll();
-    console.log("Polygon completed. Canvas objects:", fabricCanvas.getObjects().length, "Show features:", { show45Devtas, show16Directions, show32Gates, showVithiMandal, showMarmaSthan, showFiveElements, showTest });
+    console.log("Polygon completed. Canvas objects:", fabricCanvas.getObjects().length, "Show features:", { show45Devtas, show16Directions, show32Gates, showVithiMandal, showMarmaSthan, showFiveElements, showGates81Pad });
     setIsDrawing(false);
     setPolygonPoints([]);
     setCompletedPolygonPoints(points); // Store completed polygon points
@@ -2507,21 +2507,21 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     console.log(`Marma Sthan: Red lines with ${intersectionPoints.length} intersection dots drawn`);
   }, [fabricCanvas, showMarmaSthan, marmaSthanLines, rotationDegree]);
 
-  // Test feature functions - exact duplicate of 45 devtas
-  const drawTestSmallPolygon = (polygonPoints: Point[], center: Point) => {
+  // 32 Gates 81 Pad feature functions - exact duplicate of 45 devtas
+  const drawGates81PadSmallPolygon = (polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas) return;
 
-    // Remove existing test small polygon
-    if (testPolygon) {
-      fabricCanvas.remove(testPolygon);
-      setTestPolygon(null);
+    // Remove existing gates81Pad small polygon
+    if (gates81PadPolygon) {
+      fabricCanvas.remove(gates81PadPolygon);
+      setGates81PadPolygon(null);
     }
 
     // Calculate scale factor for 11% area (√0.11 ≈ 0.331)
     const areaScaleFactor = 0.11;
     const linearScaleFactor = Math.sqrt(areaScaleFactor);
 
-    console.log('Creating test small polygon with scale factor:', linearScaleFactor);
+    console.log('Creating gates81Pad small polygon with scale factor:', linearScaleFactor);
     console.log('Original polygon center:', center);
     console.log('Original polygon points:', polygonPoints);
 
@@ -2542,11 +2542,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       };
     });
 
-    console.log('Scaled test polygon points:', scaledPoints);
+    console.log('Scaled gates81Pad polygon points:', scaledPoints);
 
     // Create smaller polygon with transparent fill and red boundary only
     const fabricPoints = scaledPoints.map(p => ({ x: p.x, y: p.y }));
-    const testSmallPoly = new Polygon(fabricPoints, {
+    const gates81PadSmallPoly = new Polygon(fabricPoints, {
       fill: 'transparent', // No fill - transparent inside
       stroke: '#ff0000', // Red border only
       strokeWidth: 3,
@@ -2555,12 +2555,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     });
 
     // Add and ensure it's on top
-    fabricCanvas.add(testSmallPoly);
+    fabricCanvas.add(gates81PadSmallPoly);
     
     // Make sure it's rendered on top of everything except center point
-    fabricCanvas.bringObjectToFront(testSmallPoly);
+    fabricCanvas.bringObjectToFront(gates81PadSmallPoly);
     
-    setTestPolygon(testSmallPoly);
+    setGates81PadPolygon(gates81PadSmallPoly);
     fabricCanvas.renderAll();
 
     const smallArea = calculatePolygonArea(scaledPoints);
@@ -2571,16 +2571,16 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     console.log('Test small polygon area:', smallArea);
     console.log('Actual percentage:', actualPercentage);
     
-    toast.success(`Test small polygon created with ${actualPercentage.toFixed(1)}% area (${smallArea.toFixed(2)} sq units)`);
+    toast.success(`32 Gates 81 Pad small polygon created with ${actualPercentage.toFixed(1)}% area (${smallArea.toFixed(2)} sq units)`);
   };
 
-  const drawTestMediumPolygon = (polygonPoints: Point[], center: Point) => {
+  const drawGates81PadMediumPolygon = (polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas) return;
 
-    // Remove existing test medium polygon
-    if (testMediumPolygon) {
-      fabricCanvas.remove(testMediumPolygon);
-      setTestMediumPolygon(null);
+    // Remove existing gates81Pad medium polygon
+    if (gates81PadMediumPolygon) {
+      fabricCanvas.remove(gates81PadMediumPolygon);
+      setGates81PadMediumPolygon(null);
     }
 
     // Calculate scale factor for 62% area (√0.62 ≈ 0.787)
@@ -2638,11 +2638,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     toast.success(`Test medium polygon created with ${actualPercentage.toFixed(1)}% area (${mediumArea.toFixed(2)} sq units)`);
   };
 
-  // Create 32 ring slices between main (outer) polygon and the medium (inner) polygon - Test version
-  const drawTestRingSlices = useCallback((polygonPoints: Point[], center: Point) => {
+  // Create 32 ring slices between main (outer) polygon and the medium (inner) polygon - 32 Gates 81 Pad version
+  const drawGates81PadRingSlices = useCallback((polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas) return;
 
-    // Recompute the inner (second layer) polygon using the same scale as drawTestMediumPolygon
+    // Recompute the inner (second layer) polygon using the same scale as drawGates81PadMediumPolygon
     const innerScale = Math.sqrt(0.62); // ~0.787
     const innerPolygonPoints = polygonPoints.map((p) => ({
       x: center.x + (p.x - center.x) * innerScale,
@@ -2652,7 +2652,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const N = 32;
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for test feature
+    const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 32 gates 81 pad feature
     const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
     
@@ -2834,21 +2834,21 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     };
   };
 
-  const toggleTest = () => {
+  const toggleGates81Pad = () => {
     if (!fabricCanvas) return;
     
-    const newShowTest = !showTest;
-    setShowTest(newShowTest);
+    const newShowGates81Pad = !showGates81Pad;
+    setShowGates81Pad(newShowGates81Pad);
     
-    if (newShowTest) {
-      // Recreate all test features to ensure proper display
+    if (newShowGates81Pad) {
+      // Recreate all gates81Pad features to ensure proper display
       if (completedPolygonPoints.length >= 3) {
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
-        console.log('Drawing test features with center:', center);
+        console.log('Drawing gates81Pad features with center:', center);
         
         // Recreate medium polygon and ring slices (no red polygon)
-        drawTestMediumPolygon(completedPolygonPoints, center);
-        drawTestRingSlices(completedPolygonPoints, center);
+        drawGates81PadMediumPolygon(completedPolygonPoints, center);
+        drawGates81PadRingSlices(completedPolygonPoints, center);
       }
     } else {
       // Properly remove all test objects instead of just hiding them
@@ -4397,12 +4397,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                           />
                         </div>
 
-                          {/* Test Toggle */}
+                         {/* 32 gates 81 pad Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">Test</span>
+                          <span className="text-xs xl:text-sm font-medium">32 gates 81 pad</span>
                           <Switch
-                            checked={showTest}
-                            onCheckedChange={toggleTest}
+                            checked={showGates81Pad}
+                            onCheckedChange={toggleGates81Pad}
                             className="data-[state=checked]:bg-yellow-600 touch-manipulation scale-90 xl:scale-100"
                           />
                         </div>
