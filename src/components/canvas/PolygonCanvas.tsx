@@ -2947,8 +2947,57 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     if (bg) fabricCanvas.sendObjectToBack(bg);
     newObjects.forEach(obj => fabricCanvas.bringObjectToFront(obj));
 
-    fabricCanvas.renderAll();
+     fabricCanvas.renderAll();
   }, [fabricCanvas, gates81PadGridLines, rotationDegree]);
+
+  // Thoroughly clear all 32 Gates 81 Pad artifacts (polygons, lines, labels)
+  const clearGates81PadArtifacts = useCallback(() => {
+    if (!fabricCanvas) return;
+
+    // Remove tracked references
+    if (gates81PadPolygon) {
+      fabricCanvas.remove(gates81PadPolygon);
+      setGates81PadPolygon(null);
+    }
+    if (gates81PadMediumPolygon) {
+      fabricCanvas.remove(gates81PadMediumPolygon);
+      setGates81PadMediumPolygon(null);
+    }
+    gates81PadGridLines.forEach(obj => {
+      if (fabricCanvas.contains(obj)) fabricCanvas.remove(obj);
+    });
+    setGates81PadGridLines([]);
+
+    // Scan all objects for remaining artifacts
+    const artifacts: any[] = [];
+    fabricCanvas.getObjects().forEach(obj => {
+      if (obj instanceof Polygon) {
+        // Slices and medium polygon are transparent fill with black stroke
+        const poly = obj as Polygon;
+        if ((poly.fill === 'transparent' || poly.fill === undefined)
+            && poly.stroke === '#000000' && (poly.strokeWidth === 2 || poly.strokeWidth === 3)) {
+          artifacts.push(obj);
+        }
+      } else if (obj instanceof Line) {
+        const line = obj as Line;
+        if (line.stroke === '#000000' && (line.strokeWidth === 2 || line.strokeWidth === 3)) {
+          artifacts.push(obj);
+        }
+      } else if (obj instanceof Text) {
+        const text = obj as Text;
+        if (typeof text.text === 'string' && /^(N|E|S|W)\d{1,2}$/.test(text.text)) {
+          artifacts.push(obj);
+        }
+      }
+    });
+
+    if (artifacts.length) {
+      console.log('clearGates81PadArtifacts: removing', artifacts.length, 'objects');
+      artifacts.forEach(o => fabricCanvas.remove(o));
+    }
+
+    fabricCanvas.renderAll();
+  }, [fabricCanvas, gates81PadGridLines, gates81PadMediumPolygon, gates81PadPolygon]);
 
   // Helper function to find the center point of a region between two polygons
   const findRegionCenterBetweenPolygons = (center: Point, angle: number, innerPoly: Point[], outerPoly: Point[]): Point => {
@@ -2984,63 +3033,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         }
       } else {
         // Comprehensive cleanup for all 32 gates 81 pad objects
-        if (gates81PadPolygon) {
-          fabricCanvas.remove(gates81PadPolygon);
-          setGates81PadPolygon(null);
-        }
-        if (gates81PadMediumPolygon) {
-          fabricCanvas.remove(gates81PadMediumPolygon);
-          setGates81PadMediumPolygon(null);
-        }
-        
-        // Remove all tracked grid lines
-        gates81PadGridLines.forEach(line => {
-          if (fabricCanvas.contains(line)) {
-            fabricCanvas.remove(line);
-          }
-        });
-        setGates81PadGridLines([]);
-
-        // Comprehensive cleanup - search for ALL 32 gates 81 pad objects
-        const allObjects = fabricCanvas.getObjects();
-        const gates81PadToRemove: any[] = [];
-        
-        allObjects.forEach(obj => {
-          // Remove polygons created by drawGates81PadRingSlices (typically have specific fills)
-          if (obj instanceof Polygon) {
-            const polygon = obj as Polygon;
-            // Check for polygons with transparent fills (likely ring slices)
-            if (polygon.fill && typeof polygon.fill === 'string' && 
-                (polygon.fill.includes('rgba') || polygon.fill.includes('hsla')) &&
-                polygon.fill.includes('0.1')) { // Typical alpha for ring slices
-              gates81PadToRemove.push(obj);
-            }
-          }
-          // Remove lines created by drawGates81PadRingSlices 
-          else if (obj instanceof Line) {
-            const line = obj as Line;
-            // Look for specific stroke colors or patterns used by 32 gates
-            if (line.strokeWidth === 1 && line.stroke && 
-                (line.stroke === '#333' || line.stroke === '#666' || line.stroke === '#999')) {
-              gates81PadToRemove.push(obj);
-            }
-          }
-          // Remove text labels created by drawGates81PadRingSlices
-          else if (obj instanceof Text) {
-            const text = obj as Text;
-            // Look for small font size text (likely slice labels)
-            if (text.fontSize === 10 && text.fontFamily === 'Arial' &&
-                typeof text.text === 'string' && text.text.length <= 3) {
-              gates81PadToRemove.push(obj);
-            }
-          }
-        });
-        
-        // Remove all found 32 gates 81 pad objects
-        if (gates81PadToRemove.length > 0) {
-          console.log('Removing', gates81PadToRemove.length, '32 gates 81 pad objects (slices + lines + labels)');
-          gates81PadToRemove.forEach(obj => fabricCanvas.remove(obj));
-        }
+        clearGates81PadArtifacts();
       }
       
       fabricCanvas.renderAll();
@@ -3714,6 +3707,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         clearDevtaZones();
         clearMarmaSthanLine();
         clearFiveElementsLines();
+        clearGates81PadArtifacts();
         
         // Ensure background image stays at the back
         const backgroundImage = fabricCanvas.getObjects().find(obj => obj instanceof FabricImage);
