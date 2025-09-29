@@ -1680,6 +1680,74 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       console.log('Could not create air area: insufficient boundary points', airBoundaryPoints.length, 'Expected 4 for ENE, E, ESE, SE edges');
     }
 
+    console.log('Drawing fire area polygon...');
+    // Add the fire area polygon - covering SE(6), SSE(7), S(8)
+    const fireAreaPoints: Point[] = [center]; // Start from center
+    const fireBoundaryPoints: Point[] = [];
+
+    // Build the FOUR boundary angles that enclose the fire zone exactly (SE..S)
+    const fireBoundaryAngles = [
+      6 * angleStep + rotationRad + northOffset,  // B6:  ESE|SE (left edge)
+      7 * angleStep + rotationRad + northOffset,  // B7:  SE|SSE
+      8 * angleStep + rotationRad + northOffset,  // B8:  SSE|S
+      9 * angleStep + rotationRad + northOffset,  // B9:  S|SSW (right edge)
+    ];
+
+    fireBoundaryAngles.forEach((rayAngle, idx) => {
+      const boundaryPoint = getBoundaryPointWithFallback(rayAngle);
+      if (boundaryPoint) {
+        fireBoundaryPoints.push(boundaryPoint);
+        console.log(`✓ Fire boundary edge ${idx + 1} added at`, boundaryPoint);
+      } else {
+        console.log(`✗ No boundary point found for fire edge ${idx + 1}`);
+      }
+    });
+
+    // Create fire polygon points in proper order: center -> four boundary edges -> back to center
+    console.log('Fire boundary points found:', fireBoundaryPoints.length, 'Expected: 4');
+    if (fireBoundaryPoints.length >= 4) {
+      // Add all boundary edge points clockwise for proper sector coverage
+      fireAreaPoints.push(...fireBoundaryPoints);
+      
+      console.log('Fire area points:', fireAreaPoints.length, 'First boundary point:', fireBoundaryPoints[0], 'Last boundary point:', fireBoundaryPoints[3]);
+
+      // Create fire area polygon
+      const fireAreaPolygon = new Polygon(fireAreaPoints.map(p => ({ x: p.x, y: p.y })), {
+        fill: 'rgba(239, 68, 68, 0.3)', // Red with transparency
+        stroke: '#ef4444', // Red stroke
+        strokeWidth: 2,
+        selectable: false,
+        evented: false,
+        objectCaching: false,
+      });
+      newObjects.push(fireAreaPolygon);
+
+      // Calculate center of fire area for text placement - use all boundary points
+      const fireCenterX = fireBoundaryPoints.reduce((sum, p) => sum + p.x, 0) / fireBoundaryPoints.length;
+      const fireCenterY = fireBoundaryPoints.reduce((sum, p) => sum + p.y, 0) / fireBoundaryPoints.length;
+
+      // Add fire area text
+      const fireText = new Text('Fire Area', {
+        left: fireCenterX,
+        top: fireCenterY,
+        fontSize: 14,
+        fill: '#dc2626', // Darker red for text
+        fontFamily: 'Arial Black',
+        fontWeight: 'bold',
+        selectable: false,
+        evented: false,
+        textAlign: 'center',
+        originX: 'center',
+        originY: 'center',
+        objectCaching: false,
+      });
+      newObjects.push(fireText);
+      
+      console.log('Fire area created with', fireBoundaryPoints.length, 'boundary points covering SE, SSE, S');
+    } else {
+      console.log('Could not create fire area: insufficient boundary points', fireBoundaryPoints.length, 'Expected 4 for SE, SSE, S, SSW edges');
+    }
+
     if (newObjects.length > 0) {
       fabricCanvas.add(...newObjects);
       setFiveElementsLines(newObjects);
