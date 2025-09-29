@@ -1195,83 +1195,83 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.add(strip1Poly);
     newVithiPolygons.push(strip1Poly);
     
-    // Add "executive area" text inside Strip 1 (no number)
-    const strip1Center = calculatePolygonCenter(strip1Points);
-    const executiveText = new Text("executive area", {
-      left: strip1Center.x,
-      top: strip1Center.y,
-      fontSize: 14,
-      fill: '#ef4444', // Red text to match the polygon
-      fontWeight: 'bold',
-      textAlign: 'center',
-      originX: 'center',
-      originY: 'center',
-      selectable: false,
-      evented: false,
-      fontFamily: 'Arial, sans-serif'
-    });
-    fabricCanvas.add(executiveText);
-    newVithiPolygons.push(executiveText);
+    // Add "executive area" text inside Strip 1 (no number) - REMOVED
+    // const strip1Center = calculatePolygonCenter(strip1Points);
+    // const executiveText = new Text("executive area", {
+    //   left: strip1Center.x,
+    //   top: strip1Center.y,
+    //   fontSize: 14,
+    //   fill: '#ef4444', // Red text to match the polygon
+    //   fontWeight: 'bold',
+    //   textAlign: 'center',
+    //   originX: 'center',
+    //   originY: 'center',
+    //   selectable: false,
+    //   evented: false,
+    //   fontFamily: 'Arial, sans-serif'
+    // });
+    // fabricCanvas.add(executiveText);
+    // newVithiPolygons.push(executiveText);
     
-    // Add numbers to strips 2, 3, and 4
-    const createStripNumber = (stripPoints: Point[], number: string, fillColor: string) => {
-      const stripCenter = calculatePolygonCenter(stripPoints);
-      
-      // Calculate responsive font size based on polygon size
-      const avgDistance = stripPoints.reduce((sum, point) => {
-        const dist = Math.sqrt(Math.pow(point.x - stripCenter.x, 2) + Math.pow(point.y - stripCenter.y, 2));
-        return sum + dist;
-      }, 0) / stripPoints.length;
-      
-      const fontSize = Math.max(24, Math.min(48, avgDistance * 0.15));
-      
-      // Create white background/shadow effect
-      const shadowText = new Text(number, {
-        left: stripCenter.x + 2,
-        top: stripCenter.y + 2,
-        fontSize: fontSize,
-        fill: '#ffffff', // White shadow
-        fontWeight: 'bold',
-        textAlign: 'center',
-        originX: 'center',
-        originY: 'center',
-        selectable: false,
-        evented: false,
-        fontFamily: 'Arial, sans-serif',
-        opacity: 0.8
-      });
-      
-      // Create main number text
-      const mainText = new Text(number, {
-        left: stripCenter.x,
-        top: stripCenter.y,
-        fontSize: fontSize,
-        fill: '#000000', // Black text
-        stroke: '#ffffff', // White outline
-        strokeWidth: 2,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        originX: 'center',
-        originY: 'center',
-        selectable: false,
-        evented: false,
-        fontFamily: 'Arial, sans-serif'
-      });
-      
-      fabricCanvas.add(shadowText);
-      fabricCanvas.add(mainText);
-      newVithiPolygons.push(shadowText);
-      newVithiPolygons.push(mainText);
-    };
-    
-    // Add number "2" to Strip 2 (light blue)
-    createStripNumber(strip2Points, "2", "#3b82f6");
-    
-    // Add number "3" to Strip 3 (blue) 
-    createStripNumber(strip3Points, "3", "#2563eb");
-    
-    // Add number "4" to Strip 4 (dark blue)
-    createStripNumber(strip4Points, "4", "#1e3a8a");
+    // Add numbers to strips 2, 3, and 4 - REMOVED
+    // const createStripNumber = (stripPoints: Point[], number: string, fillColor: string) => {
+    //   const stripCenter = calculatePolygonCenter(stripPoints);
+    //   
+    //   // Calculate responsive font size based on polygon size
+    //   const avgDistance = stripPoints.reduce((sum, point) => {
+    //     const dist = Math.sqrt(Math.pow(point.x - stripCenter.x, 2) + Math.pow(point.y - stripCenter.y, 2));
+    //     return sum + dist;
+    //   }, 0) / stripPoints.length;
+    //   
+    //   const fontSize = Math.max(24, Math.min(48, avgDistance * 0.15));
+    //   
+    //   // Create white background/shadow effect
+    //   const shadowText = new Text(number, {
+    //     left: stripCenter.x + 2,
+    //     top: stripCenter.y + 2,
+    //     fontSize: fontSize,
+    //     fill: '#ffffff', // White shadow
+    //     fontWeight: 'bold',
+    //     textAlign: 'center',
+    //     originX: 'center',
+    //     originY: 'center',
+    //     selectable: false,
+    //     evented: false,
+    //     fontFamily: 'Arial, sans-serif',
+    //     opacity: 0.8
+    //   });
+    //   
+    //   // Create main number text
+    //   const mainText = new Text(number, {
+    //     left: stripCenter.x,
+    //     top: stripCenter.y,
+    //     fontSize: fontSize,
+    //     fill: '#000000', // Black text
+    //     stroke: '#ffffff', // White outline
+    //     strokeWidth: 2,
+    //     fontWeight: 'bold',
+    //     textAlign: 'center',
+    //     originX: 'center',
+    //     originY: 'center',
+    //     selectable: false,
+    //     evented: false,
+    //     fontFamily: 'Arial, sans-serif'
+    //   });
+    //   
+    //   fabricCanvas.add(shadowText);
+    //   fabricCanvas.add(mainText);
+    //   newVithiPolygons.push(shadowText);
+    //   newVithiPolygons.push(mainText);
+    // };
+    // 
+    // // Add number "2" to Strip 2 (light blue)
+    // createStripNumber(strip2Points, "2", "#3b82f6");
+    // 
+    // // Add number "3" to Strip 3 (blue) 
+    // createStripNumber(strip3Points, "3", "#2563eb");
+    // 
+    // // Add number "4" to Strip 4 (dark blue)
+    // createStripNumber(strip4Points, "4", "#1e3a8a");
     
     // Ensure proper layering
     newVithiPolygons.forEach(poly => fabricCanvas.bringObjectToFront(poly));
