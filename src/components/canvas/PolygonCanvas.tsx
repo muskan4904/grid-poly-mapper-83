@@ -60,8 +60,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [show45Devtas, setShow45Devtas] = useState(false);
   const [devtaSlices, setDevtaSlices] = useState<any[]>([]);
   const [vithiMandalPolygons, setVithiMandalPolygons] = useState<any[]>([]);
-  const [show32Entrances, setShow32Entrances] = useState(false);
-  const [entranceLines, setEntranceLines] = useState<any[]>([]);
   const [showMarmaSthan, setShowMarmaSthan] = useState(false);
   const [marmaSthanLines, setMarmaSthanLines] = useState<Line[]>([]);
   const [showFiveElements, setShowFiveElements] = useState(false);
@@ -394,7 +392,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const devtasEnabled = false; // Always off by default on completion
     const directionsEnabled = true; // Always on by default on completion
     const gatesEnabled = show32Gates;
-    const entrancesEnabled = show32Entrances;
     const marmaEnabled = showMarmaSthan;
     const testEnabled = showTest;
     const fiveElementsEnabled = showFiveElements;
@@ -412,10 +409,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     if (gatesEnabled) {
       draw32Gates(points, center);
-    }
-
-    if (entrancesEnabled) {
-      draw32Entrances(points, center);
     }
 
     if (marmaEnabled) {
@@ -2910,110 +2903,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     return closestPoint;
   };
 
-  // Draw 32 entrances 81 pad - copy 45 Devtas ring-slice mechanic (no red polygon shown)
-  const draw32Entrances = useCallback((polygonPoints: Point[], center: Point) => {
-    console.log('[32 Entrances] draw called. pts=', polygonPoints.length, 'center=', center);
-    if (!fabricCanvas) return;
-
-    // Remove previously tracked entrance objects
-    if (entranceLines.length > 0) {
-      entranceLines.forEach(obj => fabricCanvas.contains(obj) && fabricCanvas.remove(obj));
-    }
-
-    // Inner ring uses same scale as 45 Devtas medium polygon (62% area)
-    const innerScale = Math.sqrt(0.62);
-    const innerPolygonPoints = polygonPoints.map(p => ({
-      x: center.x + (p.x - center.x) * innerScale,
-      y: center.y + (p.y - center.y) * innerScale,
-    }));
-
-    const N = 32;
-    const angleStep = (Math.PI * 2) / N;
-    const ROTATION_OFFSET = -10; // keep system baseline
-    const DEVTA_ADJUSTMENT = 4;  // align with 45 Devtas baseline
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
-    const northOffset = -Math.PI / 2;
-
-    const outerHits: Point[] = [];
-    const innerHits: Point[] = [];
-
-    for (let i = 0; i < N; i++) {
-      const a = i * angleStep + rotationRad + northOffset;
-      const ho = getRayIntersectionWithPolygon(center, a, polygonPoints);
-      const hi = getRayIntersectionWithPolygon(center, a, innerPolygonPoints);
-      if (!ho || !hi) continue;
-      outerHits.push(ho);
-      innerHits.push(hi);
-    }
-
-    const newObjs: any[] = [];
-
-    // Build slices + separator lines + labels (exact structure used by 45 Devtas)
-    for (let i = 0; i < outerHits.length; i++) {
-      const j = (i + 1) % outerHits.length;
-      const verts = [
-        { x: innerHits[i].x, y: innerHits[i].y },
-        { x: innerHits[j].x, y: innerHits[j].y },
-        { x: outerHits[j].x, y: outerHits[j].y },
-        { x: outerHits[i].x, y: outerHits[i].y },
-      ];
-
-      // Slice polygon (transparent fill, black edge)
-      const slice = new Polygon(verts, {
-        fill: 'transparent',
-        stroke: '#000000',
-        strokeWidth: 2,
-        selectable: false,
-        evented: false,
-        objectCaching: false,
-      });
-      fabricCanvas.add(slice);
-      newObjs.push(slice);
-
-      // Separator radial line (from inner ring to outer boundary)
-      const sep = new Line([
-        innerHits[i].x, innerHits[i].y,
-        outerHits[i].x, outerHits[i].y,
-      ], {
-        stroke: '#000000',
-        strokeWidth: 2,
-        selectable: false,
-        evented: false,
-        objectCaching: false,
-      });
-      fabricCanvas.add(sep);
-      newObjs.push(sep);
-
-      // Center of slice for label
-      const cx = (innerHits[i].x + innerHits[j].x + outerHits[i].x + outerHits[j].x) / 4;
-      const cy = (innerHits[i].y + innerHits[j].y + outerHits[i].y + outerHits[j].y) / 4;
-
-      const label = new Text(String(i + 1), {
-        left: cx - 8,
-        top: cy - 8,
-        fontSize: 16,
-        fill: '#000000',
-        fontFamily: 'Arial',
-        fontWeight: 'bold',
-        selectable: false,
-        evented: false,
-        textAlign: 'center',
-        objectCaching: false,
-      });
-      fabricCanvas.add(label);
-      newObjs.push(label);
-    }
-
-    setEntranceLines(newObjs);
-
-    // Keep background image at back and bring our objects to front
-    const bg = fabricCanvas.getObjects().find(o => o instanceof FabricImage) as FabricImage | undefined;
-    if (bg) fabricCanvas.sendObjectToBack(bg);
-    newObjs.forEach(obj => fabricCanvas.bringObjectToFront(obj));
-
-    fabricCanvas.renderAll();
-  }, [fabricCanvas, entranceLines, rotationDegree]);
-
   // Helper function to calculate intersection of ray with line segment
   const rayLineIntersection = (rayStart: Point, rayDirection: Point, lineStart: Point, lineEnd: Point): Point | null => {
     const dx1 = rayDirection.x;
@@ -3040,36 +2929,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     
     return null;
   };
-  // Clear 32 entrances lines
-  const clear32EntranceLines = () => {
-    if (!fabricCanvas) return;
-    
-    entranceLines.forEach(line => {
-      if (fabricCanvas.contains(line)) {
-        fabricCanvas.remove(line);
-      }
-    });
-    setEntranceLines([]);
-  };
-
-  // Toggle 32 entrances visibility
-  const toggle32Entrances = (newShow32Entrances: boolean) => {
-    console.log('[32 Entrances] toggle ->', newShow32Entrances, {
-      hasCanvas: !!fabricCanvas,
-      completedPts: completedPolygonPoints.length,
-    });
-    setShow32Entrances(newShow32Entrances);
-    
-    if (!newShow32Entrances) {
-      clear32EntranceLines();
-    } else if (completedPolygonPoints.length >= 3) {
-      const center = calculatePolygonCenterLocal(completedPolygonPoints);
-      console.log('[32 Entrances] drawing after toggle. center=', center);
-      draw32Entrances(completedPolygonPoints, center);
-    }
-
-    toast.success(`32 Entrances ${newShow32Entrances ? 'enabled' : 'disabled'}`);
-  };
 
   // Toggle Marma Sthan visibility
   const toggleMarmaSthan = (newShowMarmaSthan: boolean) => {
@@ -3093,13 +2952,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
   }, [rotationDegree, showMarmaSthan, currentPolygon, completedPolygonPoints, fabricCanvas, drawMarmaSthan]);
 
-  // Smooth updates for 32 entrances rotation
+  // Smooth updates for five elements rotation
   useEffect(() => {
-    if (show32Entrances && currentPolygon && completedPolygonPoints.length >= 3 && fabricCanvas) {
+    if (showFiveElements && currentPolygon && completedPolygonPoints.length >= 3 && fabricCanvas) {
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
-      draw32Entrances(completedPolygonPoints, center);
+      drawFiveElements(completedPolygonPoints, center);
     }
-  }, [rotationDegree, show32Entrances, currentPolygon, completedPolygonPoints, fabricCanvas, draw32Entrances]);
+  }, [rotationDegree, showFiveElements, currentPolygon, completedPolygonPoints, fabricCanvas, drawFiveElements]);
 
   // Smooth updates for 45 devtas rotation
   useEffect(() => {
@@ -3160,7 +3019,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     clearDevtaZones();
     clearDirectionLines();
     clearGateLines();
-    clear32EntranceLines();
     setCompletedPolygonPoints([]);
     toast.info("Click to add polygon points. Use the Finish button when you have 3+ points.");
   };
@@ -3251,13 +3109,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     clearDevtaZones();
     clearDirectionLines();
     clearGateLines();
-    clear32EntranceLines();
     clearVithiMandalPolygons();
     clearMarmaSthanLine();
     setCompletedPolygonPoints([]);
     setTestGridLines([]);
     setDevtaSlices([]);
-    setEntranceLines([]);
     setMarmaSthanLines([]);
     
     fabricCanvas.renderAll();
@@ -4403,7 +4259,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                 {/* Statistics removed per user request - keeping only feature controls below */}
                 
                      {/* Shared Rotation Controls */}
-                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || show32Entrances || showMarmaSthan || showFiveElements || showTest) && (
+                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || showMarmaSthan || showFiveElements || showTest) && (
                     <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
@@ -4519,18 +4375,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                             onCheckedChange={toggleMarmaSthan}
                             className="data-[state=checked]:bg-red-600 touch-manipulation scale-90 xl:scale-100"
                           />
-                        </div>
-                        
-                         {/* 32 Entrances 81 Pad Toggle */}
-                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">32 Entrances 81 Pad</span>
-                          <Switch
-                            checked={show32Entrances}
-                            onCheckedChange={toggle32Entrances}
-                            className="data-[state=checked]:bg-indigo-600 touch-manipulation scale-90 xl:scale-100"
-                          />
-                        </div>
-
+                         </div>
+                         
                          {/* Vithi Mandal Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                           <span className="text-xs xl:text-sm font-medium">Vithi Mandal</span>
