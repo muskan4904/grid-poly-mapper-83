@@ -1609,7 +1609,75 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       
       console.log('Water area created with', waterBoundaryPoints.length, 'boundary points including NE');
     } else {
-      console.log('Could not create water area: insufficient boundary points', waterBoundaryPoints.length, 'Expected 4 for NNW, N, NNE, NE');
+      console.log('Could not create water area: insufficient boundary points', waterBoundaryPoints.length, 'Expected 5 for NNW, N, NNE, NE, ENE edges');
+    }
+
+    console.log('Drawing air area polygon...');
+    // Add the air area polygon - covering ENE(3), E(4), ESE(5)
+    const airAreaPoints: Point[] = [center]; // Start from center
+    const airBoundaryPoints: Point[] = [];
+
+    // Build the FOUR boundary angles that enclose the air zone exactly (ENE..ESE)
+    const airBoundaryAngles = [
+      3 * angleStep + rotationRad + northOffset,  // B3:  NE|ENE (left edge)
+      4 * angleStep + rotationRad + northOffset,  // B4:  ENE|E
+      5 * angleStep + rotationRad + northOffset,  // B5:  E|ESE
+      6 * angleStep + rotationRad + northOffset,  // B6:  ESE|SE (right edge)
+    ];
+
+    airBoundaryAngles.forEach((rayAngle, idx) => {
+      const boundaryPoint = getBoundaryPointWithFallback(rayAngle);
+      if (boundaryPoint) {
+        airBoundaryPoints.push(boundaryPoint);
+        console.log(`✓ Air boundary edge ${idx + 1} added at`, boundaryPoint);
+      } else {
+        console.log(`✗ No boundary point found for air edge ${idx + 1}`);
+      }
+    });
+
+    // Create air polygon points in proper order: center -> four boundary edges -> back to center
+    console.log('Air boundary points found:', airBoundaryPoints.length, 'Expected: 4');
+    if (airBoundaryPoints.length >= 4) {
+      // Add all boundary edge points clockwise for proper sector coverage
+      airAreaPoints.push(...airBoundaryPoints);
+      
+      console.log('Air area points:', airAreaPoints.length, 'First boundary point:', airBoundaryPoints[0], 'Last boundary point:', airBoundaryPoints[3]);
+
+      // Create air area polygon
+      const airAreaPolygon = new Polygon(airAreaPoints.map(p => ({ x: p.x, y: p.y })), {
+        fill: 'rgba(34, 197, 94, 0.3)', // Green with transparency
+        stroke: '#22c55e', // Green stroke
+        strokeWidth: 2,
+        selectable: false,
+        evented: false,
+        objectCaching: false,
+      });
+      newObjects.push(airAreaPolygon);
+
+      // Calculate center of air area for text placement - use all boundary points
+      const airCenterX = airBoundaryPoints.reduce((sum, p) => sum + p.x, 0) / airBoundaryPoints.length;
+      const airCenterY = airBoundaryPoints.reduce((sum, p) => sum + p.y, 0) / airBoundaryPoints.length;
+
+      // Add air area text
+      const airText = new Text('Air Area', {
+        left: airCenterX,
+        top: airCenterY,
+        fontSize: 14,
+        fill: '#15803d', // Darker green for text
+        fontFamily: 'Arial Black',
+        fontWeight: 'bold',
+        selectable: false,
+        evented: false,
+        textAlign: 'center',
+        originX: 'center',
+        originY: 'center',
+        objectCaching: false,
+      });
+      newObjects.push(airText);
+      
+      console.log('Air area created with', airBoundaryPoints.length, 'boundary points covering ENE, E, ESE');
+    } else {
+      console.log('Could not create air area: insufficient boundary points', airBoundaryPoints.length, 'Expected 4 for ENE, E, ESE, SE edges');
     }
 
     if (newObjects.length > 0) {
