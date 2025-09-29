@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   calculatePolygonArea, 
   calculatePolygonCenter,
@@ -53,6 +54,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [showDevtaNamesDialog, setShowDevtaNamesDialog] = useState(false);
   const [showVithiMandal, setShowVithiMandal] = useState(false);
   const [rotationDegree, setRotationDegree] = useState(0);
+  const [tempRotationValue, setTempRotationValue] = useState(0); // For smooth slider preview
+  const rotationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMobile = useIsMobile();
   const [directionLines, setDirectionLines] = useState<any[]>([]);
   const [gateLines, setGateLines] = useState<any[]>([]);
   const [completedPolygonPoints, setCompletedPolygonPoints] = useState<Point[]>([]);
@@ -79,6 +83,38 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [polygonHistory, setPolygonHistory] = useState<Point[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const historyIndexRef = useRef(-1);
+  
+  // Optimized rotation handler for mobile and desktop
+  const handleRotationChange = useCallback((value: number[]) => {
+    const newValue = Math.max(0, Math.min(360, Number(value[0])));
+    setTempRotationValue(newValue); // Update preview immediately
+    
+    if (isMobile) {
+      // On mobile: use debouncing to reduce update frequency for performance
+      if (rotationTimeoutRef.current) {
+        clearTimeout(rotationTimeoutRef.current);
+      }
+      
+      rotationTimeoutRef.current = setTimeout(() => {
+        setRotationDegree(newValue);
+        setIsRotating(false);
+      }, 50); // 50ms debounce for mobile
+      
+      setIsRotating(true);
+    } else {
+      // On desktop: update immediately for responsive feel
+      setRotationDegree(newValue);
+    }
+  }, [isMobile]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (rotationTimeoutRef.current) {
+        clearTimeout(rotationTimeoutRef.current);
+      }
+    };
+  }, []);
   
 
   // Initialize canvas with responsive dimensions
@@ -4499,21 +4535,22 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                       <div className="flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
                         <div className="px-2 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800">
-                          {rotationDegree}°
+                          {isMobile && isRotating ? tempRotationValue : rotationDegree}°
                         </div>
                       </div>
                       
                       <div className="space-y-2">
                         <Slider
-                          value={[rotationDegree]}
-                          onValueChange={(value) => {
-                            const displayValue = Math.max(0, Math.min(360, Number(value[0])));
-                            setRotationDegree(displayValue);
-                          }}
+                          value={[isMobile && isRotating ? tempRotationValue : rotationDegree]}
+                          onValueChange={handleRotationChange}
                           max={360}
                           min={0}
-                          step={1}
-                          className={cn("w-full touch-manipulation", isRotating && "opacity-75")}
+                          step={isMobile ? 0.5 : 1} // Finer control on mobile for smoother experience
+                          className={cn(
+                            "w-full",
+                            isMobile ? "touch-manipulation" : "",
+                            isRotating && "opacity-75"
+                          )}
                         />
                         
                         <div className="flex gap-2">
