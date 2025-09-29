@@ -1548,43 +1548,37 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       return null;
     };
 
-    for (let i = 0; i < waterDirections.length; i++) {
-      const dirIndex = waterDirections[i];
+    // Build the FIVE boundary angles that enclose full water zone (NNW..NE)
+    const nnwCenter = 15 * angleStep + rotationRad + northOffset;
+    const nCenter = 0 * angleStep + rotationRad + northOffset;
+    const nneCenter = 1 * angleStep + rotationRad + northOffset;
+    const neCenter = 2 * angleStep + rotationRad + northOffset;
 
-      // Decide angle per direction to fully cover the 4 sectors:
-      // - NNW (15): use its START boundary (left edge) => center - half step
-      // - N (0), NNE (1): use CENTER of sector
-      // - NE (2): use its END boundary (right edge) => center + half step
-      const centerAngle = dirIndex * angleStep + rotationRad + northOffset;
-      let rayAngle = centerAngle;
-      if (dirIndex === 15) rayAngle = centerAngle - angleStep / 2; // left boundary of zone
-      else if (dirIndex === 2) rayAngle = centerAngle + angleStep / 2; // right boundary of zone
+    const boundaryAngles = [
+      nnwCenter - angleStep / 2, // NW|NNW leftmost edge
+      nnwCenter + angleStep / 2, // NNW|N
+      nCenter + angleStep / 2,   // N|NNE
+      nneCenter + angleStep / 2, // NNE|NE
+      neCenter + angleStep / 2,  // NE|ENE rightmost edge
+    ];
 
-      const directionLabel = directionLabels[dirIndex];
-      const angleType = dirIndex === 15 ? 'start-boundary' : dirIndex === 2 ? 'end-boundary' : 'center';
-      console.log(
-        `Processing water direction ${i}: index=${dirIndex}, label=${directionLabel}, ${angleType} angle=${(rayAngle * 180 / Math.PI).toFixed(1)}°`
-      );
-
+    boundaryAngles.forEach((rayAngle, idx) => {
       const boundaryPoint = getBoundaryPointWithFallback(rayAngle);
       if (boundaryPoint) {
         waterBoundaryPoints.push(boundaryPoint);
-        console.log(`✓ Water boundary (${angleType}) for ${directionLabel} (index ${dirIndex}) added at`, boundaryPoint);
+        console.log(`✓ Water boundary edge ${idx + 1} added at`, boundaryPoint);
       } else {
-        console.log(`✗ No boundary point found for ${directionLabel} (index ${dirIndex}) even after fallbacks`);
+        console.log(`✗ No boundary point found for water edge ${idx + 1}`);
       }
-    }
+    });
 
-    // Create polygon points in proper order: center -> NNW -> N -> NNE -> NE -> back to center
-    console.log('Water boundary points found:', waterBoundaryPoints.length, 'Expected: 4');
-    if (waterBoundaryPoints.length >= 4) {
-      // Add points in clockwise order for proper polygon
-      waterAreaPoints.push(waterBoundaryPoints[0]); // NNW (index 15)
-      waterAreaPoints.push(waterBoundaryPoints[1]); // N (index 0) 
-      waterAreaPoints.push(waterBoundaryPoints[2]); // NNE (index 1)
-      waterAreaPoints.push(waterBoundaryPoints[3]); // NE (index 2)
+    // Create polygon points in proper order: center -> five boundary edges -> back to center
+    console.log('Water boundary points found:', waterBoundaryPoints.length, 'Expected: 5');
+    if (waterBoundaryPoints.length >= 5) {
+      // Add all boundary edge points clockwise for proper sector coverage
+      waterAreaPoints.push(...waterBoundaryPoints);
       
-      console.log('Water area points:', waterAreaPoints.length, 'First boundary point:', waterBoundaryPoints[0], 'Last boundary point:', waterBoundaryPoints[3]);
+      console.log('Water area points:', waterAreaPoints.length, 'First boundary point:', waterBoundaryPoints[0], 'Last boundary point:', waterBoundaryPoints[4]);
 
       // Create water area polygon
       const waterAreaPolygon = new Polygon(waterAreaPoints.map(p => ({ x: p.x, y: p.y })), {
@@ -1597,7 +1591,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       });
       newObjects.push(waterAreaPolygon);
 
-      // Calculate center of water area for text placement - use all 4 boundary points
+      // Calculate center of water area for text placement - use all boundary points
       const waterCenterX = waterBoundaryPoints.reduce((sum, p) => sum + p.x, 0) / waterBoundaryPoints.length;
       const waterCenterY = waterBoundaryPoints.reduce((sum, p) => sum + p.y, 0) / waterBoundaryPoints.length;
 
