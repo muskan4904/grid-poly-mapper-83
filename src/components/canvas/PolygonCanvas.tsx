@@ -1430,8 +1430,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         if (text.text === 'Water Area' || 
             text.text === 'Fire Area' || 
             text.text === 'Earth Area' ||
-            text.text === 'Air Area' ||  // Added missing Air Area text
-            (text.fill === '#3b82f6' || text.fill === '#dc2626' || text.fill === '#ca8a04' || text.fill === '#8b5cf6' || text.fill === '#15803d')) {
+            text.text === 'Air Area' ||
+            text.text === 'Space Area' ||  // Added Space Area text
+            (text.fill === '#3b82f6' || text.fill === '#dc2626' || text.fill === '#ca8a04' || text.fill === '#8b5cf6' || text.fill === '#15803d' || text.fill === '#6b7280')) {
           fiveElementsToRemove.push(obj);
         }
       } else if (obj instanceof Polygon) {
@@ -1442,11 +1443,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             polygon.fill === 'rgba(234, 179, 8, 0.3)' ||   // Earth yellow
             polygon.fill === 'rgba(239, 68, 68, 0.3)' ||   // Fire red (updated color)
             polygon.fill === 'rgba(34, 197, 94, 0.3)' ||   // Air green
+            polygon.fill === 'rgba(107, 114, 128, 0.3)' || // Space grey
             polygon.stroke === '#3b82f6' || 
             polygon.stroke === '#dc2626' || 
             polygon.stroke === '#eab308' ||
             polygon.stroke === '#ef4444' ||               // Fire red stroke
-            polygon.stroke === '#22c55e') {               // Air green stroke
+            polygon.stroke === '#22c55e' ||               // Air green stroke
+            polygon.stroke === '#6b7280') {               // Space grey stroke
           fiveElementsToRemove.push(obj);
         }
       } else if (obj instanceof Line) {
@@ -2398,14 +2401,33 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     });
     setMarmaSthanLines([]);
     
-    // Also remove any existing marma sthan lines by checking all objects
-    const existingLines = fabricCanvas.getObjects().filter(obj => 
-      obj instanceof Line && obj.stroke === '#ff0000' && obj.strokeDashArray
-    );
-    existingLines.forEach(line => fabricCanvas.remove(line));
+    // Comprehensive cleanup - search for ALL marma sthan objects
+    const allObjects = fabricCanvas.getObjects();
+    const marmaSthanToRemove: any[] = [];
+    
+    allObjects.forEach(obj => {
+      // Remove red dashed lines
+      if (obj instanceof Line && obj.stroke === '#ff0000' && obj.strokeDashArray) {
+        marmaSthanToRemove.push(obj);
+      }
+      // Remove black dots (circles) with radius 4
+      else if (obj instanceof Circle && 
+               obj.fill === '#000000' && 
+               obj.radius === 4 &&
+               obj.originX === 'center' && 
+               obj.originY === 'center') {
+        marmaSthanToRemove.push(obj);
+      }
+    });
+    
+    // Remove all found marma sthan objects
+    if (marmaSthanToRemove.length > 0) {
+      console.log('Removing', marmaSthanToRemove.length, 'marma sthan objects (lines + dots)');
+      marmaSthanToRemove.forEach(obj => fabricCanvas.remove(obj));
+    }
     
     fabricCanvas.renderAll();
-    console.log('Marma Sthan lines cleared');
+    console.log('Marma Sthan lines and dots cleared completely');
   }, [fabricCanvas, marmaSthanLines]);
 
   // Draw Marma Sthan (red lines connecting specific block pairs from 45 devta system)
