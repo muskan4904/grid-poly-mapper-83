@@ -1112,58 +1112,103 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     toast.success(`Medium polygon created with ${actualPercentage.toFixed(1)}% area (${mediumArea.toFixed(2)} sq units)`);
   };
 
-  // Vithi Mandal Functions - Copy of 45 devtas but without radial lines
+  // Vithi Mandal Functions - Creates 4 concentric strips with numbers
   const drawVithiMandalPolygons = (polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas) return;
     
     // Clear existing vithi mandal polygons
     clearVithiMandalPolygons();
     
-    // Create red polygon (11% area - same as small polygon)
-    const redAreaFactor = 0.11;
-    const redScale = Math.sqrt(redAreaFactor);
-    const redPoints = polygonPoints.map(point => ({
-      x: center.x + (point.x - center.x) * redScale,
-      y: center.y + (point.y - center.y) * redScale
+    // Define the 4 strips with progressive area factors
+    const strip1Factor = 0.15;   // Executive area (innermost) - 15%
+    const strip2Factor = 0.35;   // Light blue strip - 35%
+    const strip3Factor = 0.60;   // Blue strip (darker) - 60%
+    const strip4Factor = 0.90;   // Dark blue strip (outermost) - 90%
+    
+    // Calculate scaling factors (square root of area factors)
+    const strip1Scale = Math.sqrt(strip1Factor);
+    const strip2Scale = Math.sqrt(strip2Factor);
+    const strip3Scale = Math.sqrt(strip3Factor);
+    const strip4Scale = Math.sqrt(strip4Factor);
+    
+    // Create point arrays for each strip
+    const strip1Points = polygonPoints.map(point => ({
+      x: center.x + (point.x - center.x) * strip1Scale,
+      y: center.y + (point.y - center.y) * strip1Scale
     }));
     
-    // Create black polygon (62% area - same as medium polygon)
-    const blackAreaFactor = 0.62;
-    const blackScale = Math.sqrt(blackAreaFactor);
-    const blackPoints = polygonPoints.map(point => ({
-      x: center.x + (point.x - center.x) * blackScale,
-      y: center.y + (point.y - center.y) * blackScale
+    const strip2Points = polygonPoints.map(point => ({
+      x: center.x + (point.x - center.x) * strip2Scale,
+      y: center.y + (point.y - center.y) * strip2Scale
     }));
     
-    // Create center polygon (50% area between red and black = 36.5% area)
-    const centerAreaFactor = (redAreaFactor + blackAreaFactor) / 2; // 36.5%
-    const centerScale = Math.sqrt(centerAreaFactor);
-    const centerPoints = polygonPoints.map(point => ({
-      x: center.x + (point.x - center.x) * centerScale,
-      y: center.y + (point.y - center.y) * centerScale
+    const strip3Points = polygonPoints.map(point => ({
+      x: center.x + (point.x - center.x) * strip3Scale,
+      y: center.y + (point.y - center.y) * strip3Scale
+    }));
+    
+    const strip4Points = polygonPoints.map(point => ({
+      x: center.x + (point.x - center.x) * strip4Scale,
+      y: center.y + (point.y - center.y) * strip4Scale
     }));
     
     const newVithiPolygons: any[] = [];
     
-    // Create red polygon
-    const redFabricPoints = redPoints.map(p => ({ x: p.x, y: p.y }));
-    const redPoly = new Polygon(redFabricPoints, {
-      fill: 'transparent',
-      stroke: '#ff0000', // Red
+    // Create Strip 4 (outermost - dark blue)
+    const strip4FabricPoints = strip4Points.map(p => ({ x: p.x, y: p.y }));
+    const strip4Poly = new Polygon(strip4FabricPoints, {
+      fill: 'rgba(30, 58, 138, 0.2)', // Dark blue fill
+      stroke: '#1e3a8a', // Dark blue stroke
       strokeWidth: 3,
       selectable: false,
       evented: false
     });
-    fabricCanvas.add(redPoly);
-    newVithiPolygons.push(redPoly);
+    fabricCanvas.add(strip4Poly);
+    newVithiPolygons.push(strip4Poly);
     
-    // Add "executive area" text inside the red polygon
-    const redCenter = calculatePolygonCenter(redPoints);
+    // Create Strip 3 (blue)
+    const strip3FabricPoints = strip3Points.map(p => ({ x: p.x, y: p.y }));
+    const strip3Poly = new Polygon(strip3FabricPoints, {
+      fill: 'rgba(37, 99, 235, 0.25)', // Blue fill
+      stroke: '#2563eb', // Blue stroke
+      strokeWidth: 3,
+      selectable: false,
+      evented: false
+    });
+    fabricCanvas.add(strip3Poly);
+    newVithiPolygons.push(strip3Poly);
+    
+    // Create Strip 2 (light blue)
+    const strip2FabricPoints = strip2Points.map(p => ({ x: p.x, y: p.y }));
+    const strip2Poly = new Polygon(strip2FabricPoints, {
+      fill: 'rgba(59, 130, 246, 0.3)', // Light blue fill
+      stroke: '#3b82f6', // Light blue stroke
+      strokeWidth: 3,
+      selectable: false,
+      evented: false
+    });
+    fabricCanvas.add(strip2Poly);
+    newVithiPolygons.push(strip2Poly);
+    
+    // Create Strip 1 (Executive area - red outline, no fill)
+    const strip1FabricPoints = strip1Points.map(p => ({ x: p.x, y: p.y }));
+    const strip1Poly = new Polygon(strip1FabricPoints, {
+      fill: 'transparent',
+      stroke: '#ef4444', // Red stroke
+      strokeWidth: 4,
+      selectable: false,
+      evented: false
+    });
+    fabricCanvas.add(strip1Poly);
+    newVithiPolygons.push(strip1Poly);
+    
+    // Add "executive area" text inside Strip 1 (no number)
+    const strip1Center = calculatePolygonCenter(strip1Points);
     const executiveText = new Text("executive area", {
-      left: redCenter.x,
-      top: redCenter.y,
-      fontSize: 16,
-      fill: '#ff0000', // Red text to match the polygon
+      left: strip1Center.x,
+      top: strip1Center.y,
+      fontSize: 14,
+      fill: '#ef4444', // Red text to match the polygon
       fontWeight: 'bold',
       textAlign: 'center',
       originX: 'center',
@@ -1175,29 +1220,65 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     fabricCanvas.add(executiveText);
     newVithiPolygons.push(executiveText);
     
-    // Create black polygon
-    const blackFabricPoints = blackPoints.map(p => ({ x: p.x, y: p.y }));
-    const blackPoly = new Polygon(blackFabricPoints, {
-      fill: 'transparent',
-      stroke: '#000000', // Black
-      strokeWidth: 3,
-      selectable: false,
-      evented: false
-    });
-    fabricCanvas.add(blackPoly);
-    newVithiPolygons.push(blackPoly);
+    // Add numbers to strips 2, 3, and 4
+    const createStripNumber = (stripPoints: Point[], number: string, fillColor: string) => {
+      const stripCenter = calculatePolygonCenter(stripPoints);
+      
+      // Calculate responsive font size based on polygon size
+      const avgDistance = stripPoints.reduce((sum, point) => {
+        const dist = Math.sqrt(Math.pow(point.x - stripCenter.x, 2) + Math.pow(point.y - stripCenter.y, 2));
+        return sum + dist;
+      }, 0) / stripPoints.length;
+      
+      const fontSize = Math.max(24, Math.min(48, avgDistance * 0.15));
+      
+      // Create white background/shadow effect
+      const shadowText = new Text(number, {
+        left: stripCenter.x + 2,
+        top: stripCenter.y + 2,
+        fontSize: fontSize,
+        fill: '#ffffff', // White shadow
+        fontWeight: 'bold',
+        textAlign: 'center',
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        evented: false,
+        fontFamily: 'Arial, sans-serif',
+        opacity: 0.8
+      });
+      
+      // Create main number text
+      const mainText = new Text(number, {
+        left: stripCenter.x,
+        top: stripCenter.y,
+        fontSize: fontSize,
+        fill: '#000000', // Black text
+        stroke: '#ffffff', // White outline
+        strokeWidth: 2,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        evented: false,
+        fontFamily: 'Arial, sans-serif'
+      });
+      
+      fabricCanvas.add(shadowText);
+      fabricCanvas.add(mainText);
+      newVithiPolygons.push(shadowText);
+      newVithiPolygons.push(mainText);
+    };
     
-    // Create center polygon (blue)
-    const centerFabricPoints = centerPoints.map(p => ({ x: p.x, y: p.y }));
-    const centerPoly = new Polygon(centerFabricPoints, {
-      fill: 'transparent',
-      stroke: '#0066cc', // Blue
-      strokeWidth: 3,
-      selectable: false,
-      evented: false
-    });
-    fabricCanvas.add(centerPoly);
-    newVithiPolygons.push(centerPoly);
+    // Add number "2" to Strip 2 (light blue)
+    createStripNumber(strip2Points, "2", "#3b82f6");
+    
+    // Add number "3" to Strip 3 (blue) 
+    createStripNumber(strip3Points, "3", "#2563eb");
+    
+    // Add number "4" to Strip 4 (dark blue)
+    createStripNumber(strip4Points, "4", "#1e3a8a");
     
     // Ensure proper layering
     newVithiPolygons.forEach(poly => fabricCanvas.bringObjectToFront(poly));
@@ -1205,16 +1286,18 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     setVithiMandalPolygons(newVithiPolygons);
     
     // Calculate areas for display
-    const redArea = calculatePolygonArea(redPoints);
-    const blackArea = calculatePolygonArea(blackPoints);
-    const centerArea = calculatePolygonArea(centerPoints);
+    const strip1Area = calculatePolygonArea(strip1Points);
+    const strip2Area = calculatePolygonArea(strip2Points);
+    const strip3Area = calculatePolygonArea(strip3Points);
+    const strip4Area = calculatePolygonArea(strip4Points);
     const originalArea = calculatePolygonArea(polygonPoints);
     
-    console.log('Vithi Mandal - Red area:', redArea, `(${(redArea/originalArea*100).toFixed(1)}%)`);
-    console.log('Vithi Mandal - Black area:', blackArea, `(${(blackArea/originalArea*100).toFixed(1)}%)`);
-    console.log('Vithi Mandal - Center area:', centerArea, `(${(centerArea/originalArea*100).toFixed(1)}%)`);
+    console.log('Vithi Mandal - Strip 1 (Executive):', strip1Area, `(${(strip1Area/originalArea*100).toFixed(1)}%)`);
+    console.log('Vithi Mandal - Strip 2 (Light Blue):', strip2Area, `(${(strip2Area/originalArea*100).toFixed(1)}%)`);
+    console.log('Vithi Mandal - Strip 3 (Blue):', strip3Area, `(${(strip3Area/originalArea*100).toFixed(1)}%)`);
+    console.log('Vithi Mandal - Strip 4 (Dark Blue):', strip4Area, `(${(strip4Area/originalArea*100).toFixed(1)}%)`);
     
-    toast.success(`Vithi Mandal created with center polygon at ${(centerArea/originalArea*100).toFixed(1)}% area`);
+    toast.success(`Vithi Mandal created with 4 strips and sequential numbers`);
   };
 
   const clearVithiMandalPolygons = () => {
@@ -1223,13 +1306,17 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // More comprehensive clearing - remove all vithi mandal related objects
     const allObjects = fabricCanvas.getObjects();
     const vithiObjects = allObjects.filter(obj => {
-      // Remove any text objects that might be vithi mandal labels
+      // Remove any text objects that might be vithi mandal labels including numbers
       return (obj instanceof Text && (
         obj.text?.includes('shetra') || 
         obj.text?.includes('क्षेत्र') ||
         obj.text?.includes('Brahma') ||
         obj.text?.includes('Manushya') ||
-        obj.text?.includes('Dev')
+        obj.text?.includes('Dev') ||
+        obj.text?.includes('executive area') ||
+        obj.text === '2' ||
+        obj.text === '3' ||
+        obj.text === '4'
       )) || vithiMandalPolygons.includes(obj);
     });
     
