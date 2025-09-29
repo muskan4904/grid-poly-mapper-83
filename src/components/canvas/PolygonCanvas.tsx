@@ -4257,6 +4257,27 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       if (currentStates.showFiveElements && !showFiveElements) toggleFiveElements();
       if (currentStates.showGates81Pad && !showGates81Pad) setShowGates81Pad(true);
 
+      // Add blank consultation pages
+      // Page: Vastu Consultant's remarks - 16 directions
+      pdf.addPage();
+      pdf.setFontSize(20);
+      pdf.text("Vastu Consultant's remarks", pageWidth / 2, 40, { align: 'center' });
+      pdf.setFontSize(16);
+      pdf.text("16 directions", pageWidth / 2, 70, { align: 'center' });
+      
+      // Add user details to page
+      addUserDetailsToPage(pdf, userDetails);
+
+      // Page: Vastu Consultant's remarks - 32 entrances
+      pdf.addPage();
+      pdf.setFontSize(20);
+      pdf.text("Vastu Consultant's remarks", pageWidth / 2, 40, { align: 'center' });
+      pdf.setFontSize(16);
+      pdf.text("32 entrances", pageWidth / 2, 70, { align: 'center' });
+      
+      // Add user details to page
+      addUserDetailsToPage(pdf, userDetails);
+
       // Save PDF
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
       const filename = `vastu-analysis-report-${timestamp}.pdf`;
