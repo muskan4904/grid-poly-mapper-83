@@ -3343,7 +3343,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         show16BarChart,
         showVithiMandal,
         show45Devtas,
-        showMarmaSthan
+        showMarmaSthan,
+        showFiveElements,
+        showGates81Pad
       };
 
       // Helper function to add user details to the bottom-right corner of each page
@@ -3517,6 +3519,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         setShow32Gates(false);
         setShowVithiMandal(false);
         setShowFiveElements(false);
+        setShowMarmaSthan(false);
+        setShowGates81Pad(false);
         
         
         // Clear all tracked object arrays
@@ -3813,6 +3817,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       console.log('Capturing Page 3: 32 Gates 81 Pad');
       await resetAllFeatures();
       setShowGates81Pad(true);
+      // Wait longer for state to properly update
+      await new Promise(resolve => setTimeout(resolve, 200));
       if (completedPolygonPoints.length >= 3) {
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
         drawGates81PadMediumPolygon(completedPolygonPoints, center);
@@ -4123,6 +4129,50 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Add user details to page
       addUserDetailsToPage(pdf, userDetails);
 
+      // Page 9: Five Elements (reset first, then enable only this)
+      pdf.addPage();
+      console.log('Capturing Page 9: Five Elements');
+      await resetAllFeatures();
+      setShowFiveElements(true);
+      // Wait for state to properly update
+      await new Promise(resolve => setTimeout(resolve, 200));
+      if (completedPolygonPoints.length >= 3) {
+        const center = calculatePolygonCenterLocal(completedPolygonPoints);
+        drawFiveElements(completedPolygonPoints, center);
+      }
+      ensureImageAtBack();
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const fiveElementsW = pageWidth - pdfMargin * 2;
+      const fiveElementsH = pageHeight - pdfTopOffset - pdfMargin;
+      const fiveElementsTargetAspect = fiveElementsW / fiveElementsH;
+      const fiveElementsImage = await captureCanvasState("Five Elements", fiveElementsTargetAspect);
+      
+      pdf.setFontSize(16);
+      pdf.text("Page 9: Five Elements Analysis", pageWidth / 2, 20, { align: 'center' });
+      const fiveElementsAvailableWidth = pageWidth - pdfMargin * 2;
+      const fiveElementsAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
+      // Use captured image dimensions for better height utilization
+      let fiveElementsFinalWidth = fiveElementsAvailableWidth;
+      let fiveElementsFinalHeight = fiveElementsAvailableHeight * 0.9;
+      
+      const tempFiveElementsImg = new Image();
+      tempFiveElementsImg.src = fiveElementsImage;
+      await new Promise(resolve => tempFiveElementsImg.onload = resolve);
+      
+      const fiveElementsCapturedAspect = tempFiveElementsImg.width / tempFiveElementsImg.height;
+      
+      if (fiveElementsFinalWidth / fiveElementsFinalHeight > fiveElementsCapturedAspect) {
+        fiveElementsFinalWidth = fiveElementsFinalHeight * fiveElementsCapturedAspect;
+      } else {
+        fiveElementsFinalHeight = fiveElementsFinalWidth / fiveElementsCapturedAspect;
+      }
+      const fiveElementsX = (pageWidth - fiveElementsFinalWidth) / 2;
+      const fiveElementsY = pdfTopOffset + 6;
+      pdf.addImage(fiveElementsImage, 'PNG', fiveElementsX, fiveElementsY, fiveElementsFinalWidth, fiveElementsFinalHeight);
+      
+      // Add user details to page
+      addUserDetailsToPage(pdf, userDetails);
+
       // Restore original states
       await resetAllFeatures();
       if (currentStates.showDevtas && !showDevtas) toggleDevtasVisibility();
@@ -4132,6 +4182,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       if (currentStates.showVithiMandal && !showVithiMandal) toggleVithiMandal();
       if (currentStates.showMarmaSthan && !showMarmaSthan) toggleMarmaSthan(true);
       if (currentStates.show16BarChart && !show16BarChart) setShow16BarChart(true);
+      if (currentStates.showFiveElements && !showFiveElements) toggleFiveElements();
+      if (currentStates.showGates81Pad && !showGates81Pad) setShowGates81Pad(true);
 
       // Save PDF
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
