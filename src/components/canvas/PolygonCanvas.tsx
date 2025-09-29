@@ -1748,6 +1748,73 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       console.log('Could not create fire area: insufficient boundary points', fireBoundaryPoints.length, 'Expected 4 for SE, SSE, S, SSW edges');
     }
 
+    console.log('Drawing earth area polygon...');
+    // Add the earth area polygon - covering SSW(9), SW(10)
+    const earthAreaPoints: Point[] = [center]; // Start from center
+    const earthBoundaryPoints: Point[] = [];
+
+    // Build the THREE boundary angles that enclose the earth zone exactly (SSW..SW)
+    const earthBoundaryAngles = [
+      9 * angleStep + rotationRad + northOffset,   // B9:  S|SSW (left edge)
+      10 * angleStep + rotationRad + northOffset,  // B10: SSW|SW
+      11 * angleStep + rotationRad + northOffset,  // B11: SW|WSW (right edge)
+    ];
+
+    earthBoundaryAngles.forEach((rayAngle, idx) => {
+      const boundaryPoint = getBoundaryPointWithFallback(rayAngle);
+      if (boundaryPoint) {
+        earthBoundaryPoints.push(boundaryPoint);
+        console.log(`✓ Earth boundary edge ${idx + 1} added at`, boundaryPoint);
+      } else {
+        console.log(`✗ No boundary point found for earth edge ${idx + 1}`);
+      }
+    });
+
+    // Create earth polygon points in proper order: center -> three boundary edges -> back to center
+    console.log('Earth boundary points found:', earthBoundaryPoints.length, 'Expected: 3');
+    if (earthBoundaryPoints.length >= 3) {
+      // Add all boundary edge points clockwise for proper sector coverage
+      earthAreaPoints.push(...earthBoundaryPoints);
+      
+      console.log('Earth area points:', earthAreaPoints.length, 'First boundary point:', earthBoundaryPoints[0], 'Last boundary point:', earthBoundaryPoints[2]);
+
+      // Create earth area polygon
+      const earthAreaPolygon = new Polygon(earthAreaPoints.map(p => ({ x: p.x, y: p.y })), {
+        fill: 'rgba(234, 179, 8, 0.3)', // Yellow with transparency
+        stroke: '#eab308', // Yellow stroke
+        strokeWidth: 2,
+        selectable: false,
+        evented: false,
+        objectCaching: false,
+      });
+      newObjects.push(earthAreaPolygon);
+
+      // Calculate center of earth area for text placement - use all boundary points
+      const earthCenterX = earthBoundaryPoints.reduce((sum, p) => sum + p.x, 0) / earthBoundaryPoints.length;
+      const earthCenterY = earthBoundaryPoints.reduce((sum, p) => sum + p.y, 0) / earthBoundaryPoints.length;
+
+      // Add earth area text
+      const earthText = new Text('Earth Area', {
+        left: earthCenterX,
+        top: earthCenterY,
+        fontSize: 14,
+        fill: '#ca8a04', // Darker yellow for text
+        fontFamily: 'Arial Black',
+        fontWeight: 'bold',
+        selectable: false,
+        evented: false,
+        textAlign: 'center',
+        originX: 'center',
+        originY: 'center',
+        objectCaching: false,
+      });
+      newObjects.push(earthText);
+      
+      console.log('Earth area created with', earthBoundaryPoints.length, 'boundary points covering SSW, SW');
+    } else {
+      console.log('Could not create earth area: insufficient boundary points', earthBoundaryPoints.length, 'Expected 3 for SSW, SW, WSW edges');
+    }
+
     if (newObjects.length > 0) {
       fabricCanvas.add(...newObjects);
       setFiveElementsLines(newObjects);
