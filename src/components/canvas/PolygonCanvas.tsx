@@ -1426,29 +1426,34 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     });
     setFiveElementsLines([]);
     
-    // Method 2: Comprehensive cleanup - search for orphaned five elements objects
+    // Method 2: Comprehensive cleanup - search for ALL five elements objects
     const allObjects = fabricCanvas.getObjects();
     const fiveElementsToRemove: any[] = [];
     
     allObjects.forEach(obj => {
-      // Remove objects with five elements characteristics
+      // Remove ALL text objects with five elements characteristics
       if (obj instanceof Text) {
         const text = obj as Text;
         if (text.text === 'Water Area' || 
             text.text === 'Fire Area' || 
             text.text === 'Earth Area' ||
-            (text.fill === '#3b82f6' || text.fill === '#dc2626' || text.fill === '#ca8a04' || text.fill === '#8b5cf6')) {
+            text.text === 'Air Area' ||  // Added missing Air Area text
+            (text.fill === '#3b82f6' || text.fill === '#dc2626' || text.fill === '#ca8a04' || text.fill === '#8b5cf6' || text.fill === '#15803d')) {
           fiveElementsToRemove.push(obj);
         }
       } else if (obj instanceof Polygon) {
         const polygon = obj as Polygon;
-        // Remove polygons with five elements colors
+        // Remove ALL polygons with five elements colors
         if (polygon.fill === 'rgba(59, 130, 246, 0.3)' || // Water blue
             polygon.fill === 'rgba(220, 38, 38, 0.3)' ||   // Fire red  
             polygon.fill === 'rgba(234, 179, 8, 0.3)' ||   // Earth yellow
+            polygon.fill === 'rgba(239, 68, 68, 0.3)' ||   // Fire red (updated color)
+            polygon.fill === 'rgba(34, 197, 94, 0.3)' ||   // Air green
             polygon.stroke === '#3b82f6' || 
             polygon.stroke === '#dc2626' || 
-            polygon.stroke === '#eab308') {
+            polygon.stroke === '#eab308' ||
+            polygon.stroke === '#ef4444' ||               // Fire red stroke
+            polygon.stroke === '#22c55e') {               // Air green stroke
           fiveElementsToRemove.push(obj);
         }
       } else if (obj instanceof Line) {
@@ -1467,8 +1472,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
     
     fabricCanvas.renderAll();
-    fabricCanvas.renderAll();
-    console.log('Five elements lines cleared');
+    console.log('Five elements lines cleared completely');
   }, [fabricCanvas, fiveElementsLines]);
 
   // Draw or update 16 directions in-place for smooth rotation (no flicker)
@@ -1577,7 +1581,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     toast.success(`16 directions ${newShow16Directions ? 'enabled' : 'disabled'}`);
   };
 
-  // Draw five elements - with rotating water area
+  // Draw five elements - with rotating elemental areas
   const drawFiveElements = useCallback((polygonPoints: Point[], center: Point) => {
     console.log('drawFiveElements called with rotation:', rotationDegree, 'hasExisting:', fiveElementsLines.length > 0);
     if (!fabricCanvas || !showFiveElements) {
@@ -1585,18 +1589,20 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       return;
     }
 
-    // IMMEDIATELY clear all five elements objects to prevent duplicates
+    // FORCE COMPLETE CLEAR before creating new objects - prevent ALL duplicates
+    console.log('Force clearing ALL five elements objects before redraw...');
     const allObjects = fabricCanvas.getObjects();
     const fiveElementsToRemove: any[] = [];
     
-    // Comprehensive immediate clearing - find ALL five elements objects
+    // Find ALL five elements objects (text, polygons, lines)
     allObjects.forEach(obj => {
       if (obj instanceof Text) {
         const text = obj as Text;
         if (text.text === 'Water Area' || 
             text.text === 'Fire Area' || 
             text.text === 'Earth Area' ||
-            (text.fill === '#3b82f6' || text.fill === '#dc2626' || text.fill === '#ca8a04' || text.fill === '#8b5cf6')) {
+            text.text === 'Air Area' ||
+            (text.fill === '#3b82f6' || text.fill === '#dc2626' || text.fill === '#ca8a04' || text.fill === '#8b5cf6' || text.fill === '#15803d')) {
           fiveElementsToRemove.push(obj);
         }
       } else if (obj instanceof Polygon) {
@@ -1604,26 +1610,36 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         if (polygon.fill === 'rgba(59, 130, 246, 0.3)' || // Water blue
             polygon.fill === 'rgba(220, 38, 38, 0.3)' ||   // Fire red  
             polygon.fill === 'rgba(234, 179, 8, 0.3)' ||   // Earth yellow
+            polygon.fill === 'rgba(239, 68, 68, 0.3)' ||   // Fire red (updated color)
+            polygon.fill === 'rgba(34, 197, 94, 0.3)' ||   // Air green
             polygon.stroke === '#3b82f6' || 
             polygon.stroke === '#dc2626' || 
-            polygon.stroke === '#eab308') {
+            polygon.stroke === '#eab308' ||
+            polygon.stroke === '#ef4444' ||               // Fire red stroke
+            polygon.stroke === '#22c55e') {               // Air green stroke
           fiveElementsToRemove.push(obj);
         }
       } else if (obj instanceof Line) {
         const line = obj as Line;
-        if (line.stroke === '#8b5cf6') { // Five elements direction lines
+        if (line.stroke === '#8b5cf6') { // Five elements direction lines (purple)
           fiveElementsToRemove.push(obj);
         }
       }
     });
     
-    // Remove ALL existing five elements objects immediately (synchronously)
+    // SYNCHRONOUSLY remove ALL existing objects
     if (fiveElementsToRemove.length > 0) {
-      console.log('Clearing', fiveElementsToRemove.length, 'existing five elements objects for clean redraw');
-      fiveElementsToRemove.forEach(obj => fabricCanvas.remove(obj));
+      console.log('Force removing', fiveElementsToRemove.length, 'existing five elements objects');
+      fiveElementsToRemove.forEach(obj => {
+        try {
+          fabricCanvas.remove(obj);
+        } catch (error) {
+          console.warn('Error removing five elements object:', error);
+        }
+      });
     }
     
-    // Clear the state array (this is async but objects are already removed above)
+    // Clear state array
     setFiveElementsLines([]);
 
     const N = 16; // Same as 16 directions
