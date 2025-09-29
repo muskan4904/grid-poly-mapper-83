@@ -1548,18 +1548,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       return null;
     };
 
-    // Build the FIVE boundary angles that enclose full water zone (NNW..NE)
-    const nnwCenter = 15 * angleStep + rotationRad + northOffset;
-    const nCenter = 0 * angleStep + rotationRad + northOffset;
-    const nneCenter = 1 * angleStep + rotationRad + northOffset;
-    const neCenter = 2 * angleStep + rotationRad + northOffset;
-
+    // Build the FIVE true boundary angles that enclose the water zone exactly (NNW..NE)
     const boundaryAngles = [
-      nnwCenter - angleStep / 2, // NW|NNW leftmost edge
-      nnwCenter + angleStep / 2, // NNW|N
-      nCenter + angleStep / 2,   // N|NNE
-      nneCenter + angleStep / 2, // NNE|NE
-      neCenter + angleStep / 2,  // NE|ENE rightmost edge
+      15 * angleStep + rotationRad + northOffset, // B15: NW|NNW (left edge)
+      0 * angleStep + rotationRad + northOffset,  // B0:  NNW|N
+      1 * angleStep + rotationRad + northOffset,  // B1:  N|NNE
+      2 * angleStep + rotationRad + northOffset,  // B2:  NNE|NE
+      3 * angleStep + rotationRad + northOffset,  // B3:  NE|ENE (right edge)
     ];
 
     boundaryAngles.forEach((rayAngle, idx) => {
