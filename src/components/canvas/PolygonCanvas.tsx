@@ -3139,6 +3139,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   // Smooth updates for 32 gates 81 pad feature rotation
   useEffect(() => {
     if (showGates81Pad && currentPolygon && completedPolygonPoints.length >= 3 && fabricCanvas) {
+      // Clear existing gates81Pad objects before re-drawing to prevent duplicates
+      clearGates81PadArtifacts();
+      
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       // Draw both the medium polygon and ring slices for complete rendering
       drawGates81PadMediumPolygon(completedPolygonPoints, center);
