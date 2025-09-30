@@ -443,7 +443,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       draw16Directions(points, center);
     }
 
-    if (gatesEnabled) {
+    // Gates features are mutually exclusive: prefer 81 Pad over classic 32 Gates
+    if (gates81PadEnabled) {
+      drawGates81PadMediumPolygon(points, center);
+      drawGates81PadRingSlices(points, center);
+    } else if (gatesEnabled) {
       draw32Gates(points, center);
     }
 
@@ -453,11 +457,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     if (fiveElementsEnabled) {
       drawFiveElements(points, center);
-    }
-
-    if (gates81PadEnabled) {
-      drawGates81PadMediumPolygon(points, center);
-      drawGates81PadRingSlices(points, center);
     }
 
     fabricCanvas.renderAll();
@@ -2293,6 +2292,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const newShow32Gates = !show32Gates;
     setShow32Gates(newShow32Gates);
 
+    // Ensure mutual exclusivity with 32 Gates 81 Pad
+    if (newShow32Gates && showGates81Pad) {
+      setShowGates81Pad(false);
+      clearGates81PadArtifacts();
+    }
+
     if (!newShow32Gates) {
       // Disabling: clear existing objects
       clearGateLines();
@@ -2800,7 +2805,14 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     // Check if existing objects need updating vs creating new ones
     const expectedObjectCount = outerHits.length * 3; // slices + lines + labels
-    const hasExisting = gates81PadGridLines.length >= expectedObjectCount;
+    let hasExisting = gates81PadGridLines.length >= expectedObjectCount;
+    // Guard against stale references after clears
+    if (hasExisting) {
+      const allContained = gates81PadGridLines.every(obj => fabricCanvas.contains(obj));
+      if (!allContained) {
+        hasExisting = false;
+      }
+    }
     const newObjects: any[] = [];
 
     // Disable selection for performance while updating
@@ -3018,16 +3030,20 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     
     const newShowGates81Pad = !showGates81Pad;
     setShowGates81Pad(newShowGates81Pad);
-    
-    // Add small delay to ensure state update is processed
+
+    // Ensure mutual exclusivity with classic 32 Gates
+    if (newShowGates81Pad && show32Gates) {
+      setShow32Gates(false);
+      clearGateLines();
+    }
+
+    // Small delay to allow state sync before drawing
     setTimeout(() => {
       if (newShowGates81Pad) {
-        // Recreate all gates81Pad features to ensure proper display
+        // Always start clean to avoid duplicates
+        clearGates81PadArtifacts();
         if (completedPolygonPoints.length >= 3) {
           const center = calculatePolygonCenterLocal(completedPolygonPoints);
-          console.log('Drawing gates81Pad features with center:', center);
-          
-          // Recreate medium polygon and ring slices (no red polygon)
           drawGates81PadMediumPolygon(completedPolygonPoints, center);
           drawGates81PadRingSlices(completedPolygonPoints, center);
         }
@@ -3038,7 +3054,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       
       fabricCanvas.renderAll();
       console.log("32 Gates 81 Pad feature toggled:", newShowGates81Pad, "Canvas objects:", fabricCanvas.getObjects().length);
-    }, 10); // Small delay to ensure state synchronization
+    }, 10);
     
     toast.success(`32 Gates 81 Pad feature ${newShowGates81Pad ? 'enabled' : 'disabled'}`);
   };
