@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Eye, Download, FileText, Undo2, Redo2 } from 'lucide-react';
 import { DirectionChartDialog } from '@/components/ui/direction-chart';
 import { DevtaNamesDialog } from '@/components/ui/devta-names-dialog';
+import { DevtaAttributesDialog } from '@/components/ui/devta-attributes-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -52,6 +53,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [show32Gates, setShow32Gates] = useState(false);
   const [show16BarChart, setShow16BarChart] = useState(false);
   const [showDevtaNamesDialog, setShowDevtaNamesDialog] = useState(false);
+  const [showDevtaAttributesDialog, setShowDevtaAttributesDialog] = useState(false);
   const [showVithiMandal, setShowVithiMandal] = useState(false);
   const [rotationDegree, setRotationDegree] = useState(0);
   const [tempRotationValue, setTempRotationValue] = useState(0); // For smooth slider preview
@@ -2399,6 +2401,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     toast.success(`45 devtas names ${!showDevtaNamesDialog ? 'opened' : 'closed'}`);
   };
 
+  const toggleDevtaAttributesDialog = () => {
+    setShowDevtaAttributesDialog(!showDevtaAttributesDialog);
+    toast.success(`45 devta attributes ${!showDevtaAttributesDialog ? 'opened' : 'closed'}`);
+  };
+
   const toggleVithiMandal = () => {
     if (!fabricCanvas) return;
     
@@ -4652,6 +4659,16 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                           />
                         </div>
                         
+                        {/* 45 Devta Attributes Toggle */}
+                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                          <span className="text-xs xl:text-sm font-medium">45 Devta Attributes</span>
+                          <Switch
+                            checked={showDevtaAttributesDialog}
+                            onCheckedChange={toggleDevtaAttributesDialog}
+                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
+                          />
+                        </div>
+                        
                          {/* 16 Bar Chart Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                           <span className="text-xs xl:text-sm font-medium">16 Bar Chart</span>
@@ -4718,6 +4735,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       <DevtaNamesDialog
         isOpen={showDevtaNamesDialog}
         onClose={() => setShowDevtaNamesDialog(false)}
+      />
+
+      {/* Devta Attributes Dialog */}
+      <DevtaAttributesDialog
+        isOpen={showDevtaAttributesDialog}
+        onClose={() => setShowDevtaAttributesDialog(false)}
       />
 
       {/* PDF User Details Dialog */}
