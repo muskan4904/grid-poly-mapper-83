@@ -754,7 +754,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Create mapping for region numbers as per user requirements
     const getRegionNumber = (regionNum: number) => {
       const regionMapping: { [key: number]: number } = {
-        33: 6, 34: 7, 35: 2, 36: 8, 37: 9, 38: 37, 39: 10, 40: 11, 41: 4, 42: 12, 43: 13, 44: 5
+        33: 6, 34: 7, 35: 2, 36: 8, 37: 9, 38: 3, 39: 10, 40: 11, 41: 4, 42: 12, 43: 13, 44: 5
       };
       return regionMapping[regionNum] || regionNum;
     };
