@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useIsMobile } from '@/hooks/use-mobile';
+import shaktiChakraImage from '@/assets/shakti-chakra.png';
 import { 
   calculatePolygonArea, 
   calculatePolygonCenter,
@@ -57,6 +58,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [showDevtaAttributesDialog, setShowDevtaAttributesDialog] = useState(false);
   const [showDevtaRemediesDialog, setShowDevtaRemediesDialog] = useState(false);
   const [showVithiMandal, setShowVithiMandal] = useState(false);
+  const [showShaktiChakra, setShowShaktiChakra] = useState(false);
+  const [shaktiChakraSize, setShaktiChakraSize] = useState(250);
+  const [shaktiChakraImg, setShaktiChakraImg] = useState<FabricImage | null>(null);
   const [rotationDegree, setRotationDegree] = useState(0);
   const [tempRotationValue, setTempRotationValue] = useState(0); // For smooth slider preview
   const rotationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -2413,6 +2417,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     toast.success(`45 devta remedies ${!showDevtaRemediesDialog ? 'opened' : 'closed'}`);
   };
 
+  const toggleShaktiChakra = () => {
+    setShowShaktiChakra(!showShaktiChakra);
+  };
+
   const toggleVithiMandal = () => {
     if (!fabricCanvas) return;
     
@@ -3283,6 +3291,62 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     toast.success(`45 devtas ${newShowDevtas ? 'enabled' : 'disabled'}`);
   };
 
+  // Shakti Chakra effect - load and rotate image
+  useEffect(() => {
+    if (!fabricCanvas || completedPolygonPoints.length < 3) return;
+
+    if (showShaktiChakra) {
+      // Load and display Shakti Chakra image
+      FabricImage.fromURL(shaktiChakraImage, {
+        crossOrigin: 'anonymous'
+      }).then((img) => {
+        if (!fabricCanvas) return;
+
+        const center = calculatePolygonCenterLocal(completedPolygonPoints);
+        
+        // Set image size and position
+        img.scaleToWidth(shaktiChakraSize);
+        img.scaleToHeight(shaktiChakraSize);
+        
+        // Center the image on polygon center
+        img.set({
+          left: center.x,
+          top: center.y,
+          originX: 'center',
+          originY: 'center',
+          selectable: false,
+          evented: false,
+          angle: rotationDegree,
+          objectCaching: false
+        });
+
+        // Remove old shakti chakra image if exists
+        if (shaktiChakraImg) {
+          fabricCanvas.remove(shaktiChakraImg);
+        }
+
+        fabricCanvas.add(img);
+        
+        // Ensure it's above the polygon but below center point
+        if (centerPoint) {
+          fabricCanvas.bringObjectToFront(centerPoint);
+        }
+        
+        setShaktiChakraImg(img);
+        fabricCanvas.renderAll();
+      });
+    } else {
+      // Remove shakti chakra image
+      if (shaktiChakraImg) {
+        fabricCanvas.remove(shaktiChakraImg);
+        setShaktiChakraImg(null);
+        fabricCanvas.renderAll();
+      }
+    }
+  }, [showShaktiChakra, shaktiChakraSize, rotationDegree, fabricCanvas, completedPolygonPoints]);
+
+
+
   const clearCanvas = () => {
     if (!fabricCanvas) return;
     
@@ -3542,7 +3606,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         showDevtas,
         show16Directions,
         show32Gates,
-        
+        showShaktiChakra,
         show16BarChart,
         showVithiMandal,
         show45Devtas,
@@ -3695,6 +3759,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         if (showDevtas) toggleDevtasVisibility();
         if (show16Directions) toggle16Directions();
         if (show32Gates) toggle32Gates();
+        if (showShaktiChakra) toggleShaktiChakra();
         
         if (showVithiMandal) toggleVithiMandal();
         if (showMarmaSthan) toggleMarmaSthan(false);
@@ -3724,6 +3789,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         setShowFiveElements(false);
         setShowMarmaSthan(false);
         setShowGates81Pad(false);
+        setShowShaktiChakra(false);
         
         
         // Clear all tracked object arrays
@@ -4377,11 +4443,52 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Add user details to page
       addUserDetailsToPage(pdf, userDetails);
 
+      // Page 10: Shakti Chakra (reset first, then enable only this)
+      pdf.addPage();
+      console.log('Capturing Page 10: Shakti Chakra');
+      await resetAllFeatures();
+      setShowShaktiChakra(true);
+      // Wait for state to properly update
+      await new Promise(resolve => setTimeout(resolve, 500));
+      ensureImageAtBack();
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const shaktiChakraW = pageWidth - pdfMargin * 2;
+      const shaktiChakraH = pageHeight - pdfTopOffset - pdfMargin;
+      const shaktiChakraTargetAspect = shaktiChakraW / shaktiChakraH;
+      const shaktiChakraImage = await captureCanvasState("Shakti Chakra", shaktiChakraTargetAspect);
+      
+      pdf.setFontSize(16);
+      pdf.text("Page 10: Shakti Chakra Analysis", pageWidth / 2, 20, { align: 'center' });
+      const shaktiChakraAvailableWidth = pageWidth - pdfMargin * 2;
+      const shaktiChakraAvailableHeight = pageHeight - pdfTopOffset - pdfMargin;
+      // Use captured image dimensions for better height utilization
+      let shaktiChakraFinalWidth = shaktiChakraAvailableWidth;
+      let shaktiChakraFinalHeight = shaktiChakraAvailableHeight * 0.9;
+      
+      const tempShaktiChakraImg = new Image();
+      tempShaktiChakraImg.src = shaktiChakraImage;
+      await new Promise(resolve => tempShaktiChakraImg.onload = resolve);
+      
+      const shaktiChakraCapturedAspect = tempShaktiChakraImg.width / tempShaktiChakraImg.height;
+      
+      if (shaktiChakraFinalWidth / shaktiChakraFinalHeight > shaktiChakraCapturedAspect) {
+        shaktiChakraFinalWidth = shaktiChakraFinalHeight * shaktiChakraCapturedAspect;
+      } else {
+        shaktiChakraFinalHeight = shaktiChakraFinalWidth / shaktiChakraCapturedAspect;
+      }
+      const shaktiChakraX = (pageWidth - shaktiChakraFinalWidth) / 2;
+      const shaktiChakraY = pdfTopOffset + 6;
+      pdf.addImage(shaktiChakraImage, 'PNG', shaktiChakraX, shaktiChakraY, shaktiChakraFinalWidth, shaktiChakraFinalHeight);
+      
+      // Add user details to page
+      addUserDetailsToPage(pdf, userDetails);
+
       // Restore original states
       await resetAllFeatures();
       if (currentStates.showDevtas && !showDevtas) toggleDevtasVisibility();
       if (currentStates.show16Directions && !show16Directions) toggle16Directions();
       if (currentStates.show32Gates && !show32Gates) toggle32Gates();
+      if (currentStates.showShaktiChakra && !showShaktiChakra) toggleShaktiChakra();
       
       if (currentStates.showVithiMandal && !showVithiMandal) toggleVithiMandal();
       if (currentStates.showMarmaSthan && !showMarmaSthan) toggleMarmaSthan(true);
@@ -4645,6 +4752,31 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                           />
                         </div>
                         
+                        
+                        {/* Shakti Chakra Toggle */}
+                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                          <span className="text-xs xl:text-sm font-medium">Shakti Chakra</span>
+                          <Switch
+                            checked={showShaktiChakra}
+                            onCheckedChange={toggleShaktiChakra}
+                            className="data-[state=checked]:bg-orange-600 touch-manipulation scale-90 xl:scale-100"
+                          />
+                        </div>
+
+                        {/* Shakti Chakra Size Slider - only show when Shakti Chakra is enabled */}
+                        {showShaktiChakra && (
+                          <div className="p-2 bg-muted/30 rounded-lg space-y-1">
+                            <Label className="text-xs xl:text-sm">Shakti Chakra Size: {shaktiChakraSize}px</Label>
+                            <Slider
+                              value={[shaktiChakraSize]}
+                              onValueChange={(value) => setShaktiChakraSize(value[0])}
+                              min={100}
+                              max={500}
+                              step={10}
+                              className="touch-manipulation"
+                            />
+                          </div>
+                        )}
                         
                         {/* 45 Devtas Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
