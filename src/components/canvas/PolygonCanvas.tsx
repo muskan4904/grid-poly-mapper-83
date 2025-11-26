@@ -3291,16 +3291,24 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     toast.success(`45 devtas ${newShowDevtas ? 'enabled' : 'disabled'}`);
   };
 
-  // Shakti Chakra effect - load image once
+  // Shakti Chakra effect - load image once when toggled on
   useEffect(() => {
-    if (!fabricCanvas || completedPolygonPoints.length < 3) return;
+    if (!fabricCanvas) return;
 
-    if (showShaktiChakra && !shaktiChakraImg) {
+    if (showShaktiChakra && !shaktiChakraImg && completedPolygonPoints.length >= 3) {
+      // Remove any existing shakti chakra images first (cleanup duplicates)
+      const allObjects = fabricCanvas.getObjects();
+      allObjects.forEach((obj: any) => {
+        if (obj.shaktiChakraMarker) {
+          fabricCanvas.remove(obj);
+        }
+      });
+
       // Load and display Shakti Chakra image only once
       FabricImage.fromURL(shaktiChakraImage, {
         crossOrigin: 'anonymous'
       }).then((img) => {
-        if (!fabricCanvas) return;
+        if (!fabricCanvas || !showShaktiChakra) return;
 
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
         
@@ -3317,8 +3325,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           selectable: false,
           evented: false,
           angle: rotationDegree,
-          objectCaching: false
-        });
+          objectCaching: false,
+          shaktiChakraMarker: true // Mark this object for identification
+        } as any);
 
         fabricCanvas.add(img);
         
@@ -3336,11 +3345,18 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       setShaktiChakraImg(null);
       fabricCanvas.renderAll();
     }
-  }, [showShaktiChakra, fabricCanvas, completedPolygonPoints]);
+
+    // Cleanup function
+    return () => {
+      if (!showShaktiChakra && shaktiChakraImg) {
+        fabricCanvas.remove(shaktiChakraImg);
+      }
+    };
+  }, [showShaktiChakra, fabricCanvas]);
 
   // Update existing Shakti Chakra image size and rotation
   useEffect(() => {
-    if (!fabricCanvas || !shaktiChakraImg || !showShaktiChakra) return;
+    if (!fabricCanvas || !shaktiChakraImg || !showShaktiChakra || completedPolygonPoints.length < 3) return;
 
     const center = calculatePolygonCenterLocal(completedPolygonPoints);
     
@@ -3354,7 +3370,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     });
 
     fabricCanvas.renderAll();
-  }, [shaktiChakraSize, rotationDegree, fabricCanvas, shaktiChakraImg, showShaktiChakra, completedPolygonPoints]);
+  }, [shaktiChakraSize, rotationDegree]);
 
 
 
