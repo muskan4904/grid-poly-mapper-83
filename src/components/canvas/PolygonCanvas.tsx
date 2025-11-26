@@ -3354,15 +3354,24 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     };
   }, [showShaktiChakra, fabricCanvas]);
 
-  // Update existing Shakti Chakra image size and rotation
+  // Update Shakti Chakra image size only when size slider changes
+  useEffect(() => {
+    if (!fabricCanvas || !shaktiChakraImg || !showShaktiChakra) return;
+    
+    // Update only the size
+    shaktiChakraImg.scaleToWidth(shaktiChakraSize);
+    shaktiChakraImg.scaleToHeight(shaktiChakraSize);
+    
+    fabricCanvas.renderAll();
+  }, [shaktiChakraSize]);
+
+  // Update Shakti Chakra image rotation only when degree changes
   useEffect(() => {
     if (!fabricCanvas || !shaktiChakraImg || !showShaktiChakra || completedPolygonPoints.length < 3) return;
 
     const center = calculatePolygonCenterLocal(completedPolygonPoints);
     
-    // Update size and rotation of existing image
-    shaktiChakraImg.scaleToWidth(shaktiChakraSize);
-    shaktiChakraImg.scaleToHeight(shaktiChakraSize);
+    // Update only rotation and position, not size
     shaktiChakraImg.set({
       left: center.x,
       top: center.y,
@@ -3370,7 +3379,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     });
 
     fabricCanvas.renderAll();
-  }, [shaktiChakraSize, rotationDegree]);
+  }, [rotationDegree, completedPolygonPoints]);
 
 
 
