@@ -3291,12 +3291,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     toast.success(`45 devtas ${newShowDevtas ? 'enabled' : 'disabled'}`);
   };
 
-  // Shakti Chakra effect - load and rotate image
+  // Shakti Chakra effect - load image once
   useEffect(() => {
     if (!fabricCanvas || completedPolygonPoints.length < 3) return;
 
-    if (showShaktiChakra) {
-      // Load and display Shakti Chakra image
+    if (showShaktiChakra && !shaktiChakraImg) {
+      // Load and display Shakti Chakra image only once
       FabricImage.fromURL(shaktiChakraImage, {
         crossOrigin: 'anonymous'
       }).then((img) => {
@@ -3320,11 +3320,6 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           objectCaching: false
         });
 
-        // Remove old shakti chakra image if exists
-        if (shaktiChakraImg) {
-          fabricCanvas.remove(shaktiChakraImg);
-        }
-
         fabricCanvas.add(img);
         
         // Ensure it's above the polygon but below center point
@@ -3335,15 +3330,31 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         setShaktiChakraImg(img);
         fabricCanvas.renderAll();
       });
-    } else {
-      // Remove shakti chakra image
-      if (shaktiChakraImg) {
-        fabricCanvas.remove(shaktiChakraImg);
-        setShaktiChakraImg(null);
-        fabricCanvas.renderAll();
-      }
+    } else if (!showShaktiChakra && shaktiChakraImg) {
+      // Remove shakti chakra image when toggled off
+      fabricCanvas.remove(shaktiChakraImg);
+      setShaktiChakraImg(null);
+      fabricCanvas.renderAll();
     }
-  }, [showShaktiChakra, shaktiChakraSize, rotationDegree, fabricCanvas, completedPolygonPoints]);
+  }, [showShaktiChakra, fabricCanvas, completedPolygonPoints]);
+
+  // Update existing Shakti Chakra image size and rotation
+  useEffect(() => {
+    if (!fabricCanvas || !shaktiChakraImg || !showShaktiChakra) return;
+
+    const center = calculatePolygonCenterLocal(completedPolygonPoints);
+    
+    // Update size and rotation of existing image
+    shaktiChakraImg.scaleToWidth(shaktiChakraSize);
+    shaktiChakraImg.scaleToHeight(shaktiChakraSize);
+    shaktiChakraImg.set({
+      left: center.x,
+      top: center.y,
+      angle: rotationDegree
+    });
+
+    fabricCanvas.renderAll();
+  }, [shaktiChakraSize, rotationDegree, fabricCanvas, shaktiChakraImg, showShaktiChakra, completedPolygonPoints]);
 
 
 
