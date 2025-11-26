@@ -4749,15 +4749,17 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                     <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
                       {/* Compact toggle layout */}
                       <div className="space-y-2">
-                        {/* 16 Directions Toggle */}
-                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">16 Directions</span>
-                          <Switch
-                            checked={show16Directions}
-                            onCheckedChange={toggle16Directions}
-                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
-                          />
-                        </div>
+                        {/* 16 Directions Toggle - also appears above when Shakti Chakra is enabled */}
+                        {!showShaktiChakra && (
+                          <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                            <span className="text-xs xl:text-sm font-medium">16 Directions</span>
+                            <Switch
+                              checked={show16Directions}
+                              onCheckedChange={toggle16Directions}
+                              className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
+                            />
+                          </div>
+                        )}
                         
                          {/* 32 Gates Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
@@ -4798,9 +4800,21 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                               value={[shaktiChakraSize]}
                               onValueChange={(value) => setShaktiChakraSize(value[0])}
                               min={100}
-                              max={500}
+                              max={2000}
                               step={10}
                               className="touch-manipulation"
+                            />
+                          </div>
+                        )}
+
+                        {/* 16 Directions Toggle - show when Shakti Chakra is enabled */}
+                        {showShaktiChakra && (
+                          <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                            <span className="text-xs xl:text-sm font-medium">16 Directions</span>
+                            <Switch
+                              checked={show16Directions}
+                              onCheckedChange={toggle16Directions}
+                              className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
                             />
                           </div>
                         )}
