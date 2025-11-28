@@ -4700,7 +4700,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                 {/* Statistics removed per user request - keeping only feature controls below */}
                 
                      {/* Shared Rotation Controls */}
-                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || showMarmaSthan || showFiveElements || showGates81Pad) && (
+                    {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || showMarmaSthan || showFiveElements || showGates81Pad || showShaktiChakra) && (
                     <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
