@@ -208,9 +208,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     if (!fabricCanvas || !imageUrl) return;
     
     // Check if canvas context is still valid before clearing
-    if (!fabricCanvas.getContext()) return;
-
-    fabricCanvas.clear();
+    try {
+      fabricCanvas.clear();
+    } catch (e) {
+      // Canvas was disposed, skip this effect
+      return;
+    }
     setPolygonPoints([]);
     setCurrentPolygon(null);
     setCenterPoint(null);
