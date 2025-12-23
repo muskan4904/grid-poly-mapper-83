@@ -61,8 +61,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [showShaktiChakra, setShowShaktiChakra] = useState(false);
   const [shaktiChakraSize, setShaktiChakraSize] = useState(250);
   const [shaktiChakraImg, setShaktiChakraImg] = useState<FabricImage | null>(null);
-  const [rotationDegree, setRotationDegree] = useState(0);
+  const [rotationDegree, setRotationDegree] = useState(0); // Display value shown to user
   const [tempRotationValue, setTempRotationValue] = useState(0); // For smooth slider preview
+  
+  // Internal rotation offset: User sees X degrees, but calculations use X-11 degrees
+  const USER_DISPLAY_OFFSET = 11;
+  const internalRotationDegree = rotationDegree - USER_DISPLAY_OFFSET;
   const rotationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMobile = useIsMobile();
   const [directionLines, setDirectionLines] = useState<any[]>([]);
@@ -602,7 +606,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
     const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 45 devtas
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
+    const rotationRad = ((internalRotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
     
     const outerHits: Point[] = [];
@@ -1525,7 +1529,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     const angleStep = (Math.PI * 2) / 16; // 22.5° each
     const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
+    const rotationRad = ((internalRotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
 
     const hasExisting = directionLines.length >= 32; // 16 lines + 16 labels
@@ -1687,7 +1691,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const N = 16; // Same as 16 directions
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
+    const rotationRad = ((internalRotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
 
     // Define direction labels - same as 16 directions
@@ -2209,7 +2213,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const N = 32;
     const angleStep = (Math.PI * 2) / N; // 11.25° each
     const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
+    const rotationRad = ((internalRotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
 
     // Custom gate labels mapping
@@ -2332,7 +2336,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const N = 32;
     const angleStep = (Math.PI * 2) / N; // 11.25° each
     const ROTATION_OFFSET = -10; // System offset for directional alignment
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
+    const rotationRad = ((internalRotationDegree + ROTATION_OFFSET) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
 
     // Calculate area for each of the 32 sectors
@@ -2519,7 +2523,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
     const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 45 devtas
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
+    const rotationRad = ((internalRotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
 
     // Define the block pairs to connect
@@ -2810,7 +2814,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const angleStep = (Math.PI * 2) / N;
     const ROTATION_OFFSET = -10; // System offset for directional alignment
     const DEVTA_ADJUSTMENT = 4; // +4 degrees clockwise rotation for 32 gates 81 pad feature
-    const rotationRad = ((rotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
+    const rotationRad = ((internalRotationDegree + ROTATION_OFFSET + DEVTA_ADJUSTMENT) * Math.PI) / 180;
     const northOffset = -Math.PI / 2; // 0° = North (up)
     
     const outerHits: Point[] = [];
@@ -3372,10 +3376,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const center = calculatePolygonCenterLocal(completedPolygonPoints);
     
     // Update only rotation and position, not size
+    // Use internalRotationDegree for actual rotation calculation
     shaktiChakraImg.set({
       left: center.x,
       top: center.y,
-      angle: rotationDegree
+      angle: internalRotationDegree
     });
 
     fabricCanvas.renderAll();
