@@ -206,6 +206,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   // Load image when provided
   useEffect(() => {
     if (!fabricCanvas || !imageUrl) return;
+    
+    // Check if canvas context is still valid before clearing
+    if (!fabricCanvas.getContext()) return;
 
     fabricCanvas.clear();
     setPolygonPoints([]);
