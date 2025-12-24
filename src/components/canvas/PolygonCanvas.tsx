@@ -64,8 +64,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [rotationDegree, setRotationDegree] = useState(0); // Display value shown to user
   const [tempRotationValue, setTempRotationValue] = useState(0); // For smooth slider preview
   
-  // Internal rotation offset: User sees X degrees, but calculations use X-9 degrees
-  const USER_DISPLAY_OFFSET = 9;
+  // Internal rotation offset: User sees X degrees, calculations also use X degrees (no offset)
+  const USER_DISPLAY_OFFSET = 0;
   const internalRotationDegree = rotationDegree - USER_DISPLAY_OFFSET;
   const rotationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMobile = useIsMobile();
