@@ -3335,7 +3335,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           originY: 'center',
           selectable: false,
           evented: false,
-          angle: rotationDegree,
+          angle: internalRotationDegree,
           objectCaching: false,
           shaktiChakraMarker: true // Mark this object for identification
         } as any);
