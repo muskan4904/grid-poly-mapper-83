@@ -65,8 +65,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [tempRotationValue, setTempRotationValue] = useState(0); // For smooth slider preview
   
   // Internal rotation offset: User sees X degrees, calculations also use X degrees (no offset)
+  // Negate the rotation to make it anticlockwise instead of clockwise
   const USER_DISPLAY_OFFSET = 0;
-  const internalRotationDegree = rotationDegree - USER_DISPLAY_OFFSET;
+  const internalRotationDegree = -(rotationDegree - USER_DISPLAY_OFFSET);
   const rotationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMobile = useIsMobile();
   const [directionLines, setDirectionLines] = useState<any[]>([]);
