@@ -87,6 +87,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     phone: '',
     address: ''
   });
+  const [show16DirectionRemark, setShow16DirectionRemark] = useState(false);
+  const [remark16Direction, setRemark16Direction] = useState('');
+  const [show32EntranceRemark, setShow32EntranceRemark] = useState(false);
+  const [remark32Entrance, setRemark32Entrance] = useState('');
   const [showGates81Pad, setShowGates81Pad] = useState(false);
   const [gates81PadPolygon, setGates81PadPolygon] = useState<Polygon | null>(null);
   const [gates81PadMediumPolygon, setGates81PadMediumPolygon] = useState<Polygon | null>(null);
@@ -4553,6 +4557,20 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       pdf.setFontSize(16);
       pdf.text("16 directions", pageWidth / 2, 70, { align: 'center' });
       
+      // Add 16 direction remark text if provided
+      if (remark16Direction.trim()) {
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        const remarkLines16 = pdf.splitTextToSize(remark16Direction, pageWidth - pdfMargin * 4);
+        let remarkY16 = 90;
+        remarkLines16.forEach((line: string) => {
+          if (remarkY16 < pageHeight - 40) {
+            pdf.text(line, pdfMargin * 2, remarkY16);
+            remarkY16 += 7;
+          }
+        });
+      }
+      
       // Add user details to page
       addUserDetailsToPage(pdf, userDetails);
 
@@ -4562,6 +4580,20 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       pdf.text("Vastu Consultant's remarks", pageWidth / 2, 40, { align: 'center' });
       pdf.setFontSize(16);
       pdf.text("32 entrances", pageWidth / 2, 70, { align: 'center' });
+      
+      // Add 32 entrance remark text if provided
+      if (remark32Entrance.trim()) {
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        const remarkLines32 = pdf.splitTextToSize(remark32Entrance, pageWidth - pdfMargin * 4);
+        let remarkY32 = 90;
+        remarkLines32.forEach((line: string) => {
+          if (remarkY32 < pageHeight - 40) {
+            pdf.text(line, pdfMargin * 2, remarkY32);
+            remarkY32 += 7;
+          }
+        });
+      }
       
       // Add user details to page
       addUserDetailsToPage(pdf, userDetails);
@@ -5013,12 +5045,64 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
               </div>
             </div>
             
+            {/* Optional Remark Sections */}
+            <div className="space-y-3 border-t pt-3">
+              <p className="text-sm font-medium">Optional Remarks</p>
+              
+              {/* 16 Direction Remark */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={show16DirectionRemark}
+                    onChange={(e) => {
+                      setShow16DirectionRemark(e.target.checked);
+                      if (!e.target.checked) setRemark16Direction('');
+                    }}
+                    className="w-4 h-4 rounded border-input accent-primary"
+                  />
+                  <span className="text-sm">Add remark for 16 Directions</span>
+                </label>
+                {show16DirectionRemark && (
+                  <textarea
+                    value={remark16Direction}
+                    onChange={(e) => setRemark16Direction(e.target.value)}
+                    placeholder="Enter your 16 direction remarks here..."
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                )}
+              </div>
+              
+              {/* 32 Entrance Remark */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={show32EntranceRemark}
+                    onChange={(e) => {
+                      setShow32EntranceRemark(e.target.checked);
+                      if (!e.target.checked) setRemark32Entrance('');
+                    }}
+                    className="w-4 h-4 rounded border-input accent-primary"
+                  />
+                  <span className="text-sm">Add remark for 32 Entrances</span>
+                </label>
+                {show32EntranceRemark && (
+                  <textarea
+                    value={remark32Entrance}
+                    onChange={(e) => setRemark32Entrance(e.target.value)}
+                    placeholder="Enter your 32 entrance remarks here..."
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                )}
+              </div>
+            </div>
+            
             <div className="flex gap-2 justify-end">
               <Button
                 variant="outline"
                 onClick={() => {
                   setShowPDFDialog(false);
-                  // Generate PDF without details
                   generatePDFWithDetails({ name: '', phone: '', address: '' });
                 }}
               >
