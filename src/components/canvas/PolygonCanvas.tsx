@@ -164,7 +164,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       width: canvasWidth,
       height: canvasHeight,
       backgroundColor: '#ffffff',
-      selection: false
+      selection: false,
+      allowTouchScrolling: true
     });
 
     setFabricCanvas(canvas);
@@ -1078,7 +1079,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
     
     // Re-enable selection and render
-    fabricCanvas.selection = true;
+    fabricCanvas.selection = false;
     if ((fabricCanvas as any).requestRenderAll) {
       (fabricCanvas as any).requestRenderAll();
     } else {
@@ -1605,7 +1606,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     // Re-enable selection and render
-    fabricCanvas.selection = true;
+    fabricCanvas.selection = false;
     if ((fabricCanvas as any).requestRenderAll) {
       (fabricCanvas as any).requestRenderAll();
     } else {
@@ -2121,7 +2122,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     // Re-enable selection and render
-    fabricCanvas.selection = true;
+    fabricCanvas.selection = false;
     if ((fabricCanvas as any).requestRenderAll) {
       (fabricCanvas as any).requestRenderAll();
     } else {
@@ -2297,7 +2298,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     // Re-enable selection and render
-    fabricCanvas.selection = true;
+    fabricCanvas.selection = false;
     if ((fabricCanvas as any).requestRenderAll) {
       (fabricCanvas as any).requestRenderAll();
     } else {
@@ -2985,7 +2986,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     // Re-enable selection after updates
-    fabricCanvas.selection = true;
+    fabricCanvas.selection = false;
 
     // Keep background image at back and bring our objects to front
     const bg = fabricCanvas.getObjects().find(o => o instanceof FabricImage) as FabricImage | undefined;
