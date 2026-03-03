@@ -300,22 +300,27 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const updatedPoints = [...prev, newPoint];
         const pointNumber = updatedPoints.length;
         
+        // Calculate dynamic scale for point markers
+        const markerScale = updatedPoints.length >= 3 ? getOverlayScale(updatedPoints) : 1;
+        const scaledRadius = Math.max(5, Math.round(10 * markerScale));
+        const scaledFontSize = Math.max(8, Math.round(14 * markerScale));
+        
         // Add numbered point marker at the clicked location
         const circle = new Circle({
-          radius: 10,
+          radius: scaledRadius,
           fill: '#2563eb',
           stroke: '#ffffff',
-          strokeWidth: 2,
-          left: pointer.x - 10,
-          top: pointer.y - 10,
+          strokeWidth: Math.max(1, Math.round(2 * markerScale)),
+          left: pointer.x - scaledRadius,
+          top: pointer.y - scaledRadius,
           selectable: false,
           evented: false,
         });
 
         const text = new Text(pointNumber.toString(), {
-          left: pointer.x - 4.5,
-          top: pointer.y - 7,
-          fontSize: 14,
+          left: pointer.x - Math.round(4.5 * markerScale),
+          top: pointer.y - Math.round(7 * markerScale),
+          fontSize: scaledFontSize,
           fill: '#ffffff',
           fontWeight: 'bold',
           textAlign: 'center',
@@ -380,11 +385,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         fabricCanvas.add(startPoint);
         setCurrentPolygon(startPoint);
       } else {
-        // For multiple points, draw the polyline with thicker blue stroke
+        // For multiple points, draw the polyline with scaled blue stroke
+        const polyScale = points.length >= 3 ? getOverlayScale(points) : 1;
         const polyline = new Polyline(fabricPoints, {
           fill: '',
           stroke: '#2563eb',
-          strokeWidth: 4,
+          strokeWidth: Math.max(2, Math.round(4 * polyScale)),
           selectable: false,
           evented: false
         });
@@ -405,13 +411,17 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Calculate area and center
     const area = calculatePolygonAreaLocal(points);
     const center = calculatePolygonCenterLocal(points);
+    const scale = getOverlayScale(points);
+    const scaledPolyStroke = Math.max(2, Math.round(4 * scale));
+    const scaledCenterRadius = Math.max(3, Math.round(5 * scale));
+    const scaledCenterStroke = Math.max(1, Math.round(2 * scale));
 
     // Draw final polygon
     const fabricPoints = points.map(p => ({ x: p.x, y: p.y }));
     const finalPolygon = new Polygon(fabricPoints, {
       fill: 'rgba(37, 99, 235, 0.2)',
       stroke: '#2563eb',
-      strokeWidth: 4,
+      strokeWidth: scaledPolyStroke,
       selectable: false,
       evented: false
     });
@@ -427,12 +437,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     // Draw center point
     const centerCircle = new Circle({
-      left: center.x - 5,
-      top: center.y - 5,
-      radius: 5,
+      left: center.x - scaledCenterRadius,
+      top: center.y - scaledCenterRadius,
+      radius: scaledCenterRadius,
       fill: 'hsl(0, 84%, 60%)',
       stroke: 'white',
-      strokeWidth: 2,
+      strokeWidth: scaledCenterStroke,
       selectable: false,
       evented: false
     });
@@ -539,10 +549,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     // Create smaller polygon with transparent fill and red boundary only
     const fabricPoints = scaledPoints.map(p => ({ x: p.x, y: p.y }));
+    const scaledStroke = Math.max(1, Math.round(3 * getOverlayScale(polygonPoints)));
     const smallPoly = new Polygon(fabricPoints, {
-      fill: 'transparent', // No fill - transparent inside
-      stroke: '#ff0000', // Red border only
-      strokeWidth: 3,
+      fill: 'transparent',
+      stroke: '#ff0000',
+      strokeWidth: scaledStroke,
       selectable: false,
       evented: false
     });
@@ -565,6 +576,19 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     console.log('Actual percentage:', actualPercentage);
     
     toast.success(`Small polygon created with ${actualPercentage.toFixed(1)}% area (${smallArea.toFixed(2)} sq units)`);
+  };
+
+  // Calculate dynamic scale factor based on polygon bounding box size
+  // Reference size ~500px = scale 1.0; smaller polygons get smaller overlays
+  const getOverlayScale = (polygonPoints: Point[]): number => {
+    if (polygonPoints.length < 3) return 1;
+    const xs = polygonPoints.map(p => p.x);
+    const ys = polygonPoints.map(p => p.y);
+    const width = Math.max(...xs) - Math.min(...xs);
+    const height = Math.max(...ys) - Math.min(...ys);
+    const size = Math.max(width, height);
+    const referenceSize = 500;
+    return Math.max(0.35, Math.min(1.5, size / referenceSize));
   };
 
   // Compute closest intersection of a ray (from center at angle) with a polygon
@@ -599,6 +623,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   // Create 32 ring slices between main (outer) polygon and the medium (inner) polygon  
   const drawRingSlices = useCallback((polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas) return;
+
+    const scale = getOverlayScale(polygonPoints);
+    const scaledDevtaFontSize = Math.max(8, Math.round(16 * scale));
+    const scaledRegionFontSize = Math.max(7, Math.round(14 * scale));
+    const scaledStrokeWidth = Math.max(1, Math.round(2 * scale));
+    const scaledLabelOffset = Math.round(-8 * scale);
 
     // Recompute the inner (second layer) polygon using the same scale as drawMediumPolygon
     const innerScale = Math.sqrt(0.62); // ~0.787
@@ -721,7 +751,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const slice = new Polygon(verts, {
           fill: 'transparent',
           stroke: '#000000',
-          strokeWidth: 2,
+          strokeWidth: scaledStrokeWidth,
           selectable: false,
           evented: false,
           objectCaching: false
@@ -733,7 +763,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           [lineStartX, lineStartY, lineEndX, lineEndY],
           {
             stroke: '#000000',
-            strokeWidth: 2,
+            strokeWidth: scaledStrokeWidth,
             selectable: false,
             evented: false,
             objectCaching: false
@@ -744,9 +774,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
 
         const numberLabel = new Text(String(getDevtaNumber(i + 1)), {
-          left: sliceCenterX - 8,
-          top: sliceCenterY - 8,
-          fontSize: 16,
+          left: sliceCenterX + scaledLabelOffset,
+          top: sliceCenterY + scaledLabelOffset,
+          fontSize: scaledDevtaFontSize,
           fill: '#000000',
           fontFamily: 'Arial',
           fontWeight: 'bold',
@@ -811,7 +841,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             [redBoundaryPoint.x, redBoundaryPoint.y, blackBoundaryPoint.x, blackBoundaryPoint.y],
             {
               stroke: '#000000',
-              strokeWidth: 2,
+              strokeWidth: scaledStrokeWidth,
               selectable: false,
               evented: false,
               objectCaching: false,
@@ -843,7 +873,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
               [redBoundaryPoint.x, redBoundaryPoint.y, blackBoundaryPoint.x, blackBoundaryPoint.y],
               {
                 stroke: '#000000',
-                strokeWidth: 2,
+                strokeWidth: scaledStrokeWidth,
                 selectable: false,
                 evented: false,
                 objectCaching: false,
@@ -910,9 +940,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           }
         } else {
           const regionLabel = new Text(getRegionNumber(regionNumber).toString(), {
-            left: labelX - 8,
-            top: labelY - 8,
-            fontSize: 14,
+            left: labelX + scaledLabelOffset,
+            top: labelY + scaledLabelOffset,
+            fontSize: scaledRegionFontSize,
             fill: '#0000ff',
             fontFamily: 'Arial',
             fontWeight: 'bold',
@@ -982,9 +1012,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           }
         } else {
           const regionLabel = new Text(getRegionNumber(regionNumber).toString(), {
-            left: labelX - 8,
-            top: labelY - 8,
-            fontSize: 14,
+            left: labelX + scaledLabelOffset,
+            top: labelY + scaledLabelOffset,
+            fontSize: scaledRegionFontSize,
             fill: '#0000ff',
             fontFamily: 'Arial',
             fontWeight: 'bold',
@@ -1055,9 +1085,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           }
         } else {
           const regionLabel = new Text(getRegionNumber(regionNumber).toString(), {
-            left: labelX - 8,
-            top: labelY - 8,
-            fontSize: 14,
+            left: labelX + scaledLabelOffset,
+            top: labelY + scaledLabelOffset,
+            fontSize: scaledRegionFontSize,
             fill: '#0000ff',
             fontFamily: 'Arial',
             fontWeight: 'bold',
@@ -1137,10 +1167,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     // Create medium polygon with transparent fill and black boundary
     const fabricPoints = scaledPoints.map(p => ({ x: p.x, y: p.y }));
+    const scaledStroke = Math.max(1, Math.round(3 * getOverlayScale(polygonPoints)));
     const mediumPoly = new Polygon(fabricPoints, {
-      fill: 'transparent', // No fill - transparent inside
-      stroke: '#000000', // Black border
-      strokeWidth: 3,
+      fill: 'transparent',
+      stroke: '#000000',
+      strokeWidth: scaledStroke,
       selectable: false,
       evented: false
     });
@@ -1205,13 +1236,16 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }));
     
     const newVithiPolygons: any[] = [];
+    const vScale = getOverlayScale(polygonPoints);
+    const vStroke = Math.max(1, Math.round(3 * vScale));
+    const vStroke4 = Math.max(2, Math.round(4 * vScale));
     
     // Create Strip 4 (outermost - light green)
     const strip4FabricPoints = strip4Points.map(p => ({ x: p.x, y: p.y }));
     const strip4Poly = new Polygon(strip4FabricPoints, {
-      fill: 'rgba(34, 197, 94, 0.3)', // Light green fill (like air area in five elements)
-      stroke: '#22c55e', // Green stroke
-      strokeWidth: 3,
+      fill: 'rgba(34, 197, 94, 0.3)',
+      stroke: '#22c55e',
+      strokeWidth: vStroke,
       selectable: false,
       evented: false
     });
@@ -1221,9 +1255,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Create Strip 3 (light yellow)
     const strip3FabricPoints = strip3Points.map(p => ({ x: p.x, y: p.y }));
     const strip3Poly = new Polygon(strip3FabricPoints, {
-      fill: 'rgba(234, 179, 8, 0.3)', // Light yellow fill (like earth area in five elements)
-      stroke: '#eab308', // Yellow stroke
-      strokeWidth: 3,
+      fill: 'rgba(234, 179, 8, 0.3)',
+      stroke: '#eab308',
+      strokeWidth: vStroke,
       selectable: false,
       evented: false
     });
@@ -1233,9 +1267,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Create Strip 2 (light blue)
     const strip2FabricPoints = strip2Points.map(p => ({ x: p.x, y: p.y }));
     const strip2Poly = new Polygon(strip2FabricPoints, {
-      fill: 'rgba(59, 130, 246, 0.3)', // Light blue fill (like water area in five elements)
-      stroke: '#3b82f6', // Blue stroke
-      strokeWidth: 3,
+      fill: 'rgba(59, 130, 246, 0.3)',
+      stroke: '#3b82f6',
+      strokeWidth: vStroke,
       selectable: false,
       evented: false
     });
@@ -1245,9 +1279,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Create Strip 1 (Executive area - light red fill)
     const strip1FabricPoints = strip1Points.map(p => ({ x: p.x, y: p.y }));
     const strip1Poly = new Polygon(strip1FabricPoints, {
-      fill: 'rgba(239, 68, 68, 0.3)', // Light red fill
-      stroke: '#ef4444', // Red stroke
-      strokeWidth: 4,
+      fill: 'rgba(239, 68, 68, 0.3)',
+      stroke: '#ef4444',
+      strokeWidth: vStroke4,
       selectable: false,
       evented: false
     });
@@ -1534,6 +1568,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const draw16Directions = useCallback((polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas || !show16Directions) return;
 
+    const scale = getOverlayScale(polygonPoints);
+    const scaledFontSize = Math.max(8, Math.round(16 * scale));
+    const scaledStrokeWidth = Math.max(1, Math.round(2 * scale));
+
     const directions = [
       'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
       'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
@@ -1568,8 +1606,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const line = directionLines[2 * i] as unknown as Line;
         const label = directionLines[2 * i + 1] as unknown as Text;
         if (boundaryPoint) {
-          line.set({ x1: center.x, y1: center.y, x2: boundaryPoint.x, y2: boundaryPoint.y, visible: true });
-          label.set({ left: labelX, top: labelY, text: directions[i], visible: true });
+          line.set({ x1: center.x, y1: center.y, x2: boundaryPoint.x, y2: boundaryPoint.y, visible: true, strokeWidth: scaledStrokeWidth });
+          label.set({ left: labelX, top: labelY, text: directions[i], visible: true, fontSize: scaledFontSize });
         } else {
           line.set({ visible: false });
           label.set({ visible: false });
@@ -1577,7 +1615,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       } else if (boundaryPoint) {
         const line = new Line([center.x, center.y, boundaryPoint.x, boundaryPoint.y], {
           stroke: '#000000',
-          strokeWidth: 2,
+          strokeWidth: scaledStrokeWidth,
           selectable: false,
           evented: false,
           objectCaching: false,
@@ -1588,7 +1626,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const label = new Text(directions[i], {
           left: labelX,
           top: labelY,
-          fontSize: 16,
+          fontSize: scaledFontSize,
           fill: '#000000',
           fontFamily: 'Arial Black',
           fontWeight: 'bold',
@@ -1646,6 +1684,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
     // FORCE COMPLETE CLEAR before creating new objects - prevent ALL duplicates
     console.log('Force clearing ALL five elements objects before redraw...');
+
+    const scale = getOverlayScale(polygonPoints);
+    const scaledLabelFontSize = Math.max(7, Math.round(14 * scale));
+    const scaledDirFontSize = Math.max(6, Math.round(12 * scale));
+    const scaledStrokeWidth = Math.max(1, Math.round(2 * scale));
+
     const allObjects = fabricCanvas.getObjects();
     const fiveElementsToRemove: any[] = [];
     
@@ -1740,7 +1784,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         // Draw line for ALL directions
         const line = new Line([center.x, center.y, boundaryPoint.x, boundaryPoint.y], {
           stroke: '#8b5cf6', // Purple color for all direction lines
-          strokeWidth: 2,
+          strokeWidth: scaledStrokeWidth,
           selectable: false,
           evented: false,
           objectCaching: false,
@@ -1750,8 +1794,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const label = new Text(directionLabels[i], {
           left: labelX,
           top: labelY,
-          fontSize: 12,
-          fill: '#8b5cf6', // Purple color for all direction labels
+          fontSize: scaledDirFontSize,
+          fill: '#8b5cf6',
           fontFamily: 'Arial Black',
           fontWeight: 'bold',
           selectable: false,
@@ -1813,8 +1857,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Create water area polygon
       const waterAreaPolygon = new Polygon(waterAreaPoints.map(p => ({ x: p.x, y: p.y })), {
         fill: 'rgba(59, 130, 246, 0.3)', // Blue with transparency
-        stroke: '#3b82f6', // Blue stroke
-        strokeWidth: 2,
+        stroke: '#3b82f6',
+        strokeWidth: scaledStrokeWidth,
         selectable: false,
         evented: false,
         objectCaching: false,
@@ -1829,8 +1873,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const waterText = new Text('Water Area', {
         left: waterCenterX,
         top: waterCenterY,
-        fontSize: 14,
-        fill: '#1e40af', // Darker blue for text
+        fontSize: scaledLabelFontSize,
+        fill: '#1e40af',
         fontFamily: 'Arial Black',
         fontWeight: 'bold',
         selectable: false,
@@ -1881,8 +1925,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Create air area polygon
       const airAreaPolygon = new Polygon(airAreaPoints.map(p => ({ x: p.x, y: p.y })), {
         fill: 'rgba(34, 197, 94, 0.3)', // Green with transparency
-        stroke: '#22c55e', // Green stroke
-        strokeWidth: 2,
+        stroke: '#22c55e',
+        strokeWidth: scaledStrokeWidth,
         selectable: false,
         evented: false,
         objectCaching: false,
@@ -1897,8 +1941,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const airText = new Text('Air Area', {
         left: airCenterX,
         top: airCenterY,
-        fontSize: 14,
-        fill: '#15803d', // Darker green for text
+        fontSize: scaledLabelFontSize,
+        fill: '#15803d',
         fontFamily: 'Arial Black',
         fontWeight: 'bold',
         selectable: false,
@@ -1949,8 +1993,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Create fire area polygon
       const fireAreaPolygon = new Polygon(fireAreaPoints.map(p => ({ x: p.x, y: p.y })), {
         fill: 'rgba(239, 68, 68, 0.3)', // Red with transparency
-        stroke: '#ef4444', // Red stroke
-        strokeWidth: 2,
+        stroke: '#ef4444',
+        strokeWidth: scaledStrokeWidth,
         selectable: false,
         evented: false,
         objectCaching: false,
@@ -1965,8 +2009,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const fireText = new Text('Fire Area', {
         left: fireCenterX,
         top: fireCenterY,
-        fontSize: 14,
-        fill: '#dc2626', // Darker red for text
+        fontSize: scaledLabelFontSize,
+        fill: '#dc2626',
         fontFamily: 'Arial Black',
         fontWeight: 'bold',
         selectable: false,
@@ -2016,8 +2060,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Create earth area polygon
       const earthAreaPolygon = new Polygon(earthAreaPoints.map(p => ({ x: p.x, y: p.y })), {
         fill: 'rgba(234, 179, 8, 0.3)', // Yellow with transparency
-        stroke: '#eab308', // Yellow stroke
-        strokeWidth: 2,
+        stroke: '#eab308',
+        strokeWidth: scaledStrokeWidth,
         selectable: false,
         evented: false,
         objectCaching: false,
@@ -2032,8 +2076,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const earthText = new Text('Earth Area', {
         left: earthCenterX,
         top: earthCenterY,
-        fontSize: 14,
-        fill: '#ca8a04', // Darker yellow for text
+        fontSize: scaledLabelFontSize,
+        fill: '#ca8a04',
         fontFamily: 'Arial Black',
         fontWeight: 'bold',
         selectable: false,
@@ -2085,8 +2129,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Create space area polygon
       const spaceAreaPolygon = new Polygon(spaceAreaPoints.map(p => ({ x: p.x, y: p.y })), {
         fill: 'rgba(107, 114, 128, 0.3)', // Grey with transparency
-        stroke: '#6b7280', // Grey stroke
-        strokeWidth: 2,
+        stroke: '#6b7280',
+        strokeWidth: scaledStrokeWidth,
         selectable: false,
         evented: false,
         objectCaching: false,
@@ -2101,8 +2145,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const spaceText = new Text('Space Area', {
         left: spaceCenterX,
         top: spaceCenterY,
-        fontSize: 14,
-        fill: '#6b7280', // Darker grey for text
+        fontSize: scaledLabelFontSize,
+        fill: '#6b7280',
         fontFamily: 'Arial Black',
         fontWeight: 'bold',
         selectable: false,
@@ -2222,6 +2266,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const draw32Gates = useCallback((polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas || !show32Gates) return;
 
+    const scale = getOverlayScale(polygonPoints);
+    const scaledFontSize = Math.max(7, Math.round(14 * scale));
+    const scaledStrokeWidth = Math.max(1, Math.round(2 * scale));
+
     const N = 32;
     const angleStep = (Math.PI * 2) / N; // 11.25° each
     const ROTATION_OFFSET = -10; // System offset for directional alignment
@@ -2260,8 +2308,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const line = gateLines[2 * i] as unknown as Line;
         const label = gateLines[2 * i + 1] as unknown as Text;
         if (boundaryPoint) {
-          line.set({ x1: center.x, y1: center.y, x2: boundaryPoint.x, y2: boundaryPoint.y, visible: true });
-          label.set({ left: labelX, top: labelY, text: gateLabels[i], visible: true });
+          line.set({ x1: center.x, y1: center.y, x2: boundaryPoint.x, y2: boundaryPoint.y, visible: true, strokeWidth: scaledStrokeWidth });
+          label.set({ left: labelX, top: labelY, text: gateLabels[i], visible: true, fontSize: scaledFontSize });
         } else {
           line.set({ visible: false });
           label.set({ visible: false });
@@ -2269,7 +2317,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       } else if (boundaryPoint) {
         const line = new Line([center.x, center.y, boundaryPoint.x, boundaryPoint.y], {
           stroke: '#000000',
-          strokeWidth: 2,
+          strokeWidth: scaledStrokeWidth,
           selectable: false,
           evented: false,
           objectCaching: false,
@@ -2280,7 +2328,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const label = new Text(gateLabels[i], {
           left: labelX,
           top: labelY,
-          fontSize: 14,
+          fontSize: scaledFontSize,
           fill: '#000000',
           fontFamily: 'Arial Black',
           fontWeight: 'bold',
@@ -2513,6 +2561,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const drawMarmaSthan = useCallback((polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas || !showMarmaSthan) return;
 
+    const scale = getOverlayScale(polygonPoints);
+    const scaledLineStroke = Math.max(1, Math.round(3 * scale));
+    const scaledDotRadius = Math.max(2, Math.round(4 * scale));
+
     // Clear existing lines first - more thorough cleanup
     marmaSthanLines.forEach(line => {
       if (fabricCanvas.contains(line)) {
@@ -2634,10 +2686,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       // Create red line from boundary to boundary, passing through both block centers
       const line = new Line([point1.x, point1.y, point2.x, point2.y], {
         stroke: '#ff0000', // Red color
-        strokeWidth: 3,
+        strokeWidth: scaledLineStroke,
         selectable: false,
         evented: false,
-        strokeDashArray: [8, 4] // Dashed line for visibility
+        strokeDashArray: [Math.round(8 * scale), Math.round(4 * scale)]
       });
 
       fabricCanvas.add(line);
@@ -2663,7 +2715,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const dot = new Circle({
         left: point.x,
         top: point.y,
-        radius: 4,
+        radius: scaledDotRadius,
         fill: '#000000', // Black color
         selectable: false,
         evented: false,
@@ -2815,6 +2867,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const drawGates81PadRingSlices = useCallback((polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas) return;
 
+    const scale = getOverlayScale(polygonPoints);
+    const scaledFontSize = Math.max(8, Math.round(16 * scale));
+    const scaledStrokeWidth = Math.max(1, Math.round(2 * scale));
+    const scaledLabelOffset = Math.round(-8 * scale);
     // Recompute the inner (second layer) polygon using the same scale as drawGates81PadMediumPolygon
     const innerScale = Math.sqrt(0.62); // ~0.787
     const innerPolygonPoints = polygonPoints.map((p) => ({
@@ -2946,7 +3002,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         const slice = new Polygon(verts, {
           fill: 'transparent',
           stroke: '#000000',
-          strokeWidth: 2,
+          strokeWidth: scaledStrokeWidth,
           selectable: false,
           evented: false,
           objectCaching: false
@@ -2958,7 +3014,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           [lineStartX, lineStartY, lineEndX, lineEndY],
           {
             stroke: '#000000',
-            strokeWidth: 2,
+            strokeWidth: scaledStrokeWidth,
             selectable: false,
             evented: false,
             objectCaching: false
@@ -2968,9 +3024,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         newObjects.push(sep);
 
         const numberLabel = new Text(getSliceLabel(i), {
-          left: sliceCenterX - 8,
-          top: sliceCenterY - 8,
-          fontSize: 16,
+          left: sliceCenterX + scaledLabelOffset,
+          top: sliceCenterY + scaledLabelOffset,
+          fontSize: scaledFontSize,
           fill: '#000000',
           fontFamily: 'Arial',
           fontWeight: 'bold',
