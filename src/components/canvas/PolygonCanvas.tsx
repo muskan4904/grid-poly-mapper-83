@@ -4860,20 +4860,27 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                       </div>
                       
                       <div className="space-y-2">
-                        <Slider
-                          value={[tempRotationValue]}
-                          onValueChange={handleRotationChange}
-                          onValueCommit={handleRotationCommit}
-                          max={360}
-                          min={0}
-                          step={1}
-                          className={cn(
-                            "w-full",
-                            isMobile ? "touch-manipulation" : ""
-                          )}
-                        />
+                        {/* Slider only on desktop */}
+                        {!isMobile && (
+                          <Slider
+                            value={[tempRotationValue]}
+                            onValueChange={handleRotationChange}
+                            onValueCommit={handleRotationCommit}
+                            max={360}
+                            min={0}
+                            step={1}
+                            className="w-full"
+                          />
+                        )}
                         
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-center">
+                          {/* -/+ buttons for mobile */}
+                          {isMobile && (
+                            <button
+                              onClick={() => setRotationDegree(Math.max(0, rotationDegree - 1))}
+                              className="w-10 h-10 text-lg font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
+                            >−</button>
+                          )}
                           <Input
                             type="number"
                             value={rotationDegree}
@@ -4889,12 +4896,24 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                             min={0}
                             max={360}
                             step={1}
-                            className="flex-1 h-8 text-xs xl:text-sm touch-manipulation"
+                            className={cn(
+                              "flex-1 text-center touch-manipulation",
+                              isMobile ? "h-10 text-base font-medium" : "h-8 text-xs xl:text-sm"
+                            )}
                             placeholder="0-360°"
                           />
+                          {isMobile && (
+                            <button
+                              onClick={() => setRotationDegree(Math.min(360, rotationDegree + 1))}
+                              className="w-10 h-10 text-lg font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
+                            >+</button>
+                          )}
                           <button
                             onClick={() => setRotationDegree(0)}
-                            className="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded touch-manipulation"
+                            className={cn(
+                              "bg-muted hover:bg-muted/80 rounded touch-manipulation",
+                              isMobile ? "px-3 py-2 text-sm" : "px-2 py-1 text-xs"
+                            )}
                           >
                             Reset
                           </button>
@@ -4953,17 +4972,42 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
                         {/* Shakti Chakra Size Slider - only show when Shakti Chakra is enabled */}
                         {showShaktiChakra && (
-                          <div className="p-2 bg-muted/30 rounded-lg space-y-1">
-                            <Label className="text-xs xl:text-sm">Shakti Chakra Size: {Math.round(tempShaktiChakraSize)}px</Label>
-                            <Slider
-                              value={[tempShaktiChakraSize]}
-                              onValueChange={handleShaktiSizeChange}
-                              onValueCommit={handleShaktiSizeCommit}
-                              min={100}
-                              max={2000}
-                              step={10}
-                              className="touch-manipulation"
-                            />
+                          <div className="p-2 bg-muted/30 rounded-lg space-y-2">
+                            <Label className="text-xs xl:text-sm">Shakti Chakra Size: {shaktiChakraSize}px</Label>
+                            <div className="flex gap-2 items-center">
+                              <button
+                                onClick={() => setShaktiChakraSize(Math.max(100, shaktiChakraSize - 50))}
+                                className="w-9 h-9 text-lg font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
+                              >−</button>
+                              <Input
+                                type="number"
+                                value={shaktiChakraSize}
+                                onChange={(e) => {
+                                  const v = parseInt(e.target.value) || 100;
+                                  setShaktiChakraSize(Math.max(100, Math.min(2000, v)));
+                                }}
+                                min={100}
+                                max={2000}
+                                step={50}
+                                className="flex-1 h-9 text-center text-sm touch-manipulation"
+                              />
+                              <button
+                                onClick={() => setShaktiChakraSize(Math.min(2000, shaktiChakraSize + 50))}
+                                className="w-9 h-9 text-lg font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
+                              >+</button>
+                            </div>
+                            <div className="flex gap-1 flex-wrap">
+                              {[200, 400, 600, 800, 1000, 1500].map(size => (
+                                <button
+                                  key={size}
+                                  onClick={() => setShaktiChakraSize(size)}
+                                  className={cn(
+                                    "px-2 py-1 text-xs rounded touch-manipulation",
+                                    shaktiChakraSize === size ? "bg-orange-600 text-white" : "bg-muted hover:bg-muted/80"
+                                  )}
+                                >{size}</button>
+                              ))}
+                            </div>
                           </div>
                         )}
 
