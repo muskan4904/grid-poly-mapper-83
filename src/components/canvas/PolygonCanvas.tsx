@@ -4863,6 +4863,26 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             Clear
           </button>
         </div>
+
+        {/* Image Scale Control - show when image loaded and no polygon drawn yet */}
+        {imageUrl && !currentPolygon && !isDrawing && (
+          <div className="flex items-center gap-2 sm:gap-3 p-2 bg-muted/30 rounded-lg shrink-0">
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">Image Size:</span>
+            <button
+              onClick={() => setImageScale(Math.max(50, imageScale - 10))}
+              className="w-8 h-8 sm:w-9 sm:h-9 text-base font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
+            >−</button>
+            <span className="text-xs sm:text-sm font-medium min-w-[40px] text-center">{imageScale}%</span>
+            <button
+              onClick={() => setImageScale(Math.min(200, imageScale + 10))}
+              className="w-8 h-8 sm:w-9 sm:h-9 text-base font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
+            >+</button>
+            <button
+              onClick={() => setImageScale(100)}
+              className="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded touch-manipulation"
+            >Reset</button>
+          </div>
+        )}
         
         <div className="border border-border rounded-lg shadow-lg overflow-hidden bg-card flex-1 flex items-center justify-center min-h-0">
           <canvas 
