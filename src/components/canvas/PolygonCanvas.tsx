@@ -3250,8 +3250,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Small delay to allow state sync before drawing
     setTimeout(() => {
       if (newShowGates81Pad) {
-        // Always start clean to avoid duplicates
+        removeFeatureObjects('gates81Pad');
         clearGates81PadArtifacts();
+        setGates81PadGridLines([]);
         if (completedPolygonPoints.length >= 3) {
           const center = calculatePolygonCenterLocal(completedPolygonPoints);
           drawGates81PadMediumPolygon(completedPolygonPoints, center);
