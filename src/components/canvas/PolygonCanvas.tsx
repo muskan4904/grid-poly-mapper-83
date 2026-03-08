@@ -2266,9 +2266,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     if (newObjects.length > 0) {
+      // Tag all five elements objects
+      newObjects.forEach((obj: any) => { obj._feature = 'fiveElements'; });
       fabricCanvas.add(...newObjects);
       setFiveElementsLines(newObjects);
-      console.log('Added', newObjects.length, 'Five Elements objects to canvas (', newObjects.length / 2 - 2, 'direction lines + elemental areas)');
+      console.log('Added', newObjects.length, 'Five Elements objects to canvas');
     }
 
     // Re-enable selection and render
