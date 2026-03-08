@@ -291,12 +291,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         left = 0;
         top = 0;
       } else {
-        // Desktop: contain within existing canvas dimensions (no resize)
+        // Desktop: fill canvas as much as possible while keeping full image visible
         const scaleX = canvasWidth / imgElement.width;
         const scaleY = canvasHeight / imgElement.height;
-        const containScale = Math.min(scaleX, scaleY);
-        renderWidth = imgElement.width * containScale;
-        renderHeight = imgElement.height * containScale;
+        const fillScale = Math.min(scaleX, scaleY);
+        renderWidth = imgElement.width * fillScale;
+        renderHeight = imgElement.height * fillScale;
         left = (canvasWidth - renderWidth) / 2;
         top = (canvasHeight - renderHeight) / 2;
       }
