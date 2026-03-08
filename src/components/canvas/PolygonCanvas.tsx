@@ -842,8 +842,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           strokeWidth: scaledStrokeWidth,
           selectable: false,
           evented: false,
-          objectCaching: false
-        });
+          objectCaching: false,
+          _feature: 'devtas'
+        } as any);
         fabricCanvas.add(slice);
         newObjects.push(slice);
 
@@ -854,12 +855,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             strokeWidth: scaledStrokeWidth,
             selectable: false,
             evented: false,
-            objectCaching: false
-          }
+            objectCaching: false,
+            _feature: 'devtas'
+          } as any
         );
         fabricCanvas.add(sep);
         newObjects.push(sep);
-
 
         const numberLabel = new Text(String(getDevtaNumber(i + 1)), {
           left: sliceCenterX + scaledLabelOffset,
@@ -871,8 +872,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           selectable: false,
           evented: false,
           textAlign: 'center',
-          objectCaching: false
-        });
+          objectCaching: false,
+          _feature: 'devtas'
+        } as any);
         fabricCanvas.add(numberLabel);
         newObjects.push(numberLabel);
       }
