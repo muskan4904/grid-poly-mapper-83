@@ -98,6 +98,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [gates81PadPolygon, setGates81PadPolygon] = useState<Polygon | null>(null);
   const [gates81PadMediumPolygon, setGates81PadMediumPolygon] = useState<Polygon | null>(null);
   const [gates81PadGridLines, setGates81PadGridLines] = useState<any[]>([]);
+  const [imageScale, setImageScale] = useState(100);
+  const backgroundImgRef = useRef<FabricImage | null>(null);
+  const baseImageDimsRef = useRef<{ width: number; height: number; scaleX: number; scaleY: number; left: number; top: number } | null>(null);
   const preloadedShaktiRef = useRef<HTMLImageElement | null>(null);
 
   // Preload Shakti Chakra image on mount for instant display
@@ -304,14 +307,22 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       console.log("Image render dimensions:", { renderWidth, renderHeight, left, top });
 
       // Create Fabric image object
+      const baseScaleX = renderWidth / imgElement.width;
+      const baseScaleY = renderHeight / imgElement.height;
+      
       const fabricImg = new FabricImage(imgElement, {
         left: left,
         top: top,
-        scaleX: renderWidth / imgElement.width,
-        scaleY: renderHeight / imgElement.height,
+        scaleX: baseScaleX,
+        scaleY: baseScaleY,
         selectable: false,
         evented: false
       });
+
+      // Store base dimensions for scale adjustments
+      backgroundImgRef.current = fabricImg;
+      baseImageDimsRef.current = { width: imgElement.width, height: imgElement.height, scaleX: baseScaleX, scaleY: baseScaleY, left, top };
+      setImageScale(100);
 
       fabricCanvas.add(fabricImg);
       fabricCanvas.sendObjectToBack(fabricImg);
@@ -330,6 +341,27 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     };
     imgElement.src = imageUrl;
   }, [fabricCanvas, imageUrl]);
+
+  // Update image scale when user changes it
+  useEffect(() => {
+    if (!fabricCanvas || !backgroundImgRef.current || !baseImageDimsRef.current) return;
+    const base = baseImageDimsRef.current;
+    const scaleFactor = imageScale / 100;
+    const newScaleX = base.scaleX * scaleFactor;
+    const newScaleY = base.scaleY * scaleFactor;
+    const newWidth = base.width * newScaleX;
+    const newHeight = base.height * newScaleY;
+    const canvasWidth = fabricCanvas.width || 800;
+    const canvasHeight = fabricCanvas.height || 600;
+    
+    backgroundImgRef.current.set({
+      scaleX: newScaleX,
+      scaleY: newScaleY,
+      left: (canvasWidth - newWidth) / 2,
+      top: (canvasHeight - newHeight) / 2,
+    });
+    fabricCanvas.renderAll();
+  }, [imageScale, fabricCanvas]);
 
   // Canvas click handler for polygon drawing
   useEffect(() => {
@@ -4831,6 +4863,26 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             Clear
           </button>
         </div>
+
+        {/* Image Scale Control - show when image loaded and no polygon drawn yet */}
+        {imageUrl && !currentPolygon && !isDrawing && (
+          <div className="flex items-center gap-2 sm:gap-3 p-2 bg-muted/30 rounded-lg shrink-0">
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">Image Size:</span>
+            <button
+              onClick={() => setImageScale(Math.max(50, imageScale - 10))}
+              className="w-8 h-8 sm:w-9 sm:h-9 text-base font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
+            >−</button>
+            <span className="text-xs sm:text-sm font-medium min-w-[40px] text-center">{imageScale}%</span>
+            <button
+              onClick={() => setImageScale(Math.min(200, imageScale + 10))}
+              className="w-8 h-8 sm:w-9 sm:h-9 text-base font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
+            >+</button>
+            <button
+              onClick={() => setImageScale(100)}
+              className="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded touch-manipulation"
+            >Reset</button>
+          </div>
+        )}
         
         <div className="border border-border rounded-lg shadow-lg overflow-hidden bg-card flex-1 flex items-center justify-center min-h-0">
           <canvas 
