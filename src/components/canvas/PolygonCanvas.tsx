@@ -1261,8 +1261,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       stroke: '#000000',
       strokeWidth: scaledStroke,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'devtas'
+    } as any);
 
     // Add and ensure proper layering
     fabricCanvas.add(mediumPoly);
