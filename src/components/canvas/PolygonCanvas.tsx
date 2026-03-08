@@ -63,29 +63,32 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   onPolygonChange,
   className
 }) => {
+  const canvasCache = useMemo(() => loadCanvasCache(), []);
+  const cachedToggles = canvasCache?.toggles || {};
+  
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [polygonPoints, setPolygonPoints] = useState<Point[]>([]);
+  const [polygonPoints, setPolygonPoints] = useState<Point[]>(canvasCache?.polygonPoints || []);
   const [currentPolygon, setCurrentPolygon] = useState<Polygon | Polyline | Circle | null>(null);
   const [centerPoint, setCenterPoint] = useState<Circle | null>(null);
   const [smallPolygon, setSmallPolygon] = useState<Polygon | null>(null);
   const [mediumPolygon, setMediumPolygon] = useState<Polygon | null>(null);
   const [gridLines, setGridLines] = useState<any[]>([]);
   const [devtaZones, setDevtaZones] = useState<any[]>([]);
-  const [showDevtas, setShowDevtas] = useState(false);
-  const [show16Directions, setShow16Directions] = useState(true);
-  const [show32Gates, setShow32Gates] = useState(false);
-  const [show16BarChart, setShow16BarChart] = useState(false);
+  const [showDevtas, setShowDevtas] = useState(cachedToggles.showDevtas ?? false);
+  const [show16Directions, setShow16Directions] = useState(cachedToggles.show16Directions ?? true);
+  const [show32Gates, setShow32Gates] = useState(cachedToggles.show32Gates ?? false);
+  const [show16BarChart, setShow16BarChart] = useState(cachedToggles.show16BarChart ?? false);
   const [showDevtaNamesDialog, setShowDevtaNamesDialog] = useState(false);
   const [showDevtaAttributesDialog, setShowDevtaAttributesDialog] = useState(false);
   const [showDevtaRemediesDialog, setShowDevtaRemediesDialog] = useState(false);
-  const [showVithiMandal, setShowVithiMandal] = useState(false);
-  const [showShaktiChakra, setShowShaktiChakra] = useState(false);
+  const [showVithiMandal, setShowVithiMandal] = useState(cachedToggles.showVithiMandal ?? false);
+  const [showShaktiChakra, setShowShaktiChakra] = useState(cachedToggles.showShaktiChakra ?? false);
   const [shaktiChakraSize, setShaktiChakraSize] = useState(250);
   const [shaktiChakraImg, setShaktiChakraImg] = useState<FabricImage | null>(null);
-  const [rotationDegree, setRotationDegree] = useState(0); // Display value shown to user
-  const [tempRotationValue, setTempRotationValue] = useState(0); // For smooth slider preview
+  const [rotationDegree, setRotationDegree] = useState(canvasCache?.rotationDegree ?? 0);
+  const [tempRotationValue, setTempRotationValue] = useState(canvasCache?.rotationDegree ?? 0);
   
   // Internal rotation offset: User sees X degrees, calculations use X+2 degrees
   // Negate the rotation to make it anticlockwise instead of clockwise
@@ -95,14 +98,14 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const isMobile = useIsMobile();
   const [directionLines, setDirectionLines] = useState<any[]>([]);
   const [gateLines, setGateLines] = useState<any[]>([]);
-  const [completedPolygonPoints, setCompletedPolygonPoints] = useState<Point[]>([]);
+  const [completedPolygonPoints, setCompletedPolygonPoints] = useState<Point[]>(canvasCache?.completedPolygonPoints || []);
   const [isRotating, setIsRotating] = useState(false);
-  const [show45Devtas, setShow45Devtas] = useState(false);
+  const [show45Devtas, setShow45Devtas] = useState(cachedToggles.show45Devtas ?? false);
   const [devtaSlices, setDevtaSlices] = useState<any[]>([]);
   const [vithiMandalPolygons, setVithiMandalPolygons] = useState<any[]>([]);
-  const [showMarmaSthan, setShowMarmaSthan] = useState(false);
+  const [showMarmaSthan, setShowMarmaSthan] = useState(cachedToggles.showMarmaSthan ?? false);
   const [marmaSthanLines, setMarmaSthanLines] = useState<Line[]>([]);
-  const [showFiveElements, setShowFiveElements] = useState(false);
+  const [showFiveElements, setShowFiveElements] = useState(cachedToggles.showFiveElements ?? false);
   const [fiveElementsLines, setFiveElementsLines] = useState<any[]>([]);
   const [showPDFDialog, setShowPDFDialog] = useState(false);
   const [pdfUserDetails, setPdfUserDetails] = useState({
