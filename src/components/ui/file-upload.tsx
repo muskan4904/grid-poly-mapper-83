@@ -1,14 +1,50 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Image, X, RotateCw, Check } from 'lucide-react';
+import { Upload, Image, X, RotateCw, Check, Crop, ArrowLeft } from 'lucide-react';
+import Cropper from 'react-easy-crop';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+
+interface Area {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 interface FileUploadProps {
   onImageUpload: (file: File, imageUrl: string) => void;
   uploadedImage?: string;
   onClearImage?: () => void;
   className?: string;
+}
+
+function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<{ file: File; url: string }> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = pixelCrop.width;
+      canvas.height = pixelCrop.height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(
+        img,
+        pixelCrop.x, pixelCrop.y,
+        pixelCrop.width, pixelCrop.height,
+        0, 0,
+        pixelCrop.width, pixelCrop.height
+      );
+      canvas.toBlob((blob) => {
+        if (!blob) return reject(new Error('Canvas toBlob failed'));
+        const file = new File([blob], 'cropped.png', { type: 'image/png' });
+        const url = URL.createObjectURL(blob);
+        resolve({ file, url });
+      }, 'image/png');
+    };
+    img.onerror = reject;
+    img.src = imageSrc;
+  });
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -22,6 +58,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [previewRotation, setPreviewRotation] = useState(0);
 
+  // Crop state
+  const [isCropping, setIsCropping] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file && file.type.startsWith('image/')) {
@@ -29,9 +71,29 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       setPreviewFile(file);
       setPreviewUrl(url);
       setPreviewRotation(0);
+      setIsCropping(false);
     }
     setIsDragOver(false);
   }, []);
+
+  const onCropComplete = useCallback((_: any, croppedPixels: Area) => {
+    setCroppedAreaPixels(croppedPixels);
+  }, []);
+
+  const handleApplyCrop = useCallback(async () => {
+    if (!croppedAreaPixels || !previewUrl) return;
+    try {
+      const { file, url } = await getCroppedImg(previewUrl, croppedAreaPixels);
+      URL.revokeObjectURL(previewUrl);
+      setPreviewFile(file);
+      setPreviewUrl(url);
+      setIsCropping(false);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+    } catch (e) {
+      console.error('Crop failed', e);
+    }
+  }, [croppedAreaPixels, previewUrl]);
 
   const handleConfirmUpload = useCallback(() => {
     if (!previewFile || !previewUrl) return;
@@ -44,7 +106,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       return;
     }
 
-    // Apply rotation by drawing to a canvas
     const img = new window.Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
@@ -79,23 +140,78 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     setPreviewFile(null);
     setPreviewUrl('');
     setPreviewRotation(0);
+    setIsCropping(false);
   }, [previewUrl]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
-    },
+    accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'] },
     multiple: false,
     onDragEnter: () => setIsDragOver(true),
     onDragLeave: () => setIsDragOver(false)
   });
 
-  // Preview mode - show image with rotate option before uploading
+  // Crop mode
+  if (isCropping && previewUrl) {
+    return (
+      <div className="flex flex-col items-center gap-4 p-4 sm:p-6 border-2 border-primary/30 rounded-lg bg-card w-full">
+        <p className="text-base sm:text-lg font-semibold text-foreground">Crop Image — Drag & zoom to select area</p>
+        <div className="relative w-full rounded-lg overflow-hidden bg-muted/20 border border-border" style={{ height: '60vh', maxHeight: '500px' }}>
+          <Cropper
+            image={previewUrl}
+            crop={crop}
+            zoom={zoom}
+            aspect={undefined}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={onCropComplete}
+            style={{
+              containerStyle: { borderRadius: '0.5rem' },
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-3 w-full max-w-xs">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Zoom:</span>
+          <input
+            type="range"
+            min={1}
+            max={3}
+            step={0.1}
+            value={zoom}
+            onChange={(e) => setZoom(Number(e.target.value))}
+            className="w-full accent-primary"
+          />
+        </div>
+        <div className="flex gap-3 w-full max-w-sm">
+          <Button
+            variant="outline"
+            className="flex-1 gap-2 touch-manipulation h-10 sm:h-11 text-sm sm:text-base"
+            onClick={() => {
+              setIsCropping(false);
+              setCrop({ x: 0, y: 0 });
+              setZoom(1);
+            }}
+          >
+            <ArrowLeft size={16} />
+            Back
+          </Button>
+          <Button
+            className="flex-1 gap-2 touch-manipulation h-10 sm:h-11 text-sm sm:text-base"
+            onClick={handleApplyCrop}
+          >
+            <Check size={16} />
+            Apply Crop
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Preview mode
   if (previewUrl && !uploadedImage) {
     return (
       <div className="flex flex-col items-center gap-4 sm:gap-6 p-4 sm:p-6 border-2 border-primary/30 rounded-lg bg-card w-full">
-        <p className="text-base sm:text-lg font-semibold text-foreground">Preview — Rotate if needed before uploading</p>
+        <p className="text-base sm:text-lg font-semibold text-foreground">Preview — Rotate or Crop before uploading</p>
         <div className="relative w-full flex items-center justify-center overflow-hidden rounded-lg bg-muted/20 border border-border md:max-w-[500px] md:mx-auto" style={{ minHeight: window.innerWidth >= 768 ? '300px' : '50vh', maxHeight: window.innerWidth >= 768 ? '400px' : '70vh' }}>
           <img
             src={previewUrl}
@@ -104,7 +220,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             style={{ transform: `rotate(${previewRotation}deg)` }}
           />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 flex-wrap justify-center">
           <Button
             variant="outline"
             onClick={() => setPreviewRotation((r) => (r + 90) % 360)}
@@ -114,6 +230,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             Rotate 90°
           </Button>
           <span className="text-sm text-muted-foreground font-medium">{previewRotation}°</span>
+          <Button
+            variant="outline"
+            onClick={() => setIsCropping(true)}
+            className="gap-2 touch-manipulation h-10 sm:h-11 px-4 sm:px-6 text-sm sm:text-base"
+          >
+            <Crop size={18} />
+            Crop
+          </Button>
         </div>
         <div className="flex gap-3 w-full max-w-sm">
           <Button
