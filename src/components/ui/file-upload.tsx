@@ -1,16 +1,10 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, Image, X, RotateCw, Check, Crop, ArrowLeft } from 'lucide-react';
-import Cropper from 'react-easy-crop';
+import ReactCrop, { type Crop as CropType, type PixelCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-
-interface Area {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 interface FileUploadProps {
   onImageUpload: (file: File, imageUrl: string) => void;
@@ -19,31 +13,30 @@ interface FileUploadProps {
   className?: string;
 }
 
-function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<{ file: File; url: string }> {
+function getCroppedImg(image: HTMLImageElement, pixelCrop: PixelCrop): Promise<{ file: File; url: string }> {
+  const canvas = document.createElement('canvas');
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+  canvas.width = pixelCrop.width * scaleX;
+  canvas.height = pixelCrop.height * scaleY;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(
+    image,
+    pixelCrop.x * scaleX,
+    pixelCrop.y * scaleY,
+    pixelCrop.width * scaleX,
+    pixelCrop.height * scaleY,
+    0, 0,
+    canvas.width,
+    canvas.height
+  );
   return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = pixelCrop.width;
-      canvas.height = pixelCrop.height;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(
-        img,
-        pixelCrop.x, pixelCrop.y,
-        pixelCrop.width, pixelCrop.height,
-        0, 0,
-        pixelCrop.width, pixelCrop.height
-      );
-      canvas.toBlob((blob) => {
-        if (!blob) return reject(new Error('Canvas toBlob failed'));
-        const file = new File([blob], 'cropped.png', { type: 'image/png' });
-        const url = URL.createObjectURL(blob);
-        resolve({ file, url });
-      }, 'image/png');
-    };
-    img.onerror = reject;
-    img.src = imageSrc;
+    canvas.toBlob((blob) => {
+      if (!blob) return reject(new Error('Canvas toBlob failed'));
+      const file = new File([blob], 'cropped.png', { type: 'image/png' });
+      const url = URL.createObjectURL(blob);
+      resolve({ file, url });
+    }, 'image/png');
   });
 }
 
@@ -58,12 +51,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [previewRotation, setPreviewRotation] = useState(0);
 
-  // Crop state
   const [isCropping, setIsCropping] = useState(false);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-  const [cropAspect, setCropAspect] = useState<number | undefined>(4 / 3);
+  const [crop, setCrop] = useState<CropType>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -77,24 +68,20 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     setIsDragOver(false);
   }, []);
 
-  const onCropComplete = useCallback((_: any, croppedPixels: Area) => {
-    setCroppedAreaPixels(croppedPixels);
-  }, []);
-
   const handleApplyCrop = useCallback(async () => {
-    if (!croppedAreaPixels || !previewUrl) return;
+    if (!completedCrop || !imgRef.current || !previewUrl) return;
     try {
-      const { file, url } = await getCroppedImg(previewUrl, croppedAreaPixels);
+      const { file, url } = await getCroppedImg(imgRef.current, completedCrop);
       URL.revokeObjectURL(previewUrl);
       setPreviewFile(file);
       setPreviewUrl(url);
       setIsCropping(false);
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
+      setCrop(undefined);
+      setCompletedCrop(undefined);
     } catch (e) {
       console.error('Crop failed', e);
     }
-  }, [croppedAreaPixels, previewUrl]);
+  }, [completedCrop, previewUrl]);
 
   const handleConfirmUpload = useCallback(() => {
     if (!previewFile || !previewUrl) return;
@@ -152,58 +139,26 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     onDragLeave: () => setIsDragOver(false)
   });
 
-  // Crop mode
+  // Crop mode with react-image-crop (draggable handles/dots on all sides)
   if (isCropping && previewUrl) {
     return (
       <div className="flex flex-col items-center gap-4 p-4 sm:p-6 border-2 border-primary/30 rounded-lg bg-card w-full">
-        <p className="text-base sm:text-lg font-semibold text-foreground">Crop Image — Drag corners to adjust crop area</p>
-        <div className="relative w-full rounded-lg overflow-hidden bg-muted/20 border border-border" style={{ height: '60vh', maxHeight: '500px' }}>
-          <Cropper
-            image={previewUrl}
+        <p className="text-base sm:text-lg font-semibold text-foreground">Crop Image — Drag the dots to crop from any side</p>
+        <div className="relative w-full flex items-center justify-center overflow-auto rounded-lg bg-muted/20 border border-border" style={{ maxHeight: '65vh' }}>
+          <ReactCrop
             crop={crop}
-            zoom={zoom}
-            aspect={cropAspect}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={onCropComplete}
-            showGrid={true}
-            restrictPosition={false}
-            style={{
-              containerStyle: { borderRadius: '0.5rem' },
-              cropAreaStyle: { border: '2px solid hsl(var(--primary))' },
-            }}
-          />
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="text-xs text-muted-foreground">Ratio:</span>
-          {[
-            { label: 'Free', value: undefined },
-            { label: '1:1', value: 1 },
-            { label: '4:3', value: 4 / 3 },
-            { label: '3:4', value: 3 / 4 },
-          ].map((opt) => (
-            <Button
-              key={opt.label}
-              size="sm"
-              variant={cropAspect === opt.value ? 'default' : 'outline'}
-              className="h-8 px-3 text-xs touch-manipulation"
-              onClick={() => setCropAspect(opt.value)}
-            >
-              {opt.label}
-            </Button>
-          ))}
-        </div>
-        <div className="flex items-center gap-3 w-full max-w-xs">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">Zoom:</span>
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.1}
-            value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="w-full accent-primary"
-          />
+            onChange={(c) => setCrop(c)}
+            onComplete={(c) => setCompletedCrop(c)}
+            className="max-w-full"
+          >
+            <img
+              ref={imgRef}
+              src={previewUrl}
+              alt="Crop"
+              className="max-w-full max-h-[60vh] object-contain"
+              style={{ display: 'block' }}
+            />
+          </ReactCrop>
         </div>
         <div className="flex gap-3 w-full max-w-sm">
           <Button
@@ -211,8 +166,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             className="flex-1 gap-2 touch-manipulation h-10 sm:h-11 text-sm sm:text-base"
             onClick={() => {
               setIsCropping(false);
-              setCrop({ x: 0, y: 0 });
-              setZoom(1);
+              setCrop(undefined);
+              setCompletedCrop(undefined);
             }}
           >
             <ArrowLeft size={16} />
@@ -221,6 +176,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           <Button
             className="flex-1 gap-2 touch-manipulation h-10 sm:h-11 text-sm sm:text-base"
             onClick={handleApplyCrop}
+            disabled={!completedCrop?.width || !completedCrop?.height}
           >
             <Check size={16} />
             Apply Crop
