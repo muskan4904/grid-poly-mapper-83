@@ -3331,6 +3331,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       clearMarmaSthanLine();
       removeFeatureObjects('marmaSthan');
     } else if (completedPolygonPoints.length >= 3) {
+      removeFeatureObjects('marmaSthan');
+      setMarmaSthanLines([]);
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       drawMarmaSthan(completedPolygonPoints, center);
     }
