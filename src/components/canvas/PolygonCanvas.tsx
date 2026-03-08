@@ -2880,12 +2880,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Create smaller polygon with transparent fill and red boundary only
     const fabricPoints = scaledPoints.map(p => ({ x: p.x, y: p.y }));
     const gates81PadSmallPoly = new Polygon(fabricPoints, {
-      fill: 'transparent', // No fill - transparent inside
-      stroke: '#ff0000', // Red border only
+      fill: 'transparent',
+      stroke: '#ff0000',
       strokeWidth: 3,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'gates81Pad'
+    } as any);
 
     // Add and ensure it's on top
     fabricCanvas.add(gates81PadSmallPoly);
