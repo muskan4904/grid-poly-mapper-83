@@ -2813,12 +2813,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         left: point.x,
         top: point.y,
         radius: scaledDotRadius,
-        fill: '#000000', // Black color
+        fill: '#000000',
         selectable: false,
         evented: false,
         originX: 'center',
-        originY: 'center'
-      });
+        originY: 'center',
+        _feature: 'marmaSthan'
+      } as any);
 
       fabricCanvas.add(dot);
       newLines.push(dot);
