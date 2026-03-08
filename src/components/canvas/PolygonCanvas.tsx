@@ -1369,8 +1369,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       stroke: '#3b82f6',
       strokeWidth: vStroke,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'vithiMandal'
+    } as any);
     fabricCanvas.add(strip2Poly);
     newVithiPolygons.push(strip2Poly);
     
