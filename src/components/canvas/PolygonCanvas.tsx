@@ -60,6 +60,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [showVithiMandal, setShowVithiMandal] = useState(false);
   const [showShaktiChakra, setShowShaktiChakra] = useState(false);
   const [shaktiChakraSize, setShaktiChakraSize] = useState(250);
+  const [tempShaktiChakraSize, setTempShaktiChakraSize] = useState(250);
   const [shaktiChakraImg, setShaktiChakraImg] = useState<FabricImage | null>(null);
   const [rotationDegree, setRotationDegree] = useState(0);
   const [tempRotationValue, setTempRotationValue] = useState(0);
@@ -68,12 +69,14 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   // Negate the rotation to make it anticlockwise instead of clockwise
   const USER_DISPLAY_OFFSET = -2;
   const internalRotationDegree = -(rotationDegree - USER_DISPLAY_OFFSET);
-  const rotationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const rotationRafRef = useRef<number | null>(null);
+  const latestRotationRef = useRef(0);
+  const shaktiSizeRafRef = useRef<number | null>(null);
+  const latestShaktiSizeRef = useRef(250);
   const isMobile = useIsMobile();
   const [directionLines, setDirectionLines] = useState<any[]>([]);
   const [gateLines, setGateLines] = useState<any[]>([]);
   const [completedPolygonPoints, setCompletedPolygonPoints] = useState<Point[]>([]);
-  const [isRotating, setIsRotating] = useState(false);
   const [show45Devtas, setShow45Devtas] = useState(false);
   const [devtaSlices, setDevtaSlices] = useState<any[]>([]);
   const [vithiMandalPolygons, setVithiMandalPolygons] = useState<any[]>([]);
@@ -113,19 +116,56 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [historyIndex, setHistoryIndex] = useState(-1);
   const historyIndexRef = useRef(-1);
   
-  // Rotation handler - immediate update for smooth sliding on all devices
+  // Rotation handler - keep drag smooth and batch heavy canvas updates to animation frames
   const handleRotationChange = useCallback((value: number[]) => {
+    const newValue = Math.max(0, Math.min(360, Number(value[0])));
+    setTempRotationValue(newValue);
+    latestRotationRef.current = newValue;
+
+    if (rotationRafRef.current !== null) return;
+    rotationRafRef.current = requestAnimationFrame(() => {
+      setRotationDegree(latestRotationRef.current);
+      rotationRafRef.current = null;
+    });
+  }, []);
+
+  const handleRotationCommit = useCallback((value: number[]) => {
     const newValue = Math.max(0, Math.min(360, Number(value[0])));
     setTempRotationValue(newValue);
     setRotationDegree(newValue);
   }, []);
 
-  // Cleanup timeout on unmount
+  const handleShaktiSizeChange = useCallback((value: number[]) => {
+    const newSize = Math.max(100, Math.min(2000, Number(value[0])));
+    setTempShaktiChakraSize(newSize);
+    latestShaktiSizeRef.current = newSize;
+
+    if (shaktiSizeRafRef.current !== null) return;
+    shaktiSizeRafRef.current = requestAnimationFrame(() => {
+      setShaktiChakraSize(latestShaktiSizeRef.current);
+      shaktiSizeRafRef.current = null;
+    });
+  }, []);
+
+  const handleShaktiSizeCommit = useCallback((value: number[]) => {
+    const newSize = Math.max(100, Math.min(2000, Number(value[0])));
+    setTempShaktiChakraSize(newSize);
+    setShaktiChakraSize(newSize);
+  }, []);
+
+  useEffect(() => {
+    setTempRotationValue(rotationDegree);
+  }, [rotationDegree]);
+
+  useEffect(() => {
+    setTempShaktiChakraSize(shaktiChakraSize);
+  }, [shaktiChakraSize]);
+
+  // Cleanup animation frames on unmount
   useEffect(() => {
     return () => {
-      if (rotationTimeoutRef.current) {
-        clearTimeout(rotationTimeoutRef.current);
-      }
+      if (rotationRafRef.current !== null) cancelAnimationFrame(rotationRafRef.current);
+      if (shaktiSizeRafRef.current !== null) cancelAnimationFrame(shaktiSizeRafRef.current);
     };
   }, []);
   
@@ -4819,21 +4859,21 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                       <div className="flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
                         <div className="px-2 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800">
-                          {isMobile && isRotating ? tempRotationValue : rotationDegree}°
+                          {Math.round(tempRotationValue)}°
                         </div>
                       </div>
                       
                       <div className="space-y-2">
                         <Slider
-                          value={[isMobile && isRotating ? tempRotationValue : rotationDegree]}
+                          value={[tempRotationValue]}
                           onValueChange={handleRotationChange}
+                          onValueCommit={handleRotationCommit}
                           max={360}
                           min={0}
-                          step={isMobile ? 0.5 : 1} // Finer control on mobile for smoother experience
+                          step={1}
                           className={cn(
                             "w-full",
-                            isMobile ? "touch-manipulation" : "",
-                            isRotating && "opacity-75"
+                            isMobile ? "touch-manipulation" : ""
                           )}
                         />
                         
@@ -4918,10 +4958,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                         {/* Shakti Chakra Size Slider - only show when Shakti Chakra is enabled */}
                         {showShaktiChakra && (
                           <div className="p-2 bg-muted/30 rounded-lg space-y-1">
-                            <Label className="text-xs xl:text-sm">Shakti Chakra Size: {shaktiChakraSize}px</Label>
+                            <Label className="text-xs xl:text-sm">Shakti Chakra Size: {Math.round(tempShaktiChakraSize)}px</Label>
                             <Slider
-                              value={[shaktiChakraSize]}
-                              onValueChange={(value) => setShaktiChakraSize(value[0])}
+                              value={[tempShaktiChakraSize]}
+                              onValueChange={handleShaktiSizeChange}
+                              onValueCommit={handleShaktiSizeCommit}
                               min={100}
                               max={2000}
                               step={10}
