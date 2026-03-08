@@ -2600,7 +2600,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     setShowVithiMandal(newShowVithiMandal);
     
     if (newShowVithiMandal) {
-      // Enable: draw vithi mandal polygons
+      removeFeatureObjects('vithiMandal');
+      setVithiMandalPolygons([]);
       if (completedPolygonPoints.length >= 3) {
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
         drawVithiMandalPolygons(completedPolygonPoints, center);
