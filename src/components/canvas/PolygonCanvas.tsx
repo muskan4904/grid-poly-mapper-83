@@ -2604,8 +2604,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         drawVithiMandalPolygons(completedPolygonPoints, center);
       }
     } else {
-      // Disable: clear vithi mandal polygons
       clearVithiMandalPolygons();
+      removeFeatureObjects('vithiMandal');
     }
     
     fabricCanvas.renderAll();
