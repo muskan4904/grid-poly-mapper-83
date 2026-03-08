@@ -122,6 +122,20 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [gates81PadMediumPolygon, setGates81PadMediumPolygon] = useState<Polygon | null>(null);
   const [gates81PadGridLines, setGates81PadGridLines] = useState<any[]>([]);
   
+  // Persist canvas state to localStorage
+  useEffect(() => {
+    saveCanvasCache({
+      polygonPoints,
+      completedPolygonPoints,
+      rotationDegree,
+      toggles: {
+        showDevtas, show16Directions, show32Gates, show16BarChart,
+        showVithiMandal, showShaktiChakra, show45Devtas,
+        showMarmaSthan, showFiveElements, showGates81Pad
+      }
+    });
+  }, [polygonPoints, completedPolygonPoints, rotationDegree, showDevtas, show16Directions, show32Gates, show16BarChart, showVithiMandal, showShaktiChakra, show45Devtas, showMarmaSthan, showFiveElements, showGates81Pad]);
+
   // Undo/Redo functionality for polygon drawing
   const [polygonHistory, setPolygonHistory] = useState<Point[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
