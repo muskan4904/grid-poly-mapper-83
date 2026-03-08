@@ -283,12 +283,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       
       // Scale image to cover the full canvas area (like object-fit: cover)
       // Use the larger scale factor so the image fills the entire canvas
+      // Scale image to fit entirely within canvas (contain) - no cropping
       const scaleX = canvasWidth / imgElement.width;
       const scaleY = canvasHeight / imgElement.height;
-      const coverScale = Math.max(scaleX, scaleY);
+      const containScale = Math.min(scaleX, scaleY);
       
-      renderWidth = imgElement.width * coverScale;
-      renderHeight = imgElement.height * coverScale;
+      renderWidth = imgElement.width * containScale;
+      renderHeight = imgElement.height * containScale;
       
       const left = (canvasWidth - renderWidth) / 2;
       const top = (canvasHeight - renderHeight) / 2;
