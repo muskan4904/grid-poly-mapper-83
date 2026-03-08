@@ -936,8 +936,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
               evented: false,
               objectCaching: false,
               isDiagonalDivision: true,
-              sectorIndex: k // Add sector index to identify which diagonal line this is
-            }
+              sectorIndex: k,
+              _feature: 'devtas'
+            } as any
           );
           fabricCanvas.add(diagonalLine);
           newObjects.push(diagonalLine);
