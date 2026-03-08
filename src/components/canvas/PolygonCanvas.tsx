@@ -113,28 +113,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [historyIndex, setHistoryIndex] = useState(-1);
   const historyIndexRef = useRef(-1);
   
-  // Optimized rotation handler for mobile and desktop
+  // Rotation handler - immediate update for smooth sliding on all devices
   const handleRotationChange = useCallback((value: number[]) => {
     const newValue = Math.max(0, Math.min(360, Number(value[0])));
-    setTempRotationValue(newValue); // Update preview immediately
-    
-    if (isMobile) {
-      // On mobile: use debouncing to reduce update frequency for performance
-      if (rotationTimeoutRef.current) {
-        clearTimeout(rotationTimeoutRef.current);
-      }
-      
-      rotationTimeoutRef.current = setTimeout(() => {
-        setRotationDegree(newValue);
-        setIsRotating(false);
-      }, 50); // 50ms debounce for mobile
-      
-      setIsRotating(true);
-    } else {
-      // On desktop: update immediately for responsive feel
-      setRotationDegree(newValue);
-    }
-  }, [isMobile]);
+    setTempRotationValue(newValue);
+    setRotationDegree(newValue);
+  }, []);
 
   // Cleanup timeout on unmount
   useEffect(() => {
