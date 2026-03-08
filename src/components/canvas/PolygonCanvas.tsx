@@ -4859,21 +4859,21 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                       <div className="flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
                         <div className="px-2 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800">
-                          {isMobile && isRotating ? tempRotationValue : rotationDegree}°
+                          {Math.round(tempRotationValue)}°
                         </div>
                       </div>
                       
                       <div className="space-y-2">
                         <Slider
-                          value={[isMobile && isRotating ? tempRotationValue : rotationDegree]}
+                          value={[tempRotationValue]}
                           onValueChange={handleRotationChange}
+                          onValueCommit={handleRotationCommit}
                           max={360}
                           min={0}
-                          step={isMobile ? 0.5 : 1} // Finer control on mobile for smoother experience
+                          step={1}
                           className={cn(
                             "w-full",
-                            isMobile ? "touch-manipulation" : "",
-                            isRotating && "opacity-75"
+                            isMobile ? "touch-manipulation" : ""
                           )}
                         />
                         
