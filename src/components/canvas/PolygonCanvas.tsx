@@ -641,8 +641,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     if (!fabricCanvas) return;
 
     const scale = getOverlayScale(polygonPoints);
-    const scaledDevtaFontSize = Math.max(6, Math.round(10 * scale));
-    const scaledRegionFontSize = Math.max(5, Math.round(8 * scale));
+    const scaledDevtaFontSize = Math.max(7, Math.round(12 * scale));
+    const scaledRegionFontSize = Math.max(6, Math.round(10 * scale));
     const scaledStrokeWidth = Math.max(1, Math.round(2 * scale));
     const scaledLabelOffset = Math.round(-8 * scale);
 
@@ -1585,7 +1585,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     if (!fabricCanvas || !show16Directions) return;
 
     const scale = getOverlayScale(polygonPoints);
-    const scaledFontSize = Math.max(6, Math.round(10 * scale));
+    const scaledFontSize = Math.max(7, Math.round(12 * scale));
     const scaledStrokeWidth = Math.max(1, Math.round(2 * scale));
 
     const directions = [
@@ -1702,8 +1702,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     console.log('Force clearing ALL five elements objects before redraw...');
 
     const scale = getOverlayScale(polygonPoints);
-    const scaledLabelFontSize = Math.max(5, Math.round(9 * scale));
-    const scaledDirFontSize = Math.max(5, Math.round(8 * scale));
+    const scaledLabelFontSize = Math.max(6, Math.round(11 * scale));
+    const scaledDirFontSize = Math.max(6, Math.round(10 * scale));
     const scaledStrokeWidth = Math.max(1, Math.round(2 * scale));
 
     const allObjects = fabricCanvas.getObjects();
@@ -2283,7 +2283,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     if (!fabricCanvas || !show32Gates) return;
 
     const scale = getOverlayScale(polygonPoints);
-    const scaledFontSize = Math.max(5, Math.round(9 * scale));
+    const scaledFontSize = Math.max(6, Math.round(11 * scale));
     const scaledStrokeWidth = Math.max(1, Math.round(2 * scale));
 
     const N = 32;
