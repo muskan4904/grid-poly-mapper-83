@@ -2481,7 +2481,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       clearGateLines();
       removeFeatureObjects('gates32');
     } else if (completedPolygonPoints.length >= 3) {
-      // Enabling: create (or update) instantly without clearing
+      removeFeatureObjects('gates32');
+      setGateLines([]);
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       draw32Gates(completedPolygonPoints, center);
     }
