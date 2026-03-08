@@ -116,19 +116,56 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [historyIndex, setHistoryIndex] = useState(-1);
   const historyIndexRef = useRef(-1);
   
-  // Rotation handler - immediate update for smooth sliding on all devices
+  // Rotation handler - keep drag smooth and batch heavy canvas updates to animation frames
   const handleRotationChange = useCallback((value: number[]) => {
+    const newValue = Math.max(0, Math.min(360, Number(value[0])));
+    setTempRotationValue(newValue);
+    latestRotationRef.current = newValue;
+
+    if (rotationRafRef.current !== null) return;
+    rotationRafRef.current = requestAnimationFrame(() => {
+      setRotationDegree(latestRotationRef.current);
+      rotationRafRef.current = null;
+    });
+  }, []);
+
+  const handleRotationCommit = useCallback((value: number[]) => {
     const newValue = Math.max(0, Math.min(360, Number(value[0])));
     setTempRotationValue(newValue);
     setRotationDegree(newValue);
   }, []);
 
-  // Cleanup timeout on unmount
+  const handleShaktiSizeChange = useCallback((value: number[]) => {
+    const newSize = Math.max(100, Math.min(2000, Number(value[0])));
+    setTempShaktiChakraSize(newSize);
+    latestShaktiSizeRef.current = newSize;
+
+    if (shaktiSizeRafRef.current !== null) return;
+    shaktiSizeRafRef.current = requestAnimationFrame(() => {
+      setShaktiChakraSize(latestShaktiSizeRef.current);
+      shaktiSizeRafRef.current = null;
+    });
+  }, []);
+
+  const handleShaktiSizeCommit = useCallback((value: number[]) => {
+    const newSize = Math.max(100, Math.min(2000, Number(value[0])));
+    setTempShaktiChakraSize(newSize);
+    setShaktiChakraSize(newSize);
+  }, []);
+
+  useEffect(() => {
+    setTempRotationValue(rotationDegree);
+  }, [rotationDegree]);
+
+  useEffect(() => {
+    setTempShaktiChakraSize(shaktiChakraSize);
+  }, [shaktiChakraSize]);
+
+  // Cleanup animation frames on unmount
   useEffect(() => {
     return () => {
-      if (rotationTimeoutRef.current) {
-        clearTimeout(rotationTimeoutRef.current);
-      }
+      if (rotationRafRef.current !== null) cancelAnimationFrame(rotationRafRef.current);
+      if (shaktiSizeRafRef.current !== null) cancelAnimationFrame(shaktiSizeRafRef.current);
     };
   }, []);
   
