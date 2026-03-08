@@ -245,12 +245,28 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       
       let renderWidth, renderHeight;
       
+      // Always scale image to fill the maximum canvas area while preserving aspect ratio
+      // Use the larger scale factor so the image covers as much canvas as possible
       if (imgAspectRatio > canvasAspectRatio) {
+        // Image is wider relative to canvas - fit to canvas width
         renderWidth = canvasWidth;
         renderHeight = canvasWidth / imgAspectRatio;
       } else {
+        // Image is taller relative to canvas - fit to canvas height
         renderHeight = canvasHeight;
         renderWidth = canvasHeight * imgAspectRatio;
+      }
+      
+      // Ensure image fills at least 90% of canvas in both dimensions
+      // Scale up small images to use maximum canvas space
+      const widthRatio = canvasWidth / renderWidth;
+      const heightRatio = canvasHeight / renderHeight;
+      const fillScale = Math.min(widthRatio, heightRatio);
+      
+      if (fillScale > 1) {
+        // Image is smaller than canvas - scale it up to fill
+        renderWidth *= fillScale;
+        renderHeight *= fillScale;
       }
       
       const left = (canvasWidth - renderWidth) / 2;
