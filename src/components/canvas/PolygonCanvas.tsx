@@ -275,19 +275,31 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       console.log("Image loaded successfully:", imgElement.width, "x", imgElement.height);
       const canvasWidth = fabricCanvas.width || 800;
       const canvasHeight = fabricCanvas.height || 600;
+      const isMobileView = window.innerWidth < 1024;
       
-      // Scale image to fit canvas width, then resize canvas height to match image
-      const scale = canvasWidth / imgElement.width;
-      const renderWidth = canvasWidth;
-      const renderHeight = imgElement.height * scale;
+      let renderWidth, renderHeight, left, top;
       
-      // Resize canvas to match image height (eliminates empty space)
-      if (Math.abs(renderHeight - canvasHeight) > 1) {
-        fabricCanvas.setDimensions({ width: canvasWidth, height: renderHeight });
+      if (isMobileView) {
+        // Mobile/Tablet: fit width, resize canvas height to match image
+        const scale = canvasWidth / imgElement.width;
+        renderWidth = canvasWidth;
+        renderHeight = imgElement.height * scale;
+        
+        if (Math.abs(renderHeight - canvasHeight) > 1) {
+          fabricCanvas.setDimensions({ width: canvasWidth, height: renderHeight });
+        }
+        left = 0;
+        top = 0;
+      } else {
+        // Desktop: contain within existing canvas dimensions (no resize)
+        const scaleX = canvasWidth / imgElement.width;
+        const scaleY = canvasHeight / imgElement.height;
+        const containScale = Math.min(scaleX, scaleY);
+        renderWidth = imgElement.width * containScale;
+        renderHeight = imgElement.height * containScale;
+        left = (canvasWidth - renderWidth) / 2;
+        top = (canvasHeight - renderHeight) / 2;
       }
-      
-      const left = 0;
-      const top = 0;
 
       console.log("Image render dimensions:", { renderWidth, renderHeight, left, top });
 
