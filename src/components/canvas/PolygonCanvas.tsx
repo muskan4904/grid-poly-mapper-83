@@ -4958,10 +4958,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                         {/* Shakti Chakra Size Slider - only show when Shakti Chakra is enabled */}
                         {showShaktiChakra && (
                           <div className="p-2 bg-muted/30 rounded-lg space-y-1">
-                            <Label className="text-xs xl:text-sm">Shakti Chakra Size: {shaktiChakraSize}px</Label>
+                            <Label className="text-xs xl:text-sm">Shakti Chakra Size: {Math.round(tempShaktiChakraSize)}px</Label>
                             <Slider
-                              value={[shaktiChakraSize]}
-                              onValueChange={(value) => setShaktiChakraSize(value[0])}
+                              value={[tempShaktiChakraSize]}
+                              onValueChange={handleShaktiSizeChange}
+                              onValueCommit={handleShaktiSizeCommit}
                               min={100}
                               max={2000}
                               step={10}
