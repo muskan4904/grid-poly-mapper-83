@@ -191,13 +191,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     let canvasWidth, canvasHeight;
     
     if (isMobile) {
-      // Mobile: Maximum coverage - 85% of screen height
+      // Mobile/Tablet: cover ~75% of viewport height
       canvasWidth = Math.min(containerWidth - 4, viewportWidth - 8);
-      canvasHeight = Math.min(viewportHeight * 0.85, canvasWidth * 1.2); // 85% of viewport height
+      canvasHeight = viewportHeight * 0.75;
     } else {
       // Desktop: Large canvas with better coverage
-      canvasWidth = Math.min(containerWidth - 16, viewportWidth * 0.8); // 80% of viewport width
-      canvasHeight = Math.min(canvasWidth * 0.75, viewportHeight * 0.85); // 85% of viewport height
+      canvasWidth = Math.min(containerWidth - 16, viewportWidth * 0.8);
+      canvasHeight = Math.min(canvasWidth * 0.75, viewportHeight * 0.85);
     }
     
     // Ensure good minimum sizes
@@ -225,7 +225,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       
       if (newIsMobile) {
         newCanvasWidth = Math.min(newContainerWidth - 4, newViewportWidth - 8);
-        newCanvasHeight = Math.min(newViewportHeight * 0.85, newCanvasWidth * 1.2);
+        newCanvasHeight = newViewportHeight * 0.75;
       } else {
         newCanvasWidth = Math.min(newContainerWidth - 16, newViewportWidth * 0.8);
         newCanvasHeight = Math.min(newCanvasWidth * 0.75, newViewportHeight * 0.85);
