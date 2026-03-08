@@ -588,6 +588,16 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     return calculatePolygonCenter(points);
   };
 
+  // Universal helper: remove all canvas objects tagged with a specific feature name
+  const removeFeatureObjects = useCallback((featureName: string) => {
+    if (!fabricCanvas) return;
+    const toRemove = fabricCanvas.getObjects().filter((obj: any) => obj._feature === featureName);
+    if (toRemove.length > 0) {
+      console.log(`Removing ${toRemove.length} objects tagged '${featureName}'`);
+      toRemove.forEach(obj => fabricCanvas.remove(obj));
+    }
+  }, [fabricCanvas]);
+
   const drawSmallPolygon = (polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas) return;
 
