@@ -29,6 +29,29 @@ interface Point {
   y: number;
 }
 
+const CANVAS_CACHE_KEY = 'vastugrid_canvas_cache';
+
+interface CanvasCache {
+  polygonPoints: Point[];
+  completedPolygonPoints: Point[];
+  rotationDegree: number;
+  toggles: Record<string, boolean>;
+}
+
+const loadCanvasCache = (): CanvasCache | null => {
+  try {
+    const cached = localStorage.getItem(CANVAS_CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch (e) { /* ignore */ }
+  return null;
+};
+
+const saveCanvasCache = (data: CanvasCache) => {
+  try {
+    localStorage.setItem(CANVAS_CACHE_KEY, JSON.stringify(data));
+  } catch (e) { /* ignore */ }
+};
+
 interface PolygonCanvasProps {
   imageUrl?: string;
   onPolygonChange?: (polygon: Point[], area: number, center: Point) => void;
