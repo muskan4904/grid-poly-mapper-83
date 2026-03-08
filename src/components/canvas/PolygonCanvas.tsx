@@ -276,23 +276,18 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       const canvasWidth = fabricCanvas.width || 800;
       const canvasHeight = fabricCanvas.height || 600;
       
-      const imgAspectRatio = imgElement.width / imgElement.height;
-      const canvasAspectRatio = canvasWidth / canvasHeight;
+      // Scale image to fit canvas width, then resize canvas height to match image
+      const scale = canvasWidth / imgElement.width;
+      const renderWidth = canvasWidth;
+      const renderHeight = imgElement.height * scale;
       
-      let renderWidth, renderHeight;
+      // Resize canvas to match image height (eliminates empty space)
+      if (Math.abs(renderHeight - canvasHeight) > 1) {
+        fabricCanvas.setDimensions({ width: canvasWidth, height: renderHeight });
+      }
       
-      // Scale image to cover the full canvas area (like object-fit: cover)
-      // Use the larger scale factor so the image fills the entire canvas
-      // Scale image to fit entirely within canvas (contain) - no cropping
-      const scaleX = canvasWidth / imgElement.width;
-      const scaleY = canvasHeight / imgElement.height;
-      const containScale = Math.min(scaleX, scaleY);
-      
-      renderWidth = imgElement.width * containScale;
-      renderHeight = imgElement.height * containScale;
-      
-      const left = (canvasWidth - renderWidth) / 2;
-      const top = (canvasHeight - renderHeight) / 2;
+      const left = 0;
+      const top = 0;
 
       console.log("Image render dimensions:", { renderWidth, renderHeight, left, top });
 
