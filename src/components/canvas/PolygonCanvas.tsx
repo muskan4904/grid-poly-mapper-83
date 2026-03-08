@@ -3450,7 +3450,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         drawRingSlices(completedPolygonPoints, center);
       }
     } else {
-      // Properly remove all devta objects instead of just hiding them
+      // Nuclear cleanup: remove ALL objects tagged as devtas
+      removeFeatureObjects('devtas');
       if (smallPolygon) {
         fabricCanvas.remove(smallPolygon);
         setSmallPolygon(null);
@@ -3459,15 +3460,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         fabricCanvas.remove(mediumPolygon);
         setMediumPolygon(null);
       }
-      // Remove all grid lines (radial lines and numbers) instead of hiding them
       gridLines.forEach(line => {
         if (fabricCanvas.contains(line)) {
           fabricCanvas.remove(line);
         }
       });
       setGridLines([]);
-      
-      // Also clear any devta zones
       clearDevtaZones();
     }
     
