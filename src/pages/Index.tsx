@@ -51,6 +51,8 @@ const Index = () => {
     setPolygon([]);
     setArea(0);
     setCenter({ x: 0, y: 0 });
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem('vastugrid_canvas_cache');
   };
 
   const handlePolygonChange = (newPolygon: Point[], newArea: number, newCenter: Point) => {
