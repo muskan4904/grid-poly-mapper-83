@@ -3438,16 +3438,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     console.log('Toggle devtas:', newShowDevtas, 'Completed polygon points:', completedPolygonPoints.length);
     
     if (newShowDevtas) {
-      // Recreate all devta features to ensure proper display
+      // Clean up any stale devta objects first, then recreate
+      removeFeatureObjects('devtas');
+      setGridLines([]);
       if (completedPolygonPoints.length >= 3) {
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
-        console.log('Drawing devta features with center:', center);
-        
-        // Recreate small and medium polygons
         drawSmallPolygon(completedPolygonPoints, center);
         drawMediumPolygon(completedPolygonPoints, center);
-        
-        // Recreate ring slices with all special extended lines
         drawRingSlices(completedPolygonPoints, center);
       }
     } else {
