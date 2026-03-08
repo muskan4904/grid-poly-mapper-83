@@ -642,8 +642,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       stroke: '#ff0000',
       strokeWidth: scaledStroke,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'devtas'
+    } as any);
 
     // Add and ensure it's on top
     fabricCanvas.add(smallPoly);
