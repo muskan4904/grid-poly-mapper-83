@@ -1116,8 +1116,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             textAlign: 'center',
             objectCaching: false,
             regionNumber: regionNumber,
-            sectorIndex: k
-          });
+            sectorIndex: k,
+            _feature: 'devtas'
+          } as any);
           
           fabricCanvas.add(regionLabel);
           newObjects.push(regionLabel);
