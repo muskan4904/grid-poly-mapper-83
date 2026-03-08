@@ -95,7 +95,18 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [gates81PadPolygon, setGates81PadPolygon] = useState<Polygon | null>(null);
   const [gates81PadMediumPolygon, setGates81PadMediumPolygon] = useState<Polygon | null>(null);
   const [gates81PadGridLines, setGates81PadGridLines] = useState<any[]>([]);
-  
+  const preloadedShaktiRef = useRef<HTMLImageElement | null>(null);
+
+  // Preload Shakti Chakra image on mount for instant display
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = shaktiChakraImage;
+    img.onload = () => {
+      preloadedShaktiRef.current = img;
+    };
+  }, []);
+
 
   // Undo/Redo functionality for polygon drawing
   const [polygonHistory, setPolygonHistory] = useState<Point[][]>([]);
