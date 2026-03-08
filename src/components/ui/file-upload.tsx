@@ -63,6 +63,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [cropAspect, setCropAspect] = useState<number | undefined>(4 / 3);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -155,20 +156,42 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   if (isCropping && previewUrl) {
     return (
       <div className="flex flex-col items-center gap-4 p-4 sm:p-6 border-2 border-primary/30 rounded-lg bg-card w-full">
-        <p className="text-base sm:text-lg font-semibold text-foreground">Crop Image — Drag & zoom to select area</p>
+        <p className="text-base sm:text-lg font-semibold text-foreground">Crop Image — Drag corners to adjust crop area</p>
         <div className="relative w-full rounded-lg overflow-hidden bg-muted/20 border border-border" style={{ height: '60vh', maxHeight: '500px' }}>
           <Cropper
             image={previewUrl}
             crop={crop}
             zoom={zoom}
-            aspect={undefined}
+            aspect={cropAspect}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={onCropComplete}
+            showGrid={true}
+            restrictPosition={false}
             style={{
               containerStyle: { borderRadius: '0.5rem' },
+              cropAreaStyle: { border: '2px solid hsl(var(--primary))' },
             }}
           />
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <span className="text-xs text-muted-foreground">Ratio:</span>
+          {[
+            { label: 'Free', value: undefined },
+            { label: '1:1', value: 1 },
+            { label: '4:3', value: 4 / 3 },
+            { label: '3:4', value: 3 / 4 },
+          ].map((opt) => (
+            <Button
+              key={opt.label}
+              size="sm"
+              variant={cropAspect === opt.value ? 'default' : 'outline'}
+              className="h-8 px-3 text-xs touch-manipulation"
+              onClick={() => setCropAspect(opt.value)}
+            >
+              {opt.label}
+            </Button>
+          ))}
         </div>
         <div className="flex items-center gap-3 w-full max-w-xs">
           <span className="text-xs text-muted-foreground whitespace-nowrap">Zoom:</span>
