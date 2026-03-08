@@ -2781,12 +2781,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
       // Create red line from boundary to boundary, passing through both block centers
       const line = new Line([point1.x, point1.y, point2.x, point2.y], {
-        stroke: '#ff0000', // Red color
+        stroke: '#ff0000',
         strokeWidth: scaledLineStroke,
         selectable: false,
         evented: false,
-        strokeDashArray: [Math.round(8 * scale), Math.round(4 * scale)]
-      });
+        strokeDashArray: [Math.round(8 * scale), Math.round(4 * scale)],
+        _feature: 'marmaSthan'
+      } as any);
 
       fabricCanvas.add(line);
       newLines.push(line);
