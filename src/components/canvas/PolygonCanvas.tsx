@@ -307,14 +307,22 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       console.log("Image render dimensions:", { renderWidth, renderHeight, left, top });
 
       // Create Fabric image object
+      const baseScaleX = renderWidth / imgElement.width;
+      const baseScaleY = renderHeight / imgElement.height;
+      
       const fabricImg = new FabricImage(imgElement, {
         left: left,
         top: top,
-        scaleX: renderWidth / imgElement.width,
-        scaleY: renderHeight / imgElement.height,
+        scaleX: baseScaleX,
+        scaleY: baseScaleY,
         selectable: false,
         evented: false
       });
+
+      // Store base dimensions for scale adjustments
+      backgroundImgRef.current = fabricImg;
+      baseImageDimsRef.current = { width: imgElement.width, height: imgElement.height, scaleX: baseScaleX, scaleY: baseScaleY, left, top };
+      setImageScale(100);
 
       fabricCanvas.add(fabricImg);
       fabricCanvas.sendObjectToBack(fabricImg);
@@ -333,6 +341,27 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     };
     imgElement.src = imageUrl;
   }, [fabricCanvas, imageUrl]);
+
+  // Update image scale when user changes it
+  useEffect(() => {
+    if (!fabricCanvas || !backgroundImgRef.current || !baseImageDimsRef.current) return;
+    const base = baseImageDimsRef.current;
+    const scaleFactor = imageScale / 100;
+    const newScaleX = base.scaleX * scaleFactor;
+    const newScaleY = base.scaleY * scaleFactor;
+    const newWidth = base.width * newScaleX;
+    const newHeight = base.height * newScaleY;
+    const canvasWidth = fabricCanvas.width || 800;
+    const canvasHeight = fabricCanvas.height || 600;
+    
+    backgroundImgRef.current.set({
+      scaleX: newScaleX,
+      scaleY: newScaleY,
+      left: (canvasWidth - newWidth) / 2,
+      top: (canvasHeight - newHeight) / 2,
+    });
+    fabricCanvas.renderAll();
+  }, [imageScale, fabricCanvas]);
 
   // Canvas click handler for polygon drawing
   useEffect(() => {
