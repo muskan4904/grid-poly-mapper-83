@@ -3389,19 +3389,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         }
       });
 
-      // Load and display Shakti Chakra image only once
-      FabricImage.fromURL(shaktiChakraImage, {
-        crossOrigin: 'anonymous'
-      }).then((img) => {
+      // Use preloaded image for instant display
+      const createShaktiImage = (imgElement: HTMLImageElement) => {
         if (!fabricCanvas || !showShaktiChakra) return;
-
+        const img = new FabricImage(imgElement);
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
         
-        // Set image size and position
         img.scaleToWidth(shaktiChakraSize);
         img.scaleToHeight(shaktiChakraSize);
         
-        // Center the image on polygon center
         img.set({
           left: center.x,
           top: center.y,
@@ -3411,32 +3407,52 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           evented: false,
           angle: internalRotationDegree,
           objectCaching: false,
-          shaktiChakraMarker: true // Mark this object for identification
+          shaktiChakraMarker: true
         } as any);
 
         fabricCanvas.add(img);
-        
-        // Ensure it's above the polygon but below center point
         if (centerPoint) {
           fabricCanvas.bringObjectToFront(centerPoint);
         }
-        
         setShaktiChakraImg(img);
         fabricCanvas.renderAll();
-      });
+      };
+
+      if (preloadedShaktiRef.current) {
+        createShaktiImage(preloadedShaktiRef.current);
+      } else {
+        // Fallback: load if preload hasn't finished yet
+        FabricImage.fromURL(shaktiChakraImage, {
+          crossOrigin: 'anonymous'
+        }).then((img) => {
+          if (!fabricCanvas || !showShaktiChakra) return;
+          const center = calculatePolygonCenterLocal(completedPolygonPoints);
+          img.scaleToWidth(shaktiChakraSize);
+          img.scaleToHeight(shaktiChakraSize);
+          img.set({
+            left: center.x,
+            top: center.y,
+            originX: 'center',
+            originY: 'center',
+            selectable: false,
+            evented: false,
+            angle: internalRotationDegree,
+            objectCaching: false,
+            shaktiChakraMarker: true
+          } as any);
+          fabricCanvas.add(img);
+          if (centerPoint) {
+            fabricCanvas.bringObjectToFront(centerPoint);
+          }
+          setShaktiChakraImg(img);
+          fabricCanvas.renderAll();
+        });
+      }
     } else if (!showShaktiChakra && shaktiChakraImg) {
-      // Remove shakti chakra image when toggled off
       fabricCanvas.remove(shaktiChakraImg);
       setShaktiChakraImg(null);
       fabricCanvas.renderAll();
     }
-
-    // Cleanup function
-    return () => {
-      if (!showShaktiChakra && shaktiChakraImg) {
-        fabricCanvas.remove(shaktiChakraImg);
-      }
-    };
   }, [showShaktiChakra, fabricCanvas]);
 
   // Update Shakti Chakra image size only when size slider changes
