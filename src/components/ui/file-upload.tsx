@@ -94,41 +94,40 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   // Preview mode - show image with rotate option before uploading
   if (previewUrl && !uploadedImage) {
     return (
-      <div className={cn("flex flex-col items-center gap-4 p-4 border-2 border-primary/30 rounded-lg bg-card", className)}>
-        <p className="text-sm font-medium text-foreground">Preview — Rotate if needed before uploading</p>
-        <div className="relative w-full max-w-md aspect-square flex items-center justify-center overflow-hidden rounded-lg bg-muted/30">
+      <div className="flex flex-col items-center gap-4 sm:gap-6 p-4 sm:p-6 border-2 border-primary/30 rounded-lg bg-card w-full">
+        <p className="text-base sm:text-lg font-semibold text-foreground">Preview — Rotate if needed before uploading</p>
+        <div className="relative w-full flex items-center justify-center overflow-hidden rounded-lg bg-muted/20 border border-border" style={{ minHeight: '50vh', maxHeight: '70vh' }}>
           <img
             src={previewUrl}
             alt="Preview"
-            className="max-w-full max-h-full object-contain transition-transform duration-300"
+            className="max-w-full max-h-[65vh] object-contain transition-transform duration-300"
             style={{ transform: `rotate(${previewRotation}deg)` }}
           />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => setPreviewRotation((r) => (r + 90) % 360)}
-            className="gap-1 touch-manipulation"
+            className="gap-2 touch-manipulation h-10 sm:h-11 px-4 sm:px-6 text-sm sm:text-base"
           >
-            <RotateCw size={16} />
+            <RotateCw size={18} />
             Rotate 90°
           </Button>
-          <span className="text-xs text-muted-foreground">{previewRotation}°</span>
+          <span className="text-sm text-muted-foreground font-medium">{previewRotation}°</span>
         </div>
-        <div className="flex gap-3 w-full max-w-xs">
+        <div className="flex gap-3 w-full max-w-sm">
           <Button
             variant="outline"
-            className="flex-1 touch-manipulation"
+            className="flex-1 touch-manipulation h-10 sm:h-11 text-sm sm:text-base"
             onClick={handleCancelPreview}
           >
             Cancel
           </Button>
           <Button
-            className="flex-1 gap-1 touch-manipulation"
+            className="flex-1 gap-2 touch-manipulation h-10 sm:h-11 text-sm sm:text-base"
             onClick={handleConfirmUpload}
           >
-            <Check size={16} />
+            <Check size={18} />
             Upload
           </Button>
         </div>
