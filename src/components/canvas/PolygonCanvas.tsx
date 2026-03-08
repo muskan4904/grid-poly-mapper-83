@@ -2420,7 +2420,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           evented: false,
           objectCaching: false,
           isGateLine: true,
-        });
+          _feature: 'gates32'
+        } as any);
         newObjects.push(line);
 
         const label = new Text(gateLabels[i], {
@@ -2437,7 +2438,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           originY: 'center',
           objectCaching: false,
           isGateLabel: true,
-        });
+          _feature: 'gates32'
+        } as any);
         newObjects.push(label);
       }
     }
