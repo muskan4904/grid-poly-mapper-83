@@ -96,11 +96,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     return (
       <div className="flex flex-col items-center gap-4 sm:gap-6 p-4 sm:p-6 border-2 border-primary/30 rounded-lg bg-card w-full">
         <p className="text-base sm:text-lg font-semibold text-foreground">Preview — Rotate if needed before uploading</p>
-        <div className="relative w-full flex items-center justify-center overflow-hidden rounded-lg bg-muted/20 border border-border" style={{ minHeight: '50vh', maxHeight: '70vh' }}>
+        <div className="relative w-full flex items-center justify-center overflow-hidden rounded-lg bg-muted/20 border border-border md:max-w-[500px] md:mx-auto" style={{ minHeight: window.innerWidth >= 768 ? '300px' : '50vh', maxHeight: window.innerWidth >= 768 ? '400px' : '70vh' }}>
           <img
             src={previewUrl}
             alt="Preview"
-            className="max-w-full max-h-[65vh] object-contain transition-transform duration-300"
+            className="max-w-full max-h-[65vh] md:max-h-[380px] object-contain transition-transform duration-300"
             style={{ transform: `rotate(${previewRotation}deg)` }}
           />
         </div>
