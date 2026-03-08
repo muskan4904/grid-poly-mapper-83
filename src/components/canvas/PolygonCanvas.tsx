@@ -2291,8 +2291,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     console.log('Five Elements toggled:', newShowFiveElements, 'Completed polygon points:', completedPolygonPoints.length);
 
     if (!newShowFiveElements) {
-      // Disabling: clear existing objects  
       clearFiveElementsLines();
+      removeFeatureObjects('fiveElements');
     } else if (completedPolygonPoints.length >= 3) {
       // Enabling: create (or update) instantly without clearing
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
