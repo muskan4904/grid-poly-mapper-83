@@ -29,29 +29,6 @@ interface Point {
   y: number;
 }
 
-const CANVAS_CACHE_KEY = 'vastugrid_canvas_cache';
-
-interface CanvasCache {
-  polygonPoints: Point[];
-  completedPolygonPoints: Point[];
-  rotationDegree: number;
-  toggles: Record<string, boolean>;
-}
-
-const loadCanvasCache = (): CanvasCache | null => {
-  try {
-    const cached = localStorage.getItem(CANVAS_CACHE_KEY);
-    if (cached) return JSON.parse(cached);
-  } catch (e) { /* ignore */ }
-  return null;
-};
-
-const saveCanvasCache = (data: CanvasCache) => {
-  try {
-    localStorage.setItem(CANVAS_CACHE_KEY, JSON.stringify(data));
-  } catch (e) { /* ignore */ }
-};
-
 interface PolygonCanvasProps {
   imageUrl?: string;
   onPolygonChange?: (polygon: Point[], area: number, center: Point) => void;
@@ -63,32 +40,29 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   onPolygonChange,
   className
 }) => {
-  const canvasCache = useMemo(() => loadCanvasCache(), []);
-  const cachedToggles = canvasCache?.toggles || {};
-  
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [polygonPoints, setPolygonPoints] = useState<Point[]>(canvasCache?.polygonPoints || []);
+  const [polygonPoints, setPolygonPoints] = useState<Point[]>([]);
   const [currentPolygon, setCurrentPolygon] = useState<Polygon | Polyline | Circle | null>(null);
   const [centerPoint, setCenterPoint] = useState<Circle | null>(null);
   const [smallPolygon, setSmallPolygon] = useState<Polygon | null>(null);
   const [mediumPolygon, setMediumPolygon] = useState<Polygon | null>(null);
   const [gridLines, setGridLines] = useState<any[]>([]);
   const [devtaZones, setDevtaZones] = useState<any[]>([]);
-  const [showDevtas, setShowDevtas] = useState(cachedToggles.showDevtas ?? false);
-  const [show16Directions, setShow16Directions] = useState(cachedToggles.show16Directions ?? true);
-  const [show32Gates, setShow32Gates] = useState(cachedToggles.show32Gates ?? false);
-  const [show16BarChart, setShow16BarChart] = useState(cachedToggles.show16BarChart ?? false);
+  const [showDevtas, setShowDevtas] = useState(false);
+  const [show16Directions, setShow16Directions] = useState(true);
+  const [show32Gates, setShow32Gates] = useState(false);
+  const [show16BarChart, setShow16BarChart] = useState(false);
   const [showDevtaNamesDialog, setShowDevtaNamesDialog] = useState(false);
   const [showDevtaAttributesDialog, setShowDevtaAttributesDialog] = useState(false);
   const [showDevtaRemediesDialog, setShowDevtaRemediesDialog] = useState(false);
-  const [showVithiMandal, setShowVithiMandal] = useState(cachedToggles.showVithiMandal ?? false);
-  const [showShaktiChakra, setShowShaktiChakra] = useState(cachedToggles.showShaktiChakra ?? false);
+  const [showVithiMandal, setShowVithiMandal] = useState(false);
+  const [showShaktiChakra, setShowShaktiChakra] = useState(false);
   const [shaktiChakraSize, setShaktiChakraSize] = useState(250);
   const [shaktiChakraImg, setShaktiChakraImg] = useState<FabricImage | null>(null);
-  const [rotationDegree, setRotationDegree] = useState(canvasCache?.rotationDegree ?? 0);
-  const [tempRotationValue, setTempRotationValue] = useState(canvasCache?.rotationDegree ?? 0);
+  const [rotationDegree, setRotationDegree] = useState(0);
+  const [tempRotationValue, setTempRotationValue] = useState(0);
   
   // Internal rotation offset: User sees X degrees, calculations use X+2 degrees
   // Negate the rotation to make it anticlockwise instead of clockwise
@@ -98,14 +72,14 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const isMobile = useIsMobile();
   const [directionLines, setDirectionLines] = useState<any[]>([]);
   const [gateLines, setGateLines] = useState<any[]>([]);
-  const [completedPolygonPoints, setCompletedPolygonPoints] = useState<Point[]>(canvasCache?.completedPolygonPoints || []);
+  const [completedPolygonPoints, setCompletedPolygonPoints] = useState<Point[]>([]);
   const [isRotating, setIsRotating] = useState(false);
-  const [show45Devtas, setShow45Devtas] = useState(cachedToggles.show45Devtas ?? false);
+  const [show45Devtas, setShow45Devtas] = useState(false);
   const [devtaSlices, setDevtaSlices] = useState<any[]>([]);
   const [vithiMandalPolygons, setVithiMandalPolygons] = useState<any[]>([]);
-  const [showMarmaSthan, setShowMarmaSthan] = useState(cachedToggles.showMarmaSthan ?? false);
+  const [showMarmaSthan, setShowMarmaSthan] = useState(false);
   const [marmaSthanLines, setMarmaSthanLines] = useState<Line[]>([]);
-  const [showFiveElements, setShowFiveElements] = useState(cachedToggles.showFiveElements ?? false);
+  const [showFiveElements, setShowFiveElements] = useState(false);
   const [fiveElementsLines, setFiveElementsLines] = useState<any[]>([]);
   const [showPDFDialog, setShowPDFDialog] = useState(false);
   const [pdfUserDetails, setPdfUserDetails] = useState({
@@ -117,24 +91,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [remark16Direction, setRemark16Direction] = useState('');
   const [show32EntranceRemark, setShow32EntranceRemark] = useState(false);
   const [remark32Entrance, setRemark32Entrance] = useState('');
-  const [showGates81Pad, setShowGates81Pad] = useState(cachedToggles.showGates81Pad ?? false);
+  const [showGates81Pad, setShowGates81Pad] = useState(false);
   const [gates81PadPolygon, setGates81PadPolygon] = useState<Polygon | null>(null);
   const [gates81PadMediumPolygon, setGates81PadMediumPolygon] = useState<Polygon | null>(null);
   const [gates81PadGridLines, setGates81PadGridLines] = useState<any[]>([]);
   
-  // Persist canvas state to localStorage
-  useEffect(() => {
-    saveCanvasCache({
-      polygonPoints,
-      completedPolygonPoints,
-      rotationDegree,
-      toggles: {
-        showDevtas, show16Directions, show32Gates, show16BarChart,
-        showVithiMandal, showShaktiChakra, show45Devtas,
-        showMarmaSthan, showFiveElements, showGates81Pad
-      }
-    });
-  }, [polygonPoints, completedPolygonPoints, rotationDegree, showDevtas, show16Directions, show32Gates, show16BarChart, showVithiMandal, showShaktiChakra, show45Devtas, showMarmaSthan, showFiveElements, showGates81Pad]);
 
   // Undo/Redo functionality for polygon drawing
   const [polygonHistory, setPolygonHistory] = useState<Point[][]>([]);
