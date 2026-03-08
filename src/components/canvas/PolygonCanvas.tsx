@@ -588,6 +588,16 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     return calculatePolygonCenter(points);
   };
 
+  // Universal helper: remove all canvas objects tagged with a specific feature name
+  const removeFeatureObjects = useCallback((featureName: string) => {
+    if (!fabricCanvas) return;
+    const toRemove = fabricCanvas.getObjects().filter((obj: any) => obj._feature === featureName);
+    if (toRemove.length > 0) {
+      console.log(`Removing ${toRemove.length} objects tagged '${featureName}'`);
+      toRemove.forEach(obj => fabricCanvas.remove(obj));
+    }
+  }, [fabricCanvas]);
+
   const drawSmallPolygon = (polygonPoints: Point[], center: Point) => {
     if (!fabricCanvas) return;
 
@@ -632,8 +642,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       stroke: '#ff0000',
       strokeWidth: scaledStroke,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'devtas'
+    } as any);
 
     // Add and ensure it's on top
     fabricCanvas.add(smallPoly);
@@ -831,8 +842,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           strokeWidth: scaledStrokeWidth,
           selectable: false,
           evented: false,
-          objectCaching: false
-        });
+          objectCaching: false,
+          _feature: 'devtas'
+        } as any);
         fabricCanvas.add(slice);
         newObjects.push(slice);
 
@@ -843,12 +855,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             strokeWidth: scaledStrokeWidth,
             selectable: false,
             evented: false,
-            objectCaching: false
-          }
+            objectCaching: false,
+            _feature: 'devtas'
+          } as any
         );
         fabricCanvas.add(sep);
         newObjects.push(sep);
-
 
         const numberLabel = new Text(String(getDevtaNumber(i + 1)), {
           left: sliceCenterX + scaledLabelOffset,
@@ -860,8 +872,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           selectable: false,
           evented: false,
           textAlign: 'center',
-          objectCaching: false
-        });
+          objectCaching: false,
+          _feature: 'devtas'
+        } as any);
         fabricCanvas.add(numberLabel);
         newObjects.push(numberLabel);
       }
@@ -923,8 +936,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
               evented: false,
               objectCaching: false,
               isDiagonalDivision: true,
-              sectorIndex: k // Add sector index to identify which diagonal line this is
-            }
+              sectorIndex: k,
+              _feature: 'devtas'
+            } as any
           );
           fabricCanvas.add(diagonalLine);
           newObjects.push(diagonalLine);
@@ -955,8 +969,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                 evented: false,
                 objectCaching: false,
                 isDiagonalDivision: true,
-                sectorIndex: k
-              }
+                sectorIndex: k,
+                _feature: 'devtas'
+              } as any
             );
             fabricCanvas.add(diagonalLine);
             newObjects.push(diagonalLine);
@@ -1028,8 +1043,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             textAlign: 'center',
             objectCaching: false,
             regionNumber: regionNumber,
-            sectorIndex: k
-          });
+            sectorIndex: k,
+            _feature: 'devtas'
+          } as any);
           
           fabricCanvas.add(regionLabel);
           newObjects.push(regionLabel);
@@ -1100,8 +1116,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             textAlign: 'center',
             objectCaching: false,
             regionNumber: regionNumber,
-            sectorIndex: k
-          });
+            sectorIndex: k,
+            _feature: 'devtas'
+          } as any);
           
           fabricCanvas.add(regionLabel);
           newObjects.push(regionLabel);
@@ -1173,8 +1190,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             textAlign: 'center',
             objectCaching: false,
             regionNumber: regionNumber,
-            sectorIndex: k
-          });
+            sectorIndex: k,
+            _feature: 'devtas'
+          } as any);
           
           fabricCanvas.add(regionLabel);
           newObjects.push(regionLabel);
@@ -1250,8 +1268,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       stroke: '#000000',
       strokeWidth: scaledStroke,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'devtas'
+    } as any);
 
     // Add and ensure proper layering
     fabricCanvas.add(mediumPoly);
@@ -1324,8 +1343,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       stroke: '#22c55e',
       strokeWidth: vStroke,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'vithiMandal'
+    } as any);
     fabricCanvas.add(strip4Poly);
     newVithiPolygons.push(strip4Poly);
     
@@ -1336,8 +1356,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       stroke: '#eab308',
       strokeWidth: vStroke,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'vithiMandal'
+    } as any);
     fabricCanvas.add(strip3Poly);
     newVithiPolygons.push(strip3Poly);
     
@@ -1348,8 +1369,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       stroke: '#3b82f6',
       strokeWidth: vStroke,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'vithiMandal'
+    } as any);
     fabricCanvas.add(strip2Poly);
     newVithiPolygons.push(strip2Poly);
     
@@ -1360,8 +1382,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       stroke: '#ef4444',
       strokeWidth: vStroke4,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'vithiMandal'
+    } as any);
     fabricCanvas.add(strip1Poly);
     newVithiPolygons.push(strip1Poly);
     
@@ -1697,7 +1720,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           evented: false,
           objectCaching: false,
           isDirectionLine: true,
-        });
+          _feature: 'directions'
+        } as any);
         newObjects.push(line);
 
         const label = new Text(directions[i], {
@@ -1714,7 +1738,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           originY: 'center',
           objectCaching: false,
           isDirectionLabel: true,
-        });
+          _feature: 'directions'
+        } as any);
         newObjects.push(label);
       }
     }
@@ -1740,10 +1765,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     setShow16Directions(newShow16Directions);
 
     if (!newShow16Directions) {
-      // Disabling: clear existing objects  
       clearDirectionLines();
+      removeFeatureObjects('directions');
     } else if (completedPolygonPoints.length >= 3) {
-      // Enabling: create (or update) instantly without clearing
+      removeFeatureObjects('directions');
+      setDirectionLines([]);
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       draw16Directions(completedPolygonPoints, center);
     }
@@ -2241,9 +2267,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     if (newObjects.length > 0) {
+      // Tag all five elements objects
+      newObjects.forEach((obj: any) => { obj._feature = 'fiveElements'; });
       fabricCanvas.add(...newObjects);
       setFiveElementsLines(newObjects);
-      console.log('Added', newObjects.length, 'Five Elements objects to canvas (', newObjects.length / 2 - 2, 'direction lines + elemental areas)');
+      console.log('Added', newObjects.length, 'Five Elements objects to canvas');
     }
 
     // Re-enable selection and render
@@ -2264,12 +2292,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     console.log('Five Elements toggled:', newShowFiveElements, 'Completed polygon points:', completedPolygonPoints.length);
 
     if (!newShowFiveElements) {
-      // Disabling: clear existing objects  
       clearFiveElementsLines();
+      removeFeatureObjects('fiveElements');
     } else if (completedPolygonPoints.length >= 3) {
-      // Enabling: create (or update) instantly without clearing
+      removeFeatureObjects('fiveElements');
+      setFiveElementsLines([]);
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
-      console.log('Drawing Five Elements with center:', center);
       drawFiveElements(completedPolygonPoints, center);
     } else {
       console.log('Cannot draw Five Elements: insufficient polygon points');
@@ -2399,7 +2427,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           evented: false,
           objectCaching: false,
           isGateLine: true,
-        });
+          _feature: 'gates32'
+        } as any);
         newObjects.push(line);
 
         const label = new Text(gateLabels[i], {
@@ -2416,7 +2445,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           originY: 'center',
           objectCaching: false,
           isGateLabel: true,
-        });
+          _feature: 'gates32'
+        } as any);
         newObjects.push(label);
       }
     }
@@ -2448,10 +2478,11 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     }
 
     if (!newShow32Gates) {
-      // Disabling: clear existing objects
       clearGateLines();
+      removeFeatureObjects('gates32');
     } else if (completedPolygonPoints.length >= 3) {
-      // Enabling: create (or update) instantly without clearing
+      removeFeatureObjects('gates32');
+      setGateLines([]);
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       draw32Gates(completedPolygonPoints, center);
     }
@@ -2569,14 +2600,15 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     setShowVithiMandal(newShowVithiMandal);
     
     if (newShowVithiMandal) {
-      // Enable: draw vithi mandal polygons
+      removeFeatureObjects('vithiMandal');
+      setVithiMandalPolygons([]);
       if (completedPolygonPoints.length >= 3) {
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
         drawVithiMandalPolygons(completedPolygonPoints, center);
       }
     } else {
-      // Disable: clear vithi mandal polygons
       clearVithiMandalPolygons();
+      removeFeatureObjects('vithiMandal');
     }
     
     fabricCanvas.renderAll();
@@ -2762,12 +2794,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
       // Create red line from boundary to boundary, passing through both block centers
       const line = new Line([point1.x, point1.y, point2.x, point2.y], {
-        stroke: '#ff0000', // Red color
+        stroke: '#ff0000',
         strokeWidth: scaledLineStroke,
         selectable: false,
         evented: false,
-        strokeDashArray: [Math.round(8 * scale), Math.round(4 * scale)]
-      });
+        strokeDashArray: [Math.round(8 * scale), Math.round(4 * scale)],
+        _feature: 'marmaSthan'
+      } as any);
 
       fabricCanvas.add(line);
       newLines.push(line);
@@ -2793,12 +2826,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         left: point.x,
         top: point.y,
         radius: scaledDotRadius,
-        fill: '#000000', // Black color
+        fill: '#000000',
         selectable: false,
         evented: false,
         originX: 'center',
-        originY: 'center'
-      });
+        originY: 'center',
+        _feature: 'marmaSthan'
+      } as any);
 
       fabricCanvas.add(dot);
       newLines.push(dot);
@@ -2849,12 +2883,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Create smaller polygon with transparent fill and red boundary only
     const fabricPoints = scaledPoints.map(p => ({ x: p.x, y: p.y }));
     const gates81PadSmallPoly = new Polygon(fabricPoints, {
-      fill: 'transparent', // No fill - transparent inside
-      stroke: '#ff0000', // Red border only
+      fill: 'transparent',
+      stroke: '#ff0000',
       strokeWidth: 3,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'gates81Pad'
+    } as any);
 
     // Add and ensure it's on top
     fabricCanvas.add(gates81PadSmallPoly);
@@ -2914,12 +2949,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Create medium polygon with transparent fill and black boundary
     const fabricPoints = scaledPoints.map(p => ({ x: p.x, y: p.y }));
     const gates81PadMediumPoly = new Polygon(fabricPoints, {
-      fill: 'transparent', // No fill - transparent inside
-      stroke: '#000000', // Black border
+      fill: 'transparent',
+      stroke: '#000000',
       strokeWidth: 3,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'gates81Pad'
+    } as any);
 
     // Add and ensure proper layering
     fabricCanvas.add(gates81PadMediumPoly);
@@ -3082,8 +3118,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           strokeWidth: scaledStrokeWidth,
           selectable: false,
           evented: false,
-          objectCaching: false
-        });
+          objectCaching: false,
+          _feature: 'gates81Pad'
+        } as any);
         fabricCanvas.add(slice);
         newObjects.push(slice);
 
@@ -3094,8 +3131,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             strokeWidth: scaledStrokeWidth,
             selectable: false,
             evented: false,
-            objectCaching: false
-          }
+            objectCaching: false,
+            _feature: 'gates81Pad'
+          } as any
         );
         fabricCanvas.add(sep);
         newObjects.push(sep);
@@ -3110,8 +3148,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           selectable: false,
           evented: false,
           textAlign: 'center',
-          objectCaching: false
-        });
+          objectCaching: false,
+          _feature: 'gates81Pad'
+        } as any);
         fabricCanvas.add(numberLabel);
         newObjects.push(numberLabel);
       }
@@ -3211,16 +3250,17 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Small delay to allow state sync before drawing
     setTimeout(() => {
       if (newShowGates81Pad) {
-        // Always start clean to avoid duplicates
+        removeFeatureObjects('gates81Pad');
         clearGates81PadArtifacts();
+        setGates81PadGridLines([]);
         if (completedPolygonPoints.length >= 3) {
           const center = calculatePolygonCenterLocal(completedPolygonPoints);
           drawGates81PadMediumPolygon(completedPolygonPoints, center);
           drawGates81PadRingSlices(completedPolygonPoints, center);
         }
       } else {
-        // Comprehensive cleanup for all 32 gates 81 pad objects
         clearGates81PadArtifacts();
+        removeFeatureObjects('gates81Pad');
       }
       
       fabricCanvas.renderAll();
@@ -3291,7 +3331,10 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     
     if (!newShowMarmaSthan) {
       clearMarmaSthanLine();
+      removeFeatureObjects('marmaSthan');
     } else if (completedPolygonPoints.length >= 3) {
+      removeFeatureObjects('marmaSthan');
+      setMarmaSthanLines([]);
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       drawMarmaSthan(completedPolygonPoints, center);
     }
@@ -3401,20 +3444,18 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     console.log('Toggle devtas:', newShowDevtas, 'Completed polygon points:', completedPolygonPoints.length);
     
     if (newShowDevtas) {
-      // Recreate all devta features to ensure proper display
+      // Clean up any stale devta objects first, then recreate
+      removeFeatureObjects('devtas');
+      setGridLines([]);
       if (completedPolygonPoints.length >= 3) {
         const center = calculatePolygonCenterLocal(completedPolygonPoints);
-        console.log('Drawing devta features with center:', center);
-        
-        // Recreate small and medium polygons
         drawSmallPolygon(completedPolygonPoints, center);
         drawMediumPolygon(completedPolygonPoints, center);
-        
-        // Recreate ring slices with all special extended lines
         drawRingSlices(completedPolygonPoints, center);
       }
     } else {
-      // Properly remove all devta objects instead of just hiding them
+      // Nuclear cleanup: remove ALL objects tagged as devtas
+      removeFeatureObjects('devtas');
       if (smallPolygon) {
         fabricCanvas.remove(smallPolygon);
         setSmallPolygon(null);
@@ -3423,15 +3464,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         fabricCanvas.remove(mediumPolygon);
         setMediumPolygon(null);
       }
-      // Remove all grid lines (radial lines and numbers) instead of hiding them
       gridLines.forEach(line => {
         if (fabricCanvas.contains(line)) {
           fabricCanvas.remove(line);
         }
       });
       setGridLines([]);
-      
-      // Also clear any devta zones
       clearDevtaZones();
     }
     
