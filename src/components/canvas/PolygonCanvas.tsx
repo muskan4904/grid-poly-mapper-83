@@ -2946,12 +2946,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Create medium polygon with transparent fill and black boundary
     const fabricPoints = scaledPoints.map(p => ({ x: p.x, y: p.y }));
     const gates81PadMediumPoly = new Polygon(fabricPoints, {
-      fill: 'transparent', // No fill - transparent inside
-      stroke: '#000000', // Black border
+      fill: 'transparent',
+      stroke: '#000000',
       strokeWidth: 3,
       selectable: false,
-      evented: false
-    });
+      evented: false,
+      _feature: 'gates81Pad'
+    } as any);
 
     // Add and ensure proper layering
     fabricCanvas.add(gates81PadMediumPoly);
