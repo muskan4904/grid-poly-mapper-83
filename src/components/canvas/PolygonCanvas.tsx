@@ -4860,20 +4860,27 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                       </div>
                       
                       <div className="space-y-2">
-                        <Slider
-                          value={[tempRotationValue]}
-                          onValueChange={handleRotationChange}
-                          onValueCommit={handleRotationCommit}
-                          max={360}
-                          min={0}
-                          step={1}
-                          className={cn(
-                            "w-full",
-                            isMobile ? "touch-manipulation" : ""
-                          )}
-                        />
+                        {/* Slider only on desktop */}
+                        {!isMobile && (
+                          <Slider
+                            value={[tempRotationValue]}
+                            onValueChange={handleRotationChange}
+                            onValueCommit={handleRotationCommit}
+                            max={360}
+                            min={0}
+                            step={1}
+                            className="w-full"
+                          />
+                        )}
                         
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-center">
+                          {/* -/+ buttons for mobile */}
+                          {isMobile && (
+                            <button
+                              onClick={() => setRotationDegree(Math.max(0, rotationDegree - 1))}
+                              className="w-10 h-10 text-lg font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
+                            >−</button>
+                          )}
                           <Input
                             type="number"
                             value={rotationDegree}
@@ -4889,12 +4896,24 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                             min={0}
                             max={360}
                             step={1}
-                            className="flex-1 h-8 text-xs xl:text-sm touch-manipulation"
+                            className={cn(
+                              "flex-1 text-center touch-manipulation",
+                              isMobile ? "h-10 text-base font-medium" : "h-8 text-xs xl:text-sm"
+                            )}
                             placeholder="0-360°"
                           />
+                          {isMobile && (
+                            <button
+                              onClick={() => setRotationDegree(Math.min(360, rotationDegree + 1))}
+                              className="w-10 h-10 text-lg font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
+                            >+</button>
+                          )}
                           <button
                             onClick={() => setRotationDegree(0)}
-                            className="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded touch-manipulation"
+                            className={cn(
+                              "bg-muted hover:bg-muted/80 rounded touch-manipulation",
+                              isMobile ? "px-3 py-2 text-sm" : "px-2 py-1 text-xs"
+                            )}
                           >
                             Reset
                           </button>
