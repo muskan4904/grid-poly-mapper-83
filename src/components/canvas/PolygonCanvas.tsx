@@ -98,6 +98,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [gates81PadPolygon, setGates81PadPolygon] = useState<Polygon | null>(null);
   const [gates81PadMediumPolygon, setGates81PadMediumPolygon] = useState<Polygon | null>(null);
   const [gates81PadGridLines, setGates81PadGridLines] = useState<any[]>([]);
+  const [imageScale, setImageScale] = useState(100);
+  const backgroundImgRef = useRef<FabricImage | null>(null);
+  const baseImageDimsRef = useRef<{ width: number; height: number; scaleX: number; scaleY: number; left: number; top: number } | null>(null);
   const preloadedShaktiRef = useRef<HTMLImageElement | null>(null);
 
   // Preload Shakti Chakra image on mount for instant display
