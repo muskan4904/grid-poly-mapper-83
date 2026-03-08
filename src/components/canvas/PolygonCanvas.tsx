@@ -3255,8 +3255,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           drawGates81PadRingSlices(completedPolygonPoints, center);
         }
       } else {
-        // Comprehensive cleanup for all 32 gates 81 pad objects
         clearGates81PadArtifacts();
+        removeFeatureObjects('gates81Pad');
       }
       
       fabricCanvas.renderAll();
