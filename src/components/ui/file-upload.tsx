@@ -144,7 +144,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     return (
       <div className="flex flex-col items-center gap-4 p-4 sm:p-6 border-2 border-primary/30 rounded-lg bg-card w-full">
         <p className="text-base sm:text-lg font-semibold text-foreground">Crop Image — Drag the dots to crop from any side</p>
-        <div className="relative w-full flex items-center justify-center rounded-lg bg-muted/20 border border-border md:max-w-[500px] md:mx-auto overflow-hidden" style={{ maxHeight: '60vh' }}>
+        <div className="relative w-full flex items-center justify-center rounded-lg bg-muted/20 border border-border md:max-w-[500px] md:mx-auto">
           <ReactCrop
             crop={crop}
             onChange={(c) => setCrop(c)}
