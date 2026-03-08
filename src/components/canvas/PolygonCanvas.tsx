@@ -2295,9 +2295,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       clearFiveElementsLines();
       removeFeatureObjects('fiveElements');
     } else if (completedPolygonPoints.length >= 3) {
-      // Enabling: create (or update) instantly without clearing
+      removeFeatureObjects('fiveElements');
+      setFiveElementsLines([]);
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
-      console.log('Drawing Five Elements with center:', center);
       drawFiveElements(completedPolygonPoints, center);
     } else {
       console.log('Cannot draw Five Elements: insufficient polygon points');
