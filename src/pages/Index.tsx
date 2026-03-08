@@ -10,15 +10,37 @@ interface Point {
   y: number;
 }
 
+const CACHE_KEY = 'vastugrid_cache';
+
+const loadCache = () => {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch (e) { /* ignore */ }
+  return null;
+};
+
 const Index = () => {
-  const [uploadedImage, setUploadedImage] = useState<string>('');
-  const [polygon, setPolygon] = useState<Point[]>([]);
-  const [area, setArea] = useState<number>(0);
-  const [center, setCenter] = useState<Point>({ x: 0, y: 0 });
+  const cache = loadCache();
+  const [uploadedImage, setUploadedImage] = useState<string>(cache?.image || '');
+  const [polygon, setPolygon] = useState<Point[]>(cache?.polygon || []);
+  const [area, setArea] = useState<number>(cache?.area || 0);
+  const [center, setCenter] = useState<Point>(cache?.center || { x: 0, y: 0 });
+
+  // Save to localStorage whenever key state changes
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        image: uploadedImage,
+        polygon,
+        area,
+        center
+      }));
+    } catch (e) { /* quota exceeded, ignore */ }
+  }, [uploadedImage, polygon, area, center]);
 
   const handleImageUpload = (file: File, imageUrl: string) => {
     setUploadedImage(imageUrl);
-    // Reset polygon data when new image is uploaded
     setPolygon([]);
     setArea(0);
     setCenter({ x: 0, y: 0 });
@@ -29,6 +51,8 @@ const Index = () => {
     setPolygon([]);
     setArea(0);
     setCenter({ x: 0, y: 0 });
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem('vastugrid_canvas_cache');
   };
 
   const handlePolygonChange = (newPolygon: Point[], newArea: number, newCenter: Point) => {
