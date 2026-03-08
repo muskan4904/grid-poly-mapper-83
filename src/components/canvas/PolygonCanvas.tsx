@@ -4869,12 +4869,12 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           <div className="flex items-center gap-2 sm:gap-3 p-2 bg-muted/30 rounded-lg shrink-0">
             <span className="text-xs sm:text-sm font-medium whitespace-nowrap">Image Size:</span>
             <button
-              onClick={() => setImageScale(Math.max(50, imageScale - 10))}
+              onClick={() => setImageScale(Math.max(50, imageScale - 2))}
               className="w-8 h-8 sm:w-9 sm:h-9 text-base font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
             >−</button>
             <span className="text-xs sm:text-sm font-medium min-w-[40px] text-center">{imageScale}%</span>
             <button
-              onClick={() => setImageScale(Math.min(200, imageScale + 10))}
+              onClick={() => setImageScale(Math.min(200, imageScale + 2))}
               className="w-8 h-8 sm:w-9 sm:h-9 text-base font-bold bg-muted hover:bg-muted/80 rounded-lg touch-manipulation flex items-center justify-center"
             >+</button>
             <button
