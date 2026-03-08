@@ -1768,7 +1768,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       clearDirectionLines();
       removeFeatureObjects('directions');
     } else if (completedPolygonPoints.length >= 3) {
-      // Enabling: create (or update) instantly without clearing
+      removeFeatureObjects('directions');
+      setDirectionLines([]);
       const center = calculatePolygonCenterLocal(completedPolygonPoints);
       draw16Directions(completedPolygonPoints, center);
     }
