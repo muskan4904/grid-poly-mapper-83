@@ -1716,7 +1716,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           evented: false,
           objectCaching: false,
           isDirectionLine: true,
-        });
+          _feature: 'directions'
+        } as any);
         newObjects.push(line);
 
         const label = new Text(directions[i], {
@@ -1733,7 +1734,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           originY: 'center',
           objectCaching: false,
           isDirectionLabel: true,
-        });
+          _feature: 'directions'
+        } as any);
         newObjects.push(label);
       }
     }
