@@ -182,7 +182,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const containerWidth = container ? container.clientWidth : window.innerWidth - 32;
     
     // Much larger canvas dimensions for better visibility
-    const isMobile = window.innerWidth < 1024;
+    const isMobileOrTablet = window.innerWidth < BREAKPOINTS.lg;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
