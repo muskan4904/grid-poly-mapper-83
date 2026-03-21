@@ -194,7 +194,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       canvasWidth = Math.min(containerWidth - 4, viewportWidth - 8);
       canvasHeight = viewportHeight * 0.75;
     } else {
-      // Desktop: Large canvas with better coverage
+      // Laptop/Desktop (>= 1024px): Large canvas with better coverage
       canvasWidth = Math.min(containerWidth - 16, viewportWidth * 0.8);
       canvasHeight = Math.min(canvasWidth * 0.75, viewportHeight * 0.85);
     }
