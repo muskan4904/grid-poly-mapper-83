@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useBreakpoint, BREAKPOINTS } from '@/hooks/use-breakpoint';
 import shaktiChakraImage from '@/assets/shakti-chakra.png';
 import { 
   calculatePolygonArea, 
