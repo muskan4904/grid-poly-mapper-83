@@ -4798,9 +4798,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   };
 
   return (
-    <div className={cn("flex flex-col xl:flex-row gap-2 xl:gap-4 h-full", className)}>
+    <div className={cn("flex flex-col lg:flex-row gap-2 lg:gap-4 h-full", className)}>
       {/* Main Canvas Area - Takes most of the space */}
-      <div className="flex-1 flex flex-col gap-2 xl:gap-3 min-h-0">
+      <div className="flex-1 flex flex-col gap-2 lg:gap-3 min-h-0">
         <div className="flex flex-wrap gap-1 sm:gap-2 shrink-0">
           <button
             onClick={startDrawing}
@@ -4938,24 +4938,24 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       </div>
 
       {/* Side Panel - Compact and positioned to the side */}
-      <div className="w-full xl:w-72 xl:max-w-sm bg-card border border-border rounded-lg shadow-lg p-3 xl:p-4 shrink-0 xl:h-full xl:overflow-y-auto">
-        <div className="space-y-3 xl:space-y-4">
+      <div className="w-full lg:w-72 lg:max-w-sm bg-card border border-border rounded-lg shadow-lg p-3 lg:p-4 shrink-0 lg:h-full lg:overflow-y-auto">
+        <div className="space-y-3 lg:space-y-4">
           {/* Area Analysis */}
-          <div className="space-y-2 xl:space-y-3">
-            <div className="flex items-center gap-2 text-sm xl:text-base font-semibold text-foreground">
-              <div className="w-3 h-3 xl:w-4 xl:h-4 border-2 border-blue-500 rounded"></div>
+          <div className="space-y-2 lg:space-y-3">
+            <div className="flex items-center gap-2 text-sm lg:text-base font-semibold text-foreground">
+              <div className="w-3 h-3 lg:w-4 lg:h-4 border-2 border-blue-500 rounded"></div>
               <span>Area Analysis</span>
             </div>
             
             {completedPolygonPoints.length >= 3 && (
-              <div className="space-y-2 xl:space-y-3">
+              <div className="space-y-2 lg:space-y-3">
                 {/* Statistics removed per user request - keeping only feature controls below */}
                 
                      {/* Shared Rotation Controls */}
                     {completedPolygonPoints.length >= 3 && (show16Directions || show32Gates || showDevtas || showMarmaSthan || showFiveElements || showGates81Pad || showShaktiChakra) && (
-                    <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
+                    <div className="pt-2 lg:pt-3 border-t border-border space-y-2 lg:space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs xl:text-sm font-medium">Universal Rotation</span>
+                        <span className="text-xs lg:text-sm font-medium">Universal Rotation</span>
                         <div className="px-2 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800">
                           {Math.round(tempRotationValue)}°
                         </div>
@@ -5000,7 +5000,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                             step={1}
                             className={cn(
                               "flex-1 text-center touch-manipulation",
-                              isMobile ? "h-10 text-base font-medium" : "h-8 text-xs xl:text-sm"
+                              isMobile ? "h-10 text-base font-medium" : "h-8 text-xs lg:text-sm"
                             )}
                             placeholder="0-360°"
                           />
@@ -5026,56 +5026,56 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
 
                       {/* Feature Toggles */}
                   {completedPolygonPoints.length >= 3 && (
-                    <div className="pt-2 xl:pt-3 border-t border-border space-y-2 xl:space-y-3">
+                    <div className="pt-2 lg:pt-3 border-t border-border space-y-2 lg:space-y-3">
                       {/* Compact toggle layout */}
                       <div className="space-y-2">
                         {/* 16 Directions Toggle - also appears above when Shakti Chakra is enabled */}
                         {!showShaktiChakra && (
                           <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                            <span className="text-xs xl:text-sm font-medium">16 Directions</span>
+                            <span className="text-xs lg:text-sm font-medium">16 Directions</span>
                             <Switch
                               checked={show16Directions}
                               onCheckedChange={toggle16Directions}
-                              className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
+                              className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 lg:scale-100"
                             />
                           </div>
                         )}
                         
                          {/* 32 Gates Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">32 Gates</span>
+                          <span className="text-xs lg:text-sm font-medium">32 Gates</span>
                           <Switch
                             checked={show32Gates}
                             onCheckedChange={toggle32Gates}
-                            className="data-[state=checked]:bg-green-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-green-600 touch-manipulation scale-90 lg:scale-100"
                           />
                         </div>
 
                         {/* 32 gates 81 pad Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">32 gates 81 pad</span>
+                          <span className="text-xs lg:text-sm font-medium">32 gates 81 pad</span>
                           <Switch
                             checked={showGates81Pad}
                             onCheckedChange={toggleGates81Pad}
-                            className="data-[state=checked]:bg-yellow-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-yellow-600 touch-manipulation scale-90 lg:scale-100"
                           />
                         </div>
                         
                         
                         {/* Shakti Chakra Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">Shakti Chakra</span>
+                          <span className="text-xs lg:text-sm font-medium">Shakti Chakra</span>
                           <Switch
                             checked={showShaktiChakra}
                             onCheckedChange={toggleShaktiChakra}
-                            className="data-[state=checked]:bg-orange-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-orange-600 touch-manipulation scale-90 lg:scale-100"
                           />
                         </div>
 
                         {/* Shakti Chakra Size Slider - only show when Shakti Chakra is enabled */}
                         {showShaktiChakra && (
                           <div className="p-2 bg-muted/30 rounded-lg space-y-2">
-                            <Label className="text-xs xl:text-sm">Shakti Chakra Size: {shaktiChakraSize}px</Label>
+                            <Label className="text-xs lg:text-sm">Shakti Chakra Size: {shaktiChakraSize}px</Label>
                             <div className="flex gap-2 items-center">
                               <button
                                 onClick={() => setShaktiChakraSize(Math.max(100, shaktiChakraSize - 50))}
@@ -5116,92 +5116,92 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                         {/* 16 Directions Toggle - show when Shakti Chakra is enabled */}
                         {showShaktiChakra && (
                           <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                            <span className="text-xs xl:text-sm font-medium">16 Directions</span>
+                            <span className="text-xs lg:text-sm font-medium">16 Directions</span>
                             <Switch
                               checked={show16Directions}
                               onCheckedChange={toggle16Directions}
-                              className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
+                              className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 lg:scale-100"
                             />
                           </div>
                         )}
                         
                         {/* 45 Devtas Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">45 Devtas</span>
+                          <span className="text-xs lg:text-sm font-medium">45 Devtas</span>
                           <Switch
                             checked={showDevtas}
                             onCheckedChange={toggleDevtasVisibility}
-                            className="data-[state=checked]:bg-blue-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-blue-600 touch-manipulation scale-90 lg:scale-100"
                           />
                         </div>
                         
                         {/* 45 Devtas Names Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">45 Devtas Names</span>
+                          <span className="text-xs lg:text-sm font-medium">45 Devtas Names</span>
                           <Switch
                             checked={showDevtaNamesDialog}
                             onCheckedChange={toggleDevtaNamesDialog}
-                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 lg:scale-100"
                           />
                         </div>
                         
                         {/* 45 Devta Attributes Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">45 Devta Attributes</span>
+                          <span className="text-xs lg:text-sm font-medium">45 Devta Attributes</span>
                           <Switch
                             checked={showDevtaAttributesDialog}
                             onCheckedChange={toggleDevtaAttributesDialog}
-                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 lg:scale-100"
                           />
                         </div>
                         
                         {/* 45 Devta Remedies Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">45 Devta Remedies</span>
+                          <span className="text-xs lg:text-sm font-medium">45 Devta Remedies</span>
                           <Switch
                             checked={showDevtaRemediesDialog}
                             onCheckedChange={toggleDevtaRemediesDialog}
-                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 lg:scale-100"
                           />
                         </div>
                         
                          {/* 16 Bar Chart Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">16 Bar Chart</span>
+                          <span className="text-xs lg:text-sm font-medium">16 Bar Chart</span>
                           <Switch
                             checked={show16BarChart}
                             onCheckedChange={toggle16BarChart}
-                            className="data-[state=checked]:bg-orange-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-orange-600 touch-manipulation scale-90 lg:scale-100"
                           />
                         </div>
                         
                         {/* Marma Sthan Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">Marma Sthan</span>
+                          <span className="text-xs lg:text-sm font-medium">Marma Sthan</span>
                           <Switch
                             checked={showMarmaSthan}
                             onCheckedChange={toggleMarmaSthan}
-                            className="data-[state=checked]:bg-red-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-red-600 touch-manipulation scale-90 lg:scale-100"
                           />
                          </div>
                          
                          {/* Vithi Mandal Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">Vithi Mandal</span>
+                          <span className="text-xs lg:text-sm font-medium">Vithi Mandal</span>
                           <Switch
                             checked={showVithiMandal}
                             onCheckedChange={toggleVithiMandal}
-                            className="data-[state=checked]:bg-cyan-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-cyan-600 touch-manipulation scale-90 lg:scale-100"
                           />
                         </div>
 
                           {/* Five Elements Toggle */}
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <span className="text-xs xl:text-sm font-medium">Five Elements</span>
+                          <span className="text-xs lg:text-sm font-medium">Five Elements</span>
                           <Switch
                             checked={showFiveElements}
                             onCheckedChange={toggleFiveElements}
-                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 xl:scale-100"
+                            className="data-[state=checked]:bg-purple-600 touch-manipulation scale-90 lg:scale-100"
                           />
                         </div>
 
@@ -5212,7 +5212,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             )}
             
             {completedPolygonPoints.length < 3 && (
-              <div className="text-xs xl:text-sm text-muted-foreground text-center py-4 xl:py-6">
+              <div className="text-xs lg:text-sm text-muted-foreground text-center py-4 lg:py-6">
                 Draw a polygon to see analysis
               </div>
             )}
