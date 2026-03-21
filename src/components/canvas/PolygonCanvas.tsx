@@ -216,7 +216,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Handle window resize
     const handleResize = () => {
       const newContainerWidth = container ? container.clientWidth : window.innerWidth - 32;
-      const newIsMobile = window.innerWidth < 1024;
+      const newIsBelowLaptop = window.innerWidth < BREAKPOINTS.lg;
       const newViewportWidth = window.innerWidth;
       const newViewportHeight = window.innerHeight;
       
