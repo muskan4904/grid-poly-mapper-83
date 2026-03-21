@@ -222,7 +222,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       
       let newCanvasWidth, newCanvasHeight;
       
-      if (newIsMobile) {
+      if (newIsBelowLaptop) {
         newCanvasWidth = Math.min(newContainerWidth - 4, newViewportWidth - 8);
         newCanvasHeight = newViewportHeight * 0.75;
       } else {
