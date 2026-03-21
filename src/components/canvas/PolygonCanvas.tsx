@@ -278,7 +278,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       console.log("Image loaded successfully:", imgElement.width, "x", imgElement.height);
       const canvasWidth = fabricCanvas.width || 800;
       const canvasHeight = fabricCanvas.height || 600;
-      const isMobileView = window.innerWidth < 1024;
+      const isMobileView = window.innerWidth < BREAKPOINTS.lg;
       
       let renderWidth, renderHeight, left, top;
       
