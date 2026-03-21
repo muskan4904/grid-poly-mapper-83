@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useBreakpoint, BREAKPOINTS } from '@/hooks/use-breakpoint';
 import shaktiChakraImage from '@/assets/shakti-chakra.png';
 import { 
   calculatePolygonArea, 
@@ -73,7 +73,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const latestRotationRef = useRef(0);
   const shaktiSizeRafRef = useRef<number | null>(null);
   const latestShaktiSizeRef = useRef(250);
-  const isMobile = useIsMobile();
+  const { isMobile, isBelowLaptop, isLaptopUp } = useBreakpoint();
   const [directionLines, setDirectionLines] = useState<any[]>([]);
   const [gateLines, setGateLines] = useState<any[]>([]);
   const [completedPolygonPoints, setCompletedPolygonPoints] = useState<Point[]>([]);
@@ -182,19 +182,19 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const containerWidth = container ? container.clientWidth : window.innerWidth - 32;
     
     // Much larger canvas dimensions for better visibility
-    const isMobile = window.innerWidth < 1024;
+    const isMobileOrTablet = window.innerWidth < BREAKPOINTS.lg;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
     // Calculate canvas size based on viewport - aim for ~80% of screen
     let canvasWidth, canvasHeight;
     
-    if (isMobile) {
-      // Mobile/Tablet: cover ~75% of viewport height
+    if (isMobileOrTablet) {
+      // Mobile/Tablet (< 1024px): cover ~75% of viewport height
       canvasWidth = Math.min(containerWidth - 4, viewportWidth - 8);
       canvasHeight = viewportHeight * 0.75;
     } else {
-      // Desktop: Large canvas with better coverage
+      // Laptop/Desktop (>= 1024px): Large canvas with better coverage
       canvasWidth = Math.min(containerWidth - 16, viewportWidth * 0.8);
       canvasHeight = Math.min(canvasWidth * 0.75, viewportHeight * 0.85);
     }
@@ -216,13 +216,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Handle window resize
     const handleResize = () => {
       const newContainerWidth = container ? container.clientWidth : window.innerWidth - 32;
-      const newIsMobile = window.innerWidth < 1024;
+      const newIsBelowLaptop = window.innerWidth < BREAKPOINTS.lg;
       const newViewportWidth = window.innerWidth;
       const newViewportHeight = window.innerHeight;
       
       let newCanvasWidth, newCanvasHeight;
       
-      if (newIsMobile) {
+      if (newIsBelowLaptop) {
         newCanvasWidth = Math.min(newContainerWidth - 4, newViewportWidth - 8);
         newCanvasHeight = newViewportHeight * 0.75;
       } else {
@@ -278,7 +278,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
       console.log("Image loaded successfully:", imgElement.width, "x", imgElement.height);
       const canvasWidth = fabricCanvas.width || 800;
       const canvasHeight = fabricCanvas.height || 600;
-      const isMobileView = window.innerWidth < 1024;
+      const isMobileView = window.innerWidth < BREAKPOINTS.lg;
       
       let renderWidth, renderHeight, left, top;
       
