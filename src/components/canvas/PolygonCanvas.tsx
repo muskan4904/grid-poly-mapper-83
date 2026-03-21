@@ -189,8 +189,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     // Calculate canvas size based on viewport - aim for ~80% of screen
     let canvasWidth, canvasHeight;
     
-    if (isMobile) {
-      // Mobile/Tablet: cover ~75% of viewport height
+    if (isMobileOrTablet) {
+      // Mobile/Tablet (< 1024px): cover ~75% of viewport height
       canvasWidth = Math.min(containerWidth - 4, viewportWidth - 8);
       canvasHeight = viewportHeight * 0.75;
     } else {
