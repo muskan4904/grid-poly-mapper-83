@@ -88,7 +88,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [pdfUserDetails, setPdfUserDetails] = useState({
     name: '',
     phone: '',
-    address: ''
+    address: '',
+    logo: '' as string // base64 data URL, optional
   });
   const [show16DirectionRemark, setShow16DirectionRemark] = useState(false);
   const [remark16Direction, setRemark16Direction] = useState('');
@@ -4100,7 +4101,35 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         // Load and add the Om symbol image (smaller)
         const centerX = pageWidth / 2;
         const centerY = 50; // Move up
-        
+
+        // User logo in top-left corner (optional)
+        if (userDetails.logo) {
+          try {
+            const logoImg = new Image();
+            logoImg.crossOrigin = 'anonymous';
+            const logoData: string = await new Promise((resolve, reject) => {
+              logoImg.onload = () => {
+                const c = document.createElement('canvas');
+                c.width = logoImg.width;
+                c.height = logoImg.height;
+                c.getContext('2d')!.drawImage(logoImg, 0, 0);
+                resolve(c.toDataURL('image/png'));
+              };
+              logoImg.onerror = () => reject(new Error('logo load failed'));
+              logoImg.src = userDetails.logo;
+            });
+            const maxW = 28;
+            const maxH = 28;
+            const ratio = logoImg.width / logoImg.height || 1;
+            let lw = maxW;
+            let lh = maxW / ratio;
+            if (lh > maxH) { lh = maxH; lw = maxH * ratio; }
+            pdf.addImage(logoData, 'PNG', 10, 32, lw, lh);
+          } catch (e) {
+            console.warn('User logo failed to render on cover page:', e);
+          }
+        }
+
         try {
           // Load the Om symbol image as base64
           const img = new Image();
@@ -5295,6 +5324,49 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                   className="mt-1"
                 />
               </div>
+
+              <div>
+                <Label htmlFor="pdf-logo" className="text-sm font-medium">
+                  Select Your Logo (optional)
+                </Label>
+                <div className="mt-1 flex items-center gap-3">
+                  <Input
+                    id="pdf-logo"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        setPdfUserDetails(prev => ({ ...prev, logo: reader.result as string }));
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                    className="cursor-pointer"
+                  />
+                  {pdfUserDetails.logo && (
+                    <>
+                      <img
+                        src={pdfUserDetails.logo}
+                        alt="Logo preview"
+                        className="h-10 w-10 object-contain border rounded"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPdfUserDetails(prev => ({ ...prev, logo: '' }))}
+                      >
+                        Remove
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Displayed at the top-left corner of the report cover page.
+                </p>
+              </div>
             </div>
             
             {/* Optional Remark Sections */}
@@ -5355,7 +5427,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                 variant="outline"
                 onClick={() => {
                   setShowPDFDialog(false);
-                  generatePDFWithDetails({ name: '', phone: '', address: '' });
+                  generatePDFWithDetails({ name: '', phone: '', address: '', logo: '' });
                 }}
               >
                 Skip & Generate
