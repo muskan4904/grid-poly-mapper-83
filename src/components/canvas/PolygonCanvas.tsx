@@ -5356,7 +5356,7 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                 variant="outline"
                 onClick={() => {
                   setShowPDFDialog(false);
-                  generatePDFWithDetails({ name: '', phone: '', address: '' });
+                  generatePDFWithDetails({ name: '', phone: '', address: '', logo: '' });
                 }}
               >
                 Skip & Generate
