@@ -4185,13 +4185,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         // Decorative line under title
         pdf.setDrawColor(220, 20, 60); // Crimson
         pdf.setLineWidth(1);
-        pdf.line(centerX - 30, 148, centerX + 30, 148);
+        pdf.line(centerX - 30, 144, centerX + 30, 144);
         
         // English Vastu Shastra quote without background rectangle
         pdf.setTextColor(139, 69, 19); // Saddle brown text (visible on cream background)
         pdf.setFontSize(14);
-        pdf.text('Where there is happiness and harmony in living,', centerX, 150, { align: 'center' });
-        pdf.text('there itself lies the essence of Vastu Shastra', centerX, 170, { align: 'center' });
+        pdf.text('Where there is happiness and harmony in living,', centerX, 158, { align: 'center' });
+        pdf.text('there itself lies the essence of Vastu Shastra', centerX, 178, { align: 'center' });
         pdf.setTextColor(0, 0, 0); // Reset to black
         
         // User details section with decorative frame (repositioned after black rectangle)
