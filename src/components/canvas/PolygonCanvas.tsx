@@ -4098,9 +4098,9 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         pdf.rect(0, 28, 5, pageHeight - 56, 'F');
         pdf.rect(pageWidth - 5, 28, 5, pageHeight - 56, 'F');
         
-        // Load and add the Om symbol image (smaller)
+        // Load and add the Om symbol image
         const centerX = pageWidth / 2;
-        const centerY = 50; // Move up
+        const centerY = 88; // Lowered to make room for larger logo
 
         // User logo in top-left corner (optional)
         if (userDetails.logo) {
@@ -4118,13 +4118,13 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
               logoImg.onerror = () => reject(new Error('logo load failed'));
               logoImg.src = userDetails.logo;
             });
-            const maxW = 28;
-            const maxH = 28;
+            const maxW = 70;
+            const maxH = 45;
             const ratio = logoImg.width / logoImg.height || 1;
             let lw = maxW;
             let lh = maxW / ratio;
             if (lh > maxH) { lh = maxH; lw = maxH * ratio; }
-            pdf.addImage(logoData, 'PNG', 10, 32, lw, lh);
+            pdf.addImage(logoData, 'PNG', 12, 34, lw, lh);
           } catch (e) {
             console.warn('User logo failed to render on cover page:', e);
           }
@@ -4155,8 +4155,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
           
           try {
             const omImageData = await loadImage();
-            const omImageWidth = 60; // Smaller
-            const omImageHeight = 30; // Smaller
+            const omImageWidth = 65;
+            const omImageHeight = 32;
             const omImageX = centerX - omImageWidth / 2;
             const omImageY = centerY - omImageHeight / 2;
             pdf.addImage(omImageData, 'PNG', omImageX, omImageY, omImageWidth, omImageHeight);
@@ -4164,28 +4164,28 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             // Fallback to text Om symbol if image loading fails
             pdf.setFont('helvetica', 'normal');
             pdf.setTextColor(139, 69, 19);
-            pdf.setFontSize(30); // Smaller
+            pdf.setFontSize(32);
             pdf.text('ॐ', centerX, centerY + 6, { align: 'center' });
           }
         } catch (error) {
           // Fallback to text Om symbol
           pdf.setFont('helvetica', 'normal');
           pdf.setTextColor(139, 69, 19);
-          pdf.setFontSize(30); // Smaller
+          pdf.setFontSize(32);
           pdf.text('ॐ', centerX, centerY + 6, { align: 'center' });
         }
         
-        // Main title (smaller and repositioned)
+        // Main title
         pdf.setTextColor(139, 69, 19); // Saddle brown
-        pdf.setFontSize(22); // Smaller
-        pdf.text('VASTU CONSULTATION', centerX, 90, { align: 'center' }); // Move up
-        pdf.setFontSize(18); // Smaller
-        pdf.text('REPORT', centerX, 105, { align: 'center' }); // Move up
+        pdf.setFontSize(22);
+        pdf.text('VASTU CONSULTATION', centerX, 120, { align: 'center' });
+        pdf.setFontSize(18);
+        pdf.text('REPORT', centerX, 138, { align: 'center' });
         
         // Decorative line under title
         pdf.setDrawColor(220, 20, 60); // Crimson
         pdf.setLineWidth(1);
-        pdf.line(centerX - 30, 115, centerX + 30, 115); // Move up and make shorter
+        pdf.line(centerX - 30, 148, centerX + 30, 148);
         
         // English Vastu Shastra quote without background rectangle
         pdf.setTextColor(139, 69, 19); // Saddle brown text (visible on cream background)
