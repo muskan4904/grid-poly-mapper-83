@@ -88,7 +88,8 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
   const [pdfUserDetails, setPdfUserDetails] = useState({
     name: '',
     phone: '',
-    address: ''
+    address: '',
+    logo: '' as string // base64 data URL, optional
   });
   const [show16DirectionRemark, setShow16DirectionRemark] = useState(false);
   const [remark16Direction, setRemark16Direction] = useState('');
