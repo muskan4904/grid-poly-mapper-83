@@ -4101,7 +4101,35 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         // Load and add the Om symbol image (smaller)
         const centerX = pageWidth / 2;
         const centerY = 50; // Move up
-        
+
+        // User logo in top-left corner (optional)
+        if (userDetails.logo) {
+          try {
+            const logoImg = new Image();
+            logoImg.crossOrigin = 'anonymous';
+            const logoData: string = await new Promise((resolve, reject) => {
+              logoImg.onload = () => {
+                const c = document.createElement('canvas');
+                c.width = logoImg.width;
+                c.height = logoImg.height;
+                c.getContext('2d')!.drawImage(logoImg, 0, 0);
+                resolve(c.toDataURL('image/png'));
+              };
+              logoImg.onerror = () => reject(new Error('logo load failed'));
+              logoImg.src = userDetails.logo;
+            });
+            const maxW = 28;
+            const maxH = 28;
+            const ratio = logoImg.width / logoImg.height || 1;
+            let lw = maxW;
+            let lh = maxW / ratio;
+            if (lh > maxH) { lh = maxH; lw = maxH * ratio; }
+            pdf.addImage(logoData, 'PNG', 10, 32, lw, lh);
+          } catch (e) {
+            console.warn('User logo failed to render on cover page:', e);
+          }
+        }
+
         try {
           // Load the Om symbol image as base64
           const img = new Image();
