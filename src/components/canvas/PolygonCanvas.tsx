@@ -4182,22 +4182,22 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         pdf.setFontSize(18);
         pdf.text('REPORT', centerX, 138, { align: 'center' });
         
-        // Decorative line under title
+        // Decorative line under title, kept safely away from the quote text
         pdf.setDrawColor(220, 20, 60); // Crimson
-        pdf.setLineWidth(1);
-        pdf.line(centerX - 30, 144, centerX + 30, 144);
+        pdf.setLineWidth(0.5);
+        pdf.line(centerX - 22, 146, centerX + 22, 146);
         
         // English Vastu Shastra quote without background rectangle
         pdf.setTextColor(139, 69, 19); // Saddle brown text (visible on cream background)
         pdf.setFontSize(14);
-        pdf.text('Where there is happiness and harmony in living,', centerX, 158, { align: 'center' });
-        pdf.text('there itself lies the essence of Vastu Shastra', centerX, 178, { align: 'center' });
+        pdf.text('Where there is happiness and harmony in living,', centerX, 168, { align: 'center' });
+        pdf.text('there itself lies the essence of Vastu Shastra', centerX, 188, { align: 'center' });
         pdf.setTextColor(0, 0, 0); // Reset to black
         
         // User details section with decorative frame (repositioned after black rectangle)
         if (userDetails.name || userDetails.phone || userDetails.address) {
           // Decorative box for user details (positioned after black rectangle)
-          const boxY = 200; // Moved down after black rectangle
+          const boxY = 208; // Moved down to preserve clear quote spacing
           const boxHeight = 80; // Increased from 50 to 80
           
           pdf.setFillColor(255, 248, 220); // Cornsilk
