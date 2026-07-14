@@ -5296,6 +5296,49 @@ export const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
                   className="mt-1"
                 />
               </div>
+
+              <div>
+                <Label htmlFor="pdf-logo" className="text-sm font-medium">
+                  Select Your Logo (optional)
+                </Label>
+                <div className="mt-1 flex items-center gap-3">
+                  <Input
+                    id="pdf-logo"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        setPdfUserDetails(prev => ({ ...prev, logo: reader.result as string }));
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                    className="cursor-pointer"
+                  />
+                  {pdfUserDetails.logo && (
+                    <>
+                      <img
+                        src={pdfUserDetails.logo}
+                        alt="Logo preview"
+                        className="h-10 w-10 object-contain border rounded"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPdfUserDetails(prev => ({ ...prev, logo: '' }))}
+                      >
+                        Remove
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Displayed at the top-left corner of the report cover page.
+                </p>
+              </div>
             </div>
             
             {/* Optional Remark Sections */}
